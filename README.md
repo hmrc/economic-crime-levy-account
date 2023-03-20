@@ -1,6 +1,6 @@
 # economic-crime-levy-account
 
-This is the backend microservice for getting data relating to the users ECL account, such an obligation and financial data.
+This is the backend microservice for getting data relating to a user's ECL account, such as obligation data and financial details.
 
 The service provides APIs to be consumed by [economic-crime-levy-account-frontend](https://github.com/hmrc/economic-crime-levy-account-frontend) microservice.
 
