@@ -4,7 +4,7 @@ import play.api.mvc.Call
 import play.api.test.FakeRequest
 import uk.gov.hmrc.economiccrimelevyaccount.base.ISpecBase
 
-class HealthEndpointIntegrationSpec
+class HealthEndpointISpec
   extends ISpecBase {
 
   "GET /ping/ping" should {

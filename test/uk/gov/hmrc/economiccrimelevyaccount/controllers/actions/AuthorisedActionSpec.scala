@@ -18,15 +18,16 @@ package uk.gov.hmrc.economiccrimelevyaccount.controllers.actions
 
 import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.any
-import org.scalacheck.ScalacheckShapeless.derivedArbitrary
 import play.api.mvc.{BodyParsers, Request, Result}
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.auth.core.retrieve.{Retrieval, ~}
 import uk.gov.hmrc.auth.core.syntax.retrieved.authSyntaxForRetrieved
-import uk.gov.hmrc.economiccrimelevyaccount.EnrolmentsWithEcl
 import uk.gov.hmrc.economiccrimelevyaccount.base.SpecBase
+import uk.gov.hmrc.economiccrimelevyaccount.models.eacd.EclEnrolment
+import uk.gov.hmrc.economiccrimelevyaccount.{EnrolmentsWithEcl, EnrolmentsWithoutEcl}
+import uk.gov.hmrc.economiccrimelevyreturns.controllers.actions.BaseAuthorisedAction
 
 import scala.concurrent.Future
 
@@ -43,7 +44,7 @@ class AuthorisedActionSpec extends SpecBase {
   }
 
   val expectedRetrievals: Retrieval[Option[String] ~ Enrolments] =
-    Retrievals.internalId and Retrievals.allEnrolments
+    Retrievals.internalId and Retrievals.authorisedEnrolments
 
   "invokeBlock" should {
     "execute the block and return the result if authorised" in forAll {
@@ -88,6 +89,18 @@ class AuthorisedActionSpec extends SpecBase {
       }
 
       result.getMessage shouldBe "Unable to retrieve internalId"
+    }
+
+    "throw an IllegalStateException if there is no ECL enrolment in the set of authorised enrolments" in forAll {
+      (internalId: String, enrolmentsWithoutEcl: EnrolmentsWithoutEcl) =>
+        when(mockAuthConnector.authorise(any(), ArgumentMatchers.eq(expectedRetrievals))(any(), any()))
+          .thenReturn(Future(Some(internalId) and enrolmentsWithoutEcl.enrolments))
+
+        val result = intercept[IllegalStateException] {
+          await(authorisedAction.invokeBlock(fakeRequest, testAction))
+        }
+
+        result.getMessage shouldBe s"Unable to retrieve enrolment with key ${EclEnrolment.ServiceName} and identifier ${EclEnrolment.IdentifierKey}"
     }
   }
 
