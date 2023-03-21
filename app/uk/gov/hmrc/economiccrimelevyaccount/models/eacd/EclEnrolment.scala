@@ -14,13 +14,9 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.economiccrimelevyaccount.config
+package uk.gov.hmrc.economiccrimelevyaccount.models.eacd
 
-import javax.inject.{Inject, Singleton}
-import play.api.Configuration
-
-@Singleton
-class AppConfig @Inject() (config: Configuration) {
-
-  val appName: String = config.get[String]("appName")
+object EclEnrolment {
+  val ServiceName: String   = "HMRC-ECL-ORG"
+  val IdentifierKey: String = "EclRegistrationReference"
 }

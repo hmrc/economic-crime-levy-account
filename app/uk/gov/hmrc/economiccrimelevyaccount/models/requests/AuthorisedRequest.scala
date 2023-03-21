@@ -14,13 +14,9 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.economiccrimelevyaccount.config
+package uk.gov.hmrc.economiccrimelevyaccount.models.requests
 
-import javax.inject.{Inject, Singleton}
-import play.api.Configuration
+import play.api.mvc.{Request, WrappedRequest}
 
-@Singleton
-class AppConfig @Inject() (config: Configuration) {
-
-  val appName: String = config.get[String]("appName")
-}
+case class AuthorisedRequest[A](request: Request[A], internalId: String, eclRegistrationReference: Option[String])
+    extends WrappedRequest[A](request)
