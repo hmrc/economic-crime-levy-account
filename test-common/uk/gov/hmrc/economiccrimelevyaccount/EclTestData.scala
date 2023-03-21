@@ -19,7 +19,6 @@ package uk.gov.hmrc.economiccrimelevyaccount
 import com.danielasfregola.randomdatagenerator.RandomDataGenerator.derivedArbitrary
 import org.scalacheck.{Arbitrary, Gen}
 import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier, Enrolments}
-import uk.gov.hmrc.economiccrimelevyaccount.generators.Generators
 import uk.gov.hmrc.economiccrimelevyaccount.models.eacd.EclEnrolment
 
 import java.time.Instant
@@ -28,13 +27,7 @@ case class EnrolmentsWithEcl(enrolments: Enrolments)
 
 case class EnrolmentsWithoutEcl(enrolments: Enrolments)
 
-final case class EclLiabilityCalculationData(
-  relevantApLength: Int,
-  relevantApRevenue: Long,
-  amlRegulatedActivityLength: Int
-)
-
-trait EclTestData { self: Generators =>
+trait EclTestData {
 
   implicit val arbInstant: Arbitrary[Instant] = Arbitrary {
     Instant.now()
@@ -66,13 +59,4 @@ trait EclTestData { self: Generators =>
 
   val testInternalId: String               = alphaNumericString
   val testEclRegistrationReference: String = alphaNumericString
-
-  val minRevenue: Long = 0L
-  val maxRevenue: Long = 99999999999L
-  val minApDays: Int   = 1
-  val maxApDays: Int   = 999
-  val minAmlDays: Int  = 1
-  val maxAmlDays: Int  = 365
-  val daysInYear: Int  = 365
-
 }
