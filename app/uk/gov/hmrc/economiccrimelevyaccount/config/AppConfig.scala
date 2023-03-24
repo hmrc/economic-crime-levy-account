@@ -18,9 +18,24 @@ package uk.gov.hmrc.economiccrimelevyaccount.config
 
 import javax.inject.{Inject, Singleton}
 import play.api.Configuration
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 @Singleton
-class AppConfig @Inject() (config: Configuration) {
+class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig) {
 
   val appName: String = config.get[String]("appName")
+
+  val desBearerToken: String = config.get[String]("microservice.services.des.bearerToken")
+
+  val desEnvironment: String = config.get[String]("microservice.services.des.environment")
+
+  val desUrl: String = servicesConfig.baseUrl("des")
+
+  val integrationFrameworkUrl: String = servicesConfig.baseUrl("integration-framework")
+
+  val integrationFrameworkBearerToken: String =
+    config.get[String]("microservice.services.integration-framework.bearerToken")
+
+  val integrationFrameworkEnvironment: String =
+    config.get[String]("microservice.services.integration-framework.environment")
 }
