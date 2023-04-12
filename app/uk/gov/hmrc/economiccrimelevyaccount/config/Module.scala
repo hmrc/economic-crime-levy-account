@@ -17,9 +17,11 @@
 package uk.gov.hmrc.economiccrimelevyaccount.config
 
 import com.google.inject.AbstractModule
+import uk.gov.hmrc.economiccrimelevyreturns.controllers.actions.{AuthorisedAction, BaseAuthorisedAction}
 
 class Module extends AbstractModule {
 
   override def configure(): Unit =
-    bind(classOf[AppConfig]).asEagerSingleton()
+    bind(classOf[AuthorisedAction]).to(classOf[BaseAuthorisedAction]).asEagerSingleton()
+    
 }
