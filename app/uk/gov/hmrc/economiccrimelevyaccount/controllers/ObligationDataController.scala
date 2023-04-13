@@ -36,7 +36,10 @@ class ObligationDataController @Inject() (
   def getObligationData: Action[AnyContent] = authorise.async { implicit request =>
     desConnector
       .getObligationData(request.eclRegistrationReference)
-      .map(obligationData => Ok(Json.toJson(obligationData)))
+      .map {
+        case Some(obligationData) => Ok(Json.toJson(obligationData))
+        case None                 => NotFound("No obligation data found")
+      }
   }
 
 }

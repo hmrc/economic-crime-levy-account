@@ -22,11 +22,14 @@ import org.scalacheck.derive.MkArbitrary
 import uk.gov.hmrc.economiccrimelevyaccount.EclTestData
 import uk.gov.hmrc.economiccrimelevyaccount.models.des.{ObligationData, ObligationStatus}
 import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.FinancialDetails
+
 object CachedArbitraries extends EclTestData with Generators {
 
   private def mkArb[T](implicit mkArb: MkArbitrary[T]): Arbitrary[T] = MkArbitrary[T].arbitrary
 
   implicit lazy val arbOptObligationData: Arbitrary[Option[ObligationData]] = mkArb
+  implicit lazy val arbObligationData: Arbitrary[ObligationData]            = mkArb
   implicit lazy val arbFinancialDetails: Arbitrary[FinancialDetails]        = mkArb
   implicit lazy val arbObligationStatus: Arbitrary[ObligationStatus]        = mkArb
+
 }
