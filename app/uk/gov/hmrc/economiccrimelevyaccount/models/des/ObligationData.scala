@@ -18,6 +18,7 @@ package uk.gov.hmrc.economiccrimelevyaccount.models.des
 
 import play.api.libs.json.{Format, JsError, JsResult, JsString, JsSuccess, JsValue, Json, OFormat}
 
+import java.time.LocalDate
 import java.util.Date
 
 sealed trait ObligationStatus
@@ -75,10 +76,10 @@ object Identification {
 
 final case class ObligationDetails(
   status: ObligationStatus,
-  inboundCorrespondenceFromDate: Date,
-  inboundCorrespondenceToDate: Date,
-  inboundCorrespondenceDateReceived: Option[Date],
-  inboundCorrespondenceDueDate: Date,
+  inboundCorrespondenceFromDate: LocalDate,
+  inboundCorrespondenceToDate: LocalDate,
+  inboundCorrespondenceDateReceived: Option[LocalDate],
+  inboundCorrespondenceDueDate: LocalDate,
   periodKey: String
 )
 

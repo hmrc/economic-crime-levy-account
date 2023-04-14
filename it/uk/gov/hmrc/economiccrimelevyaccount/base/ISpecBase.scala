@@ -49,14 +49,12 @@ abstract class ISpecBase
     with ResultExtractors
     with WireMockHelper
     with WireMockStubs
-    with IntegrationPatience{
+    with IntegrationPatience {
 
   implicit lazy val system: ActorSystem        = ActorSystem()
   implicit lazy val materializer: Materializer = Materializer(system)
   implicit def ec: ExecutionContext            = global
 
-  val internalId: String       = "test-id"
-  val eclRegistrationReference: String = "test-ecl-registration-reference"
   val now: Instant             = Instant.now.truncatedTo(ChronoUnit.MILLIS)
   private val stubClock: Clock = Clock.fixed(now, ZoneId.systemDefault)
 
@@ -66,10 +64,9 @@ abstract class ISpecBase
     "application.router" -> "testOnlyDoNotUseInAppConf.Routes"
   ) ++ setWireMockPort(
     "auth",
-    "integration-framework"
+    "integration-framework",
+    "des"
   )
-
-  val contextPath: String = "economic-crime-levy-account"
 
   override def fakeApplication(): Application =
     GuiceApplicationBuilder()

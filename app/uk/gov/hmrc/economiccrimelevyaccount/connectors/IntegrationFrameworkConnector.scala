@@ -22,6 +22,7 @@ import uk.gov.hmrc.economiccrimelevyaccount.models.CustomHeaderNames
 import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.FinancialDetails
 import uk.gov.hmrc.economiccrimelevyaccount.utils.CorrelationIdGenerator
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
+import uk.gov.hmrc.http.HttpReads.Implicits._
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}

@@ -21,7 +21,7 @@ import org.scalacheck.{Arbitrary, Gen}
 import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier, Enrolments}
 import uk.gov.hmrc.economiccrimelevyaccount.models.eacd.EclEnrolment
 
-import java.time.Instant
+import java.time.{Instant, LocalDate}
 
 case class EnrolmentsWithEcl(enrolments: Enrolments)
 
@@ -31,6 +31,10 @@ trait EclTestData {
 
   implicit val arbInstant: Arbitrary[Instant] = Arbitrary {
     Instant.now()
+  }
+
+  implicit val arbLocalDate: Arbitrary[LocalDate] = Arbitrary {
+    LocalDate.now()
   }
 
   implicit val arbEnrolmentsWithEcl: Arbitrary[EnrolmentsWithEcl] = Arbitrary {
