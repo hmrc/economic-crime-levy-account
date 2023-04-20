@@ -19,7 +19,6 @@ package uk.gov.hmrc.economiccrimelevyaccount.models.des
 import play.api.libs.json.{Format, JsError, JsResult, JsString, JsSuccess, JsValue, Json, OFormat}
 
 import java.time.LocalDate
-import java.util.Date
 
 sealed trait ObligationStatus
 
