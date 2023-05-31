@@ -1,10 +1,14 @@
 # economic-crime-levy-account
 
-This is the backend microservice for getting data relating to a user's ECL account, such as obligation data and financial details.
+This is the backend microservice for getting data relating to a user's ECL account, such as obligation data and
+financial details.
 
-The service provides APIs to be consumed by [economic-crime-levy-account-frontend](https://github.com/hmrc/economic-crime-levy-account-frontend) microservice.
+The service provides APIs to be consumed
+by [economic-crime-levy-account-frontend](https://github.com/hmrc/economic-crime-levy-account-frontend) microservice.
 
 ## API Endpoints
+
+- [Get BTA tile data](api-docs/get-bta-tile-data.md): `GET /economic-crime-levy-account/bta-tile-data`
 
 ## Running the service
 
