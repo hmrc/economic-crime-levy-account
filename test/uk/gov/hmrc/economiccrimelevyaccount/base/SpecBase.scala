@@ -52,8 +52,6 @@ trait SpecBase
     with EclTestData {
 
   val cc: ControllerComponents                         = stubControllerComponents()
-  val internalId: String                               = "test-id"
-  val eclRegistrationReference: String                 = "test-ecl-registration-reference"
   val fakeRequest: FakeRequest[AnyContentAsEmpty.type] = FakeRequest()
   val appConfig: AppConfig                             = app.injector.instanceOf[AppConfig]
   val bodyParsers: PlayBodyParsers                     = app.injector.instanceOf[PlayBodyParsers]
