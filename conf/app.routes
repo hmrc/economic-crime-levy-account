@@ -1,3 +1,4 @@
 # microservice specific routes
 
 GET        /obligation-data        uk.gov.hmrc.economiccrimelevyaccount.controllers.ObligationDataController.getObligationData
+GET        /bta-tile-data          uk.gov.hmrc.economiccrimelevyaccount.controllers.BtaTileDataController.getBtaTileData
