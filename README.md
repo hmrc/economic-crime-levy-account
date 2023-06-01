@@ -3,9 +3,8 @@
 This is the backend microservice for getting data relating to a user's ECL account, such as obligation data and
 financial details.
 
-The service provides APIs to be consumed
-by [economic-crime-levy-account-frontend](https://github.com/hmrc/economic-crime-levy-account-frontend) microservice as
-well as the Business Tax Account service.
+The service provides APIs to be consumed by other Economic Crime Levy services as well as the Business Tax Account
+service.
 
 ## API Endpoints
 
