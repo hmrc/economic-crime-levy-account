@@ -39,7 +39,7 @@ class DesConnectorSpec extends SpecBase {
       (eclRegistrationReference: String, obligationData: Option[ObligationData], correlationId: String) =>
         val expectedUrl                            = s"${appConfig.desUrl}/enterprise/obligation-data/zecl/$eclRegistrationReference/ECL"
         val expectedHeaders: Seq[(String, String)] = Seq(
-          (HeaderNames.AUTHORIZATION, appConfig.desBearerToken),
+          (HeaderNames.AUTHORIZATION, s"Bearer ${appConfig.desBearerToken}"),
           (CustomHeaderNames.Environment, appConfig.desEnvironment),
           (CustomHeaderNames.CorrelationId, correlationId)
         )

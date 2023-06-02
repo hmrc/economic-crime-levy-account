@@ -21,8 +21,8 @@ import uk.gov.hmrc.economiccrimelevyaccount.config.AppConfig
 import uk.gov.hmrc.economiccrimelevyaccount.models.CustomHeaderNames
 import uk.gov.hmrc.economiccrimelevyaccount.models.des.ObligationData
 import uk.gov.hmrc.economiccrimelevyaccount.utils.CorrelationIdGenerator
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -38,7 +38,7 @@ class DesConnector @Inject() (
     eclRegistrationReference: String
   )(implicit hc: HeaderCarrier): Future[Option[ObligationData]] = {
     val desHeaders: Seq[(String, String)] = Seq(
-      (HeaderNames.AUTHORIZATION, appConfig.desBearerToken),
+      (HeaderNames.AUTHORIZATION, s"Bearer ${appConfig.desBearerToken}"),
       (CustomHeaderNames.Environment, appConfig.desEnvironment),
       (CustomHeaderNames.CorrelationId, correlationIdGenerator.generateCorrelationId)
     )
