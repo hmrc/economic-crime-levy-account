@@ -45,9 +45,7 @@ class DesConnector @Inject() (
     )
 
     httpClient.GET[Option[ObligationData]](
-      s"${appConfig.desUrl}/enterprise/obligation-data/zecl/$eclRegistrationReference/ECL?from=${LocalDate
-        .parse("2022-04-01")
-        .toString}&to=${LocalDate.now(ZoneOffset.UTC).toString}",
+      s"${appConfig.desUrl}/enterprise/obligation-data/zecl/$eclRegistrationReference/ECL?from=2022-04-01&to=${LocalDate.now(ZoneOffset.UTC).toString}",
       headers = desHeaders
     )
   }
