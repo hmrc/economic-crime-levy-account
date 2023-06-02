@@ -35,8 +35,6 @@ class DesConnector @Inject() (
   correlationIdGenerator: CorrelationIdGenerator
 )(implicit ec: ExecutionContext) {
 
-  private val EarliestObligationDate = LocalDate.parse("2022-04-01")
-
   def getObligationData(
     eclRegistrationReference: String
   )(implicit hc: HeaderCarrier): Future[Option[ObligationData]] = {
@@ -47,7 +45,9 @@ class DesConnector @Inject() (
     )
 
     httpClient.GET[Option[ObligationData]](
-      s"${appConfig.desUrl}/enterprise/obligation-data/zecl/$eclRegistrationReference/ECL?from=${EarliestObligationDate.toString}&to=${LocalDate.now(ZoneOffset.UTC).toString}",
+      s"${appConfig.desUrl}/enterprise/obligation-data/zecl/$eclRegistrationReference/ECL?from=${LocalDate
+        .parse("2022-04-01")
+        .toString}&to=${LocalDate.now(ZoneOffset.UTC).toString}",
       headers = desHeaders
     )
   }
