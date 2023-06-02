@@ -24,6 +24,7 @@ import uk.gov.hmrc.economiccrimelevyaccount.utils.CorrelationIdGenerator
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
+import java.time.{LocalDate, ZoneOffset}
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -33,6 +34,8 @@ class DesConnector @Inject() (
   httpClient: HttpClient,
   correlationIdGenerator: CorrelationIdGenerator
 )(implicit ec: ExecutionContext) {
+
+  private val EarliestObligationDate = LocalDate.parse("2022-04-01")
 
   def getObligationData(
     eclRegistrationReference: String
@@ -44,7 +47,7 @@ class DesConnector @Inject() (
     )
 
     httpClient.GET[Option[ObligationData]](
-      s"${appConfig.desUrl}/enterprise/obligation-data/zecl/$eclRegistrationReference/ECL",
+      s"${appConfig.desUrl}/enterprise/obligation-data/zecl/$eclRegistrationReference/ECL?from=${EarliestObligationDate.toString}&to=${LocalDate.now(ZoneOffset.UTC).toString}",
       headers = desHeaders
     )
   }
