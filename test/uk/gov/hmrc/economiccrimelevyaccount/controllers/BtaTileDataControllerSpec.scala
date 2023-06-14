@@ -20,27 +20,27 @@ import org.mockito.ArgumentMatchers.any
 import play.api.libs.json.Json
 import play.api.mvc.Result
 import uk.gov.hmrc.economiccrimelevyaccount.base.SpecBase
-import uk.gov.hmrc.economiccrimelevyaccount.connectors.DesConnector
 import uk.gov.hmrc.economiccrimelevyaccount.generators.CachedArbitraries._
 import uk.gov.hmrc.economiccrimelevyaccount.models.bta.{BtaTileData, DueReturn}
 import uk.gov.hmrc.economiccrimelevyaccount.models.des._
+import uk.gov.hmrc.economiccrimelevyaccount.services.ObligationDataService
 
 import java.time.LocalDate
 import scala.concurrent.Future
 
 class BtaTileDataControllerSpec extends SpecBase {
 
-  val mockDesConnector: DesConnector = mock[DesConnector]
+  val mockObligationDataService: ObligationDataService = mock[ObligationDataService]
 
   val controller = new BtaTileDataController(
     cc,
     fakeAuthorisedAction,
-    mockDesConnector
+    mockObligationDataService
   )
 
   "getBtaTileData" should {
     "return 200 OK with no due return when there is no obligation data" in {
-      when(mockDesConnector.getObligationData(any())(any())).thenReturn(Future.successful(None))
+      when(mockObligationDataService.getObligationData(any())(any())).thenReturn(Future.successful(None))
 
       val result: Future[Result] =
         controller.getBtaTileData()(fakeRequest)
@@ -63,7 +63,8 @@ class BtaTileDataControllerSpec extends SpecBase {
         val obligationData =
           ObligationData(Seq(Obligation(None, Seq(openObligation1, openObligation2, openObligation3))))
 
-        when(mockDesConnector.getObligationData(any())(any())).thenReturn(Future.successful(Some(obligationData)))
+        when(mockObligationDataService.getObligationData(any())(any()))
+          .thenReturn(Future.successful(Some(obligationData)))
 
         val result: Future[Result] =
           controller.getBtaTileData()(fakeRequest)
@@ -90,7 +91,8 @@ class BtaTileDataControllerSpec extends SpecBase {
             Seq(Obligation(None, Seq(fulfilledObligation, highestPriorityObligation, otherOpenObligation)))
           )
 
-        when(mockDesConnector.getObligationData(any())(any())).thenReturn(Future.successful(Some(obligationData)))
+        when(mockObligationDataService.getObligationData(any())(any()))
+          .thenReturn(Future.successful(Some(obligationData)))
 
         val result: Future[Result] =
           controller.getBtaTileData()(fakeRequest)

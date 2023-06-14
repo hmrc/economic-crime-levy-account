@@ -19,7 +19,6 @@ package uk.gov.hmrc.economiccrimelevyaccount.connectors
 import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.any
 import play.api.http.HeaderNames
-import play.api.test.Helpers.await
 import uk.gov.hmrc.economiccrimelevyaccount.base.SpecBase
 import uk.gov.hmrc.economiccrimelevyaccount.generators.CachedArbitraries.arbOptObligationData
 import uk.gov.hmrc.economiccrimelevyaccount.models.CustomHeaderNames

@@ -20,26 +20,27 @@ import org.mockito.ArgumentMatchers.any
 import play.api.libs.json.Json
 import play.api.mvc.Result
 import uk.gov.hmrc.economiccrimelevyaccount.base.SpecBase
-import uk.gov.hmrc.economiccrimelevyaccount.connectors.DesConnector
 import uk.gov.hmrc.economiccrimelevyaccount.generators.CachedArbitraries._
 import uk.gov.hmrc.economiccrimelevyaccount.models.des.ObligationData
+import uk.gov.hmrc.economiccrimelevyaccount.services.ObligationDataService
 
 import scala.concurrent.Future
 
 class ObligationDataControllerSpec extends SpecBase {
 
-  val mockDesConnector: DesConnector = mock[DesConnector]
+  val mockObligationDataService: ObligationDataService = mock[ObligationDataService]
 
   val controller = new ObligationDataController(
     cc,
     fakeAuthorisedAction,
-    mockDesConnector
+    mockObligationDataService
   )
 
   "getObligationData" should {
-    "return 200 OK with the obligation data JSON when obligation data is returned by the connector" in forAll {
+    "return 200 OK with the obligation data JSON when obligation data is returned by the service" in forAll {
       obligationData: ObligationData =>
-        when(mockDesConnector.getObligationData(any())(any())).thenReturn(Future.successful(Some(obligationData)))
+        when(mockObligationDataService.getObligationData(any())(any()))
+          .thenReturn(Future.successful(Some(obligationData)))
 
         val result: Future[Result] =
           controller.getObligationData()(fakeRequest)
@@ -48,8 +49,8 @@ class ObligationDataControllerSpec extends SpecBase {
         contentAsJson(result) shouldBe Json.toJson(obligationData)
     }
 
-    "return 404 NOT_FOUND when obligation data is not returned by the connector" in {
-      when(mockDesConnector.getObligationData(any())(any())).thenReturn(Future.successful(None))
+    "return 404 NOT_FOUND when obligation data is not returned by the service" in {
+      when(mockObligationDataService.getObligationData(any())(any())).thenReturn(Future.successful(None))
 
       val result: Future[Result] =
         controller.getObligationData()(fakeRequest)
