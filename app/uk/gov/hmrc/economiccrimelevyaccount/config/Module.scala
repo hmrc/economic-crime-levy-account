@@ -19,9 +19,13 @@ package uk.gov.hmrc.economiccrimelevyaccount.config
 import com.google.inject.AbstractModule
 import uk.gov.hmrc.economiccrimelevyreturns.controllers.actions.{AuthorisedAction, BaseAuthorisedAction}
 
+import java.time.{Clock, ZoneOffset}
+
 class Module extends AbstractModule {
 
-  override def configure(): Unit =
+  override def configure(): Unit = {
     bind(classOf[AuthorisedAction]).to(classOf[BaseAuthorisedAction]).asEagerSingleton()
+    bind(classOf[Clock]).toInstance(Clock.systemDefaultZone.withZone(ZoneOffset.UTC))
+  }
 
 }

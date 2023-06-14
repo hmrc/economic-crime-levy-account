@@ -18,7 +18,7 @@ package uk.gov.hmrc.economiccrimelevyaccount.controllers
 
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import uk.gov.hmrc.economiccrimelevyaccount.connectors.DesConnector
+import uk.gov.hmrc.economiccrimelevyaccount.services.ObligationDataService
 import uk.gov.hmrc.economiccrimelevyreturns.controllers.actions.AuthorisedAction
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
@@ -29,12 +29,12 @@ import scala.concurrent.ExecutionContext
 class ObligationDataController @Inject() (
   cc: ControllerComponents,
   authorise: AuthorisedAction,
-  desConnector: DesConnector
+  obligationDataService: ObligationDataService
 )(implicit ec: ExecutionContext)
     extends BackendController(cc) {
 
   def getObligationData: Action[AnyContent] = authorise.async { implicit request =>
-    desConnector
+    obligationDataService
       .getObligationData(request.eclRegistrationReference)
       .map {
         case Some(obligationData) => Ok(Json.toJson(obligationData))
