@@ -1,11 +1,69 @@
+/*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework
 
+import play.api.http.Status._
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
+import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 case class FinancialDataResponse(totalisation: Option[Totalisation], documentDetails: Option[Seq[DocumentDetails]])
 
 object FinancialDataResponse {
 
+  implicit object FinancialDataResponseReads
+      extends HttpReads[Either[FinancialDataErrorResponse, FinancialDataResponse]] {
+    override def read(
+      method: String,
+      url: String,
+      response: HttpResponse
+    ): Either[FinancialDataErrorResponse, FinancialDataResponse] = {
+      val validationResult = response.json.validate[FinancialDataErrorResponse]
+      response.status match {
+        case OK                    =>
+          response.json.validate[FinancialDataResponse] match {
+            case JsSuccess(response, _) => Right(response)
+          }
+        case BAD_REQUEST           =>
+          validationResult match {
+            case JsSuccess(errorResponse, _) => Left(errorResponse)
+          }
+        case NOT_FOUND             =>
+          validationResult match {
+            case JsSuccess(errorResponse, _) => Left(errorResponse)
+          }
+        case CONFLICT              =>
+          validationResult match {
+            case JsSuccess(errorResponse, _) => Left(errorResponse)
+          }
+        case UNPROCESSABLE_ENTITY  =>
+          validationResult match {
+            case JsSuccess(errorResponse, _) => Left(errorResponse)
+          }
+        case INTERNAL_SERVER_ERROR =>
+          validationResult match {
+            case JsSuccess(errorResponse, _) => Left(errorResponse)
+          }
+        case SERVICE_UNAVAILABLE   =>
+          validationResult match {
+            case JsSuccess(errorResponse, _) => Left(errorResponse)
+          }
+      }
+    }
+  }
   implicit val reads: Reads[FinancialDataResponse] = (
     (JsPath \ "getFinancialData" \ "financialDetails" \ "totalisation").readNullable[Totalisation] and
       (JsPath \ "getFinancialData" \ "financialDetails" \ "documentDetails").readNullable[Seq[DocumentDetails]]

@@ -22,7 +22,6 @@ import uk.gov.hmrc.economiccrimelevyaccount.models.CustomHeaderNames
 import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework._
 import uk.gov.hmrc.economiccrimelevyaccount.utils.CorrelationIdGenerator
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
-import uk.gov.hmrc.http.HttpReads.Implicits._
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -40,7 +39,9 @@ class IntegrationFrameworkConnector @Inject() (
     (CustomHeaderNames.CorrelationId, correlationIdGenerator.generateCorrelationId)
   )
 
-  def getFinancialDetails(eclRegistrationReference: String)(implicit hc: HeaderCarrier): Future[Either[FinancialDataErrorResponse, FinancialDataResponse]] =
+  def getFinancialDetails(
+    eclRegistrationReference: String
+  )(implicit hc: HeaderCarrier): Future[Either[FinancialDataErrorResponse, FinancialDataResponse]] =
     httpClient.GET[Either[FinancialDataErrorResponse, FinancialDataResponse]](
       s"${appConfig.integrationFrameworkUrl}/enterprise/02.00.00/financial-data/zecl/$eclRegistrationReference/ECL",
       headers = integrationFrameworkHeaders
