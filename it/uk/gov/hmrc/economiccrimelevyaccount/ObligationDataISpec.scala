@@ -21,7 +21,7 @@ import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import uk.gov.hmrc.economiccrimelevyaccount.base.ISpecBase
 import uk.gov.hmrc.economiccrimelevyaccount.controllers.routes
-import uk.gov.hmrc.economiccrimelevyaccount.generators.CachedArbitraries._
+import uk.gov.hmrc.economiccrimelevyaccount.generators.CachedArbitraries.arbObligationData
 import uk.gov.hmrc.economiccrimelevyaccount.models.des.ObligationData
 
 class ObligationDataISpec extends ISpecBase {
