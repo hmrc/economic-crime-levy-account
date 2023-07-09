@@ -21,7 +21,7 @@ import org.scalacheck.{Arbitrary, Gen}
 import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier, Enrolments}
 import uk.gov.hmrc.economiccrimelevyaccount.generators.CachedArbitraries._
 import uk.gov.hmrc.economiccrimelevyaccount.models.eacd.EclEnrolment
-import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.{DocumentDetails, FinancialDataResponse, LineItemDetails, NewCharge, Totalisation}
+import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.{DocumentDetails, FinancialDataResponse, LineItemDetails, Totalisation}
 
 import java.time.{Instant, LocalDate}
 
@@ -81,7 +81,7 @@ trait EclTestData {
         documentDetails = Some(
           Seq(
             documentDetails.copy(
-              documentType = Some(NewCharge),
+              documentType = Some("NewCharge"),
               chargeReferenceNumber = Some(chargeReference),
               postingDate = Some(postingDateArb.toString),
               issueDate = Some(issueDateArb.toString),
