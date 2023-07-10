@@ -19,7 +19,6 @@ package uk.gov.hmrc.economiccrimelevyaccount.connectors
 import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.any
 import play.api.http.HeaderNames
-import play.api.test.Helpers.await
 import uk.gov.hmrc.economiccrimelevyaccount.base.SpecBase
 import uk.gov.hmrc.economiccrimelevyaccount.generators.CachedArbitraries.arbOptObligationData
 import uk.gov.hmrc.economiccrimelevyaccount.models.CustomHeaderNames
@@ -27,6 +26,7 @@ import uk.gov.hmrc.economiccrimelevyaccount.models.des.ObligationData
 import uk.gov.hmrc.economiccrimelevyaccount.utils.CorrelationIdGenerator
 import uk.gov.hmrc.http.HttpClient
 
+import java.time.{LocalDate, ZoneOffset}
 import scala.concurrent.Future
 
 class DesConnectorSpec extends SpecBase {
@@ -37,9 +37,10 @@ class DesConnectorSpec extends SpecBase {
   "getObligationData" should {
     "return obligation data when the http client returns obligation data" in forAll {
       (eclRegistrationReference: String, obligationData: Option[ObligationData], correlationId: String) =>
-        val expectedUrl                            = s"${appConfig.desUrl}/enterprise/obligation-data/zecl/$eclRegistrationReference/ECL"
+        val expectedUrl                            =
+          s"${appConfig.desUrl}/enterprise/obligation-data/zecl/$eclRegistrationReference/ECL?from=2022-04-01&to=${LocalDate.now(ZoneOffset.UTC).toString}"
         val expectedHeaders: Seq[(String, String)] = Seq(
-          (HeaderNames.AUTHORIZATION, appConfig.desBearerToken),
+          (HeaderNames.AUTHORIZATION, s"Bearer ${appConfig.desBearerToken}"),
           (CustomHeaderNames.Environment, appConfig.desEnvironment),
           (CustomHeaderNames.CorrelationId, correlationId)
         )

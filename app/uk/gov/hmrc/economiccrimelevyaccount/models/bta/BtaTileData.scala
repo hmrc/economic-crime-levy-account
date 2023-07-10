@@ -14,18 +14,28 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.economiccrimelevyaccount.config
+package uk.gov.hmrc.economiccrimelevyaccount.models.bta
 
-import com.google.inject.AbstractModule
-import uk.gov.hmrc.economiccrimelevyreturns.controllers.actions.{AuthorisedAction, BaseAuthorisedAction}
+import play.api.libs.json.{Format, Json, OFormat}
 
-import java.time.{Clock, ZoneOffset}
+import java.time.LocalDate
 
-class Module extends AbstractModule {
+case class DueReturn(
+  isOverdue: Boolean,
+  dueDate: LocalDate,
+  periodStartDate: LocalDate,
+  periodEndDate: LocalDate,
+  fyStartYear: String,
+  fyEndYear: String
+)
 
-  override def configure(): Unit = {
-    bind(classOf[AuthorisedAction]).to(classOf[BaseAuthorisedAction]).asEagerSingleton()
-    bind(classOf[Clock]).toInstance(Clock.systemDefaultZone.withZone(ZoneOffset.UTC))
-  }
+object DueReturn {
+  implicit val format: OFormat[DueReturn] = Json.format[DueReturn]
+  implicitly[Format[LocalDate]]
+}
 
+case class BtaTileData(eclRegistrationReference: String, dueReturn: Option[DueReturn])
+
+object BtaTileData {
+  implicit val format: OFormat[BtaTileData] = Json.format[BtaTileData]
 }

@@ -27,7 +27,7 @@ import play.api.http.{HeaderNames, Status}
 import play.api.libs.json.JsValue
 import play.api.mvc._
 import play.api.test.Helpers._
-import play.api.test.{DefaultAwaitTimeout, FakeHeaders, FakeRequest, ResultExtractors}
+import play.api.test._
 import uk.gov.hmrc.economiccrimelevyaccount.EclTestData
 import uk.gov.hmrc.economiccrimelevyaccount.config.AppConfig
 import uk.gov.hmrc.economiccrimelevyaccount.controllers.actions.FakeAuthorisedAction
@@ -43,6 +43,7 @@ trait SpecBase
     with ScalaFutures
     with Results
     with DefaultAwaitTimeout
+    with FutureAwaits
     with ResultExtractors
     with Status
     with HeaderNames
@@ -52,8 +53,6 @@ trait SpecBase
     with EclTestData {
 
   val cc: ControllerComponents                         = stubControllerComponents()
-  val internalId: String                               = "test-id"
-  val eclRegistrationReference: String                 = "test-ecl-registration-reference"
   val fakeRequest: FakeRequest[AnyContentAsEmpty.type] = FakeRequest()
   val appConfig: AppConfig                             = app.injector.instanceOf[AppConfig]
   val bodyParsers: PlayBodyParsers                     = app.injector.instanceOf[PlayBodyParsers]

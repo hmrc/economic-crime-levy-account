@@ -19,14 +19,12 @@ package uk.gov.hmrc.economiccrimelevyaccount.connectors
 import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.any
 import play.api.http.HeaderNames
-import play.api.test.Helpers.await
-import uk.gov.hmrc.economiccrimelevyaccount.ValidFinancialDataResponse
 import uk.gov.hmrc.economiccrimelevyaccount.base.SpecBase
 import uk.gov.hmrc.economiccrimelevyaccount.models.CustomHeaderNames
 import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.{FinancialDataErrorResponse, FinancialDataResponse}
 import uk.gov.hmrc.economiccrimelevyaccount.utils.CorrelationIdGenerator
 import uk.gov.hmrc.http.HttpClient
-import uk.gov.hmrc.economiccrimelevyaccount.generators.CachedArbitraries._
+
 import scala.concurrent.Future
 
 class IntegrationFrameworkConnectorSpec extends SpecBase {
@@ -45,7 +43,7 @@ class IntegrationFrameworkConnectorSpec extends SpecBase {
           s"${appConfig.integrationFrameworkUrl}/enterprise/02.00.00/financial-data/zecl/$eclRegistrationReference/ECL"
 
         val expectedHeaders: Seq[(String, String)] = Seq(
-          (HeaderNames.AUTHORIZATION, appConfig.integrationFrameworkBearerToken),
+          (HeaderNames.AUTHORIZATION, s"Bearer ${appConfig.integrationFrameworkBearerToken}"),
           (CustomHeaderNames.Environment, appConfig.integrationFrameworkEnvironment),
           (CustomHeaderNames.CorrelationId, correlationId)
         )

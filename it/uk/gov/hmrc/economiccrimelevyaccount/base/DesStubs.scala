@@ -7,11 +7,17 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.economiccrimelevyaccount.base.WireMockHelper.stub
 import uk.gov.hmrc.economiccrimelevyaccount.models.des.ObligationData
 
+import java.time.{LocalDate, ZoneOffset}
+
 trait DesStubs { self: WireMockStubs =>
 
   def stubGetObligations(obligationData: ObligationData): StubMapping =
     stub(
-      get(urlEqualTo(s"/enterprise/obligation-data/zecl/$testEclRegistrationReference/ECL")),
+      get(
+        urlEqualTo(
+          s"/enterprise/obligation-data/zecl/$testEclRegistrationReference/ECL?from=2022-04-01&to=${LocalDate.now(ZoneOffset.UTC).toString}"
+        )
+      ),
       aResponse()
         .withStatus(OK)
         .withBody(Json.toJson(obligationData).toString())
@@ -19,7 +25,11 @@ trait DesStubs { self: WireMockStubs =>
 
   def stubObligationsNotFound(): StubMapping =
     stub(
-      get(urlEqualTo(s"/enterprise/obligation-data/zecl/$testEclRegistrationReference/ECL")),
+      get(
+        urlEqualTo(
+          s"/enterprise/obligation-data/zecl/$testEclRegistrationReference/ECL?from=2022-04-01&to=${LocalDate.now(ZoneOffset.UTC).toString}"
+        )
+      ),
       aResponse()
         .withStatus(NOT_FOUND)
         .withBody("No obligation data found")

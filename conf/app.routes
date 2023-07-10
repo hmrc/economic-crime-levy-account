@@ -3,3 +3,4 @@
 GET        /obligation-data        uk.gov.hmrc.economiccrimelevyaccount.controllers.ObligationDataController.getObligationData
 
 GET        /financial-data       uk.gov.hmrc.economiccrimelevyaccount.controllers.FinancialDataController.getFinancialData
+GET        /bta-tile-data          uk.gov.hmrc.economiccrimelevyaccount.controllers.BtaTileDataController.getBtaTileData

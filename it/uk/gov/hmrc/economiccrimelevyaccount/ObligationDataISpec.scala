@@ -21,8 +21,10 @@ import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import uk.gov.hmrc.economiccrimelevyaccount.base.ISpecBase
 import uk.gov.hmrc.economiccrimelevyaccount.controllers.routes
-import uk.gov.hmrc.economiccrimelevyaccount.generators.CachedArbitraries.arbObligationData
-import uk.gov.hmrc.economiccrimelevyaccount.models.des.ObligationData
+import uk.gov.hmrc.economiccrimelevyaccount.generators.CachedArbitraries._
+import uk.gov.hmrc.economiccrimelevyaccount.models.des.{Obligation, ObligationData, ObligationDetails}
+
+import java.time.LocalDate
 
 class ObligationDataISpec extends ISpecBase {
 
@@ -30,7 +32,19 @@ class ObligationDataISpec extends ISpecBase {
     "return 200 OK with the obligation data JSON when obligation data is returned" in {
       stubAuthorised()
 
-      val obligationData = random[ObligationData]
+      val obligationDetails = random[ObligationDetails]
+
+      val obligationData = ObligationData(
+        obligations = Seq(
+          Obligation(
+            identification = None,
+            obligationDetails = Seq(
+              obligationDetails.copy(inboundCorrespondenceDueDate = LocalDate.parse("2022-09-30")),
+              obligationDetails.copy(inboundCorrespondenceDueDate = LocalDate.parse("2023-09-30"))
+            )
+          )
+        )
+      )
 
       stubGetObligations(obligationData)
 
