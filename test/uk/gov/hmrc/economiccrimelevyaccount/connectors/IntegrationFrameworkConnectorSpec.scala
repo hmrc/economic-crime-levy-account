@@ -40,7 +40,7 @@ class IntegrationFrameworkConnectorSpec extends SpecBase {
         eitherResult: Either[FinancialDataErrorResponse, FinancialDataResponse]
       ) =>
         val expectedUrl =
-          s"${appConfig.integrationFrameworkUrl}/enterprise/02.00.00/financial-data/zecl/$eclRegistrationReference/ECL"
+          s"${appConfig.integrationFrameworkUrl}/penalty/financial-data/zecl/$eclRegistrationReference/ECL"
 
         val expectedHeaders: Seq[(String, String)] = Seq(
           (HeaderNames.AUTHORIZATION, s"Bearer ${appConfig.integrationFrameworkBearerToken}"),

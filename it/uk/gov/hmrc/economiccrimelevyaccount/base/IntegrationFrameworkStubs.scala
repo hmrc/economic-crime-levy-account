@@ -12,7 +12,7 @@ trait IntegrationFrameworkStubs { self: WireMockStubs =>
 
   def stubFinancialData(financialDataResponse: FinancialDataResponse): StubMapping =
     stub(
-      get(urlEqualTo(s"/enterprise/02.00.00/financial-data/zecl/$testEclRegistrationReference/ECL")),
+      get(urlEqualTo(s"/penalty/financial-data/zecl/$testEclRegistrationReference/ECL")),
       aResponse()
         .withStatus(OK)
         .withBody(Json.toJson(financialDataResponse).toString())

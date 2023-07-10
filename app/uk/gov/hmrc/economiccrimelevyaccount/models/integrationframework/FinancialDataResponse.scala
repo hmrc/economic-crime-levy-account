@@ -30,39 +30,24 @@ object FinancialDataResponse {
       method: String,
       url: String,
       response: HttpResponse
-    ): Either[FinancialDataErrorResponse, FinancialDataResponse] = {
-      val validationResult = response.json.validate[FinancialDataErrorResponse]
+    ): Either[FinancialDataErrorResponse, FinancialDataResponse] =
       response.status match {
-        case OK                    =>
+        case OK                                                                                                      =>
           response.json.validate[FinancialDataResponse] match {
             case JsSuccess(response, _) => Right(response)
+            case JsError(errors)        =>
+              Left(
+                FinancialDataErrorResponse(
+                  Some(INTERNAL_SERVER_ERROR.toString),
+                  Some(errors.flatMap(_._2).mkString(","))
+                )
+              )
           }
-        case BAD_REQUEST           =>
-          validationResult match {
-            case JsSuccess(errorResponse, _) => Left(errorResponse)
-          }
-        case NOT_FOUND             =>
-          validationResult match {
-            case JsSuccess(errorResponse, _) => Left(errorResponse)
-          }
-        case CONFLICT              =>
-          validationResult match {
-            case JsSuccess(errorResponse, _) => Left(errorResponse)
-          }
-        case UNPROCESSABLE_ENTITY  =>
-          validationResult match {
-            case JsSuccess(errorResponse, _) => Left(errorResponse)
-          }
-        case INTERNAL_SERVER_ERROR =>
-          validationResult match {
-            case JsSuccess(errorResponse, _) => Left(errorResponse)
-          }
-        case SERVICE_UNAVAILABLE   =>
-          validationResult match {
+        case BAD_REQUEST | NOT_FOUND | CONFLICT | UNPROCESSABLE_ENTITY | INTERNAL_SERVER_ERROR | SERVICE_UNAVAILABLE =>
+          response.json.validate[FinancialDataErrorResponse] match {
             case JsSuccess(errorResponse, _) => Left(errorResponse)
           }
       }
-    }
   }
   implicit val reads: Reads[FinancialDataResponse] = (
     (JsPath \ "getFinancialData" \ "financialDetails" \ "totalisation").readNullable[Totalisation] and
