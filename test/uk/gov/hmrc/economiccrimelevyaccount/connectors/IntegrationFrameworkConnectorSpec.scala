@@ -24,7 +24,7 @@ import uk.gov.hmrc.economiccrimelevyaccount.models.CustomHeaderNames
 import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.{FinancialDataErrorResponse, FinancialDataResponse}
 import uk.gov.hmrc.economiccrimelevyaccount.utils.CorrelationIdGenerator
 import uk.gov.hmrc.http.HttpClient
-
+import uk.gov.hmrc.economiccrimelevyaccount.generators.CachedArbitraries._
 import scala.concurrent.Future
 
 class IntegrationFrameworkConnectorSpec extends SpecBase {
