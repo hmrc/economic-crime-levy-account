@@ -61,19 +61,13 @@ trait EclTestData {
   implicit val arbValidFinancialDataResponse: Arbitrary[ValidFinancialDataResponse] = Arbitrary {
     for {
       totalisation    <- Arbitrary.arbitrary[Totalisation]
-      chargeReference <- Arbitrary.arbitrary[String]
-      postingDateArb   =
-        Arbitrary(localDateGen(currentYear - 1, startMonthFY, startDayFY, currentYear, endMonthFY, endDayFY))
-      issueDateArb     =
-        Arbitrary(localDateGen(currentYear - 1, startMonthFY, startDayFY, currentYear, endMonthFY, endDayFY))
-      totalAmount      = Arbitrary(genSameVale(10_000))
-      clearedAmount    = Arbitrary(genSameVale(1_000))
+      postingDateArb  <- Arbitrary.arbitrary[LocalDate]
+      issueDateArb    <- Arbitrary.arbitrary[LocalDate]
+      totalAmount     <- Arbitrary.arbitrary[Int]
+      clearedAmount   <- Arbitrary.arbitrary[Int]
       documentDetails <- Arbitrary.arbitrary[DocumentDetails]
       lineItemDetails <- Arbitrary.arbitrary[LineItemDetails]
-      itemFromDate     =
-        Arbitrary(localDateGen(currentYear - 1, startMonthFY, startDayFY, currentYear, endMonthFY, endDayFY))
-      itemToDate       = Arbitrary(localDateGen(currentYear, startMonthFY, startDayFY, currentYear, endMonthFY, endDayFY))
-      itemNetDueDate   = Arbitrary(localDateGen(currentYear, startMonthFY, startDayFY, currentYear, endMonthFY, endDayFY))
+      itemNetDueDate   = Arbitrary.arbitrary[LocalDate]
 
     } yield ValidFinancialDataResponse(
       FinancialDataResponse(
@@ -81,8 +75,8 @@ trait EclTestData {
         documentDetails = Some(
           Seq(
             documentDetails.copy(
-              documentType = Some("NewCharge"),
-              chargeReferenceNumber = Some(chargeReference),
+              documentType = Some("TRM New Charge"),
+              chargeReferenceNumber = Some("XMECL0000000001"),
               postingDate = Some(postingDateArb.toString),
               issueDate = Some(issueDateArb.toString),
               documentTotalAmount = Some(BigDecimal(totalAmount.toString)),
@@ -91,9 +85,9 @@ trait EclTestData {
               lineItemDetails = Some(
                 Seq(
                   lineItemDetails.copy(
-                    chargeDescription = Some(chargeReference),
-                    periodFromDate = Some(itemFromDate.toString),
-                    periodToDate = Some(itemToDate.toString),
+                    chargeDescription = Some("XMECL0000000001"),
+                    periodFromDate = Some(postingDateArb.toString),
+                    periodToDate = Some(postingDateArb.toString),
                     periodKey = Some(calculatePeriodKey(postingDateArb.toString.takeRight(4))),
                     netDueDate = Some(itemNetDueDate.toString),
                     amount = Some(BigDecimal(clearedAmount.toString))
