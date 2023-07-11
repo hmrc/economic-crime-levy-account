@@ -19,10 +19,9 @@ package uk.gov.hmrc.economiccrimelevyaccount.connectors
 import play.api.http.HeaderNames
 import uk.gov.hmrc.economiccrimelevyaccount.config.AppConfig
 import uk.gov.hmrc.economiccrimelevyaccount.models.CustomHeaderNames
-import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.FinancialDetails
+import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework._
 import uk.gov.hmrc.economiccrimelevyaccount.utils.CorrelationIdGenerator
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
-import uk.gov.hmrc.http.HttpReads.Implicits._
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -34,15 +33,17 @@ class IntegrationFrameworkConnector @Inject() (
   correlationIdGenerator: CorrelationIdGenerator
 )(implicit ec: ExecutionContext) {
 
-  def integrationFrameworkHeaders: Seq[(String, String)] = Seq(
+  private def integrationFrameworkHeaders: Seq[(String, String)] = Seq(
     (HeaderNames.AUTHORIZATION, s"Bearer ${appConfig.integrationFrameworkBearerToken}"),
     (CustomHeaderNames.Environment, appConfig.integrationFrameworkEnvironment),
     (CustomHeaderNames.CorrelationId, correlationIdGenerator.generateCorrelationId)
   )
 
-  def getFinancialDetails(eclRegistrationReference: String)(implicit hc: HeaderCarrier): Future[FinancialDetails] =
-    httpClient.GET[FinancialDetails](
-      s"${appConfig.integrationFrameworkUrl}/enterprise/02.00.00/financial-data/zecl/$eclRegistrationReference/ECL",
+  def getFinancialDetails(
+    eclRegistrationReference: String
+  )(implicit hc: HeaderCarrier): Future[Either[FinancialDataErrorResponse, FinancialDataResponse]] =
+    httpClient.GET[Either[FinancialDataErrorResponse, FinancialDataResponse]](
+      s"${appConfig.integrationFrameworkUrl}/penalty/financial-data/zecl/$eclRegistrationReference/ECL",
       headers = integrationFrameworkHeaders
     )
 }

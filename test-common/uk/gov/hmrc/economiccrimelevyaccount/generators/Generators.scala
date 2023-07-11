@@ -118,7 +118,6 @@ trait Generators {
       Instant.ofEpochMilli(millis).atOffset(ZoneOffset.UTC).toLocalDate
     }
   }
-
   def emailAddress(maxLength: Int): Gen[String] = {
     val emailPartsLength = maxLength / 5
 
@@ -128,4 +127,23 @@ trait Generators {
       thirdPart  <- alphaNumStringsWithMaxLength(emailPartsLength)
     } yield s"$firstPart@$secondPart.$thirdPart".toLowerCase
   }
+
+  def localDateGen(
+    startYear: Int,
+    startMonth: Int,
+    startDay: Int,
+    endYear: Int,
+    endMonth: Int,
+    endDay: Int
+  ): Gen[LocalDate] = {
+    val rangeStart = LocalDate.of(startYear, startMonth, startDay).toEpochDay
+    val rangeEnd   = LocalDate.of(endYear, endMonth, endDay).toEpochDay
+    Gen.choose(rangeStart, rangeEnd).map(i => LocalDate.ofEpochDay(i))
+  }
+
+  def intBetween(min: Int, max: Int): Gen[Int] =
+    Gen.choose(min, max)
+
+  def genSameVale[A](value: A): Gen[A] =
+    Gen.const(value)
 }

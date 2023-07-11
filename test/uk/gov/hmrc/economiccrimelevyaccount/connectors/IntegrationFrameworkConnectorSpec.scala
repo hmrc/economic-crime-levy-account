@@ -20,13 +20,11 @@ import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.any
 import play.api.http.HeaderNames
 import uk.gov.hmrc.economiccrimelevyaccount.base.SpecBase
-import uk.gov.hmrc.economiccrimelevyaccount.generators.CachedArbitraries.arbFinancialDetails
 import uk.gov.hmrc.economiccrimelevyaccount.models.CustomHeaderNames
-import uk.gov.hmrc.economiccrimelevyaccount.models.des.ObligationData
-import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.FinancialDetails
+import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.{FinancialDataErrorResponse, FinancialDataResponse}
 import uk.gov.hmrc.economiccrimelevyaccount.utils.CorrelationIdGenerator
 import uk.gov.hmrc.http.HttpClient
-
+import uk.gov.hmrc.economiccrimelevyaccount.generators.CachedArbitraries._
 import scala.concurrent.Future
 
 class IntegrationFrameworkConnectorSpec extends SpecBase {
@@ -36,9 +34,13 @@ class IntegrationFrameworkConnectorSpec extends SpecBase {
 
   "getFinancialDetails" should {
     "return financial details when the http client returns financial details" in forAll {
-      (eclRegistrationReference: String, financialDetails: FinancialDetails, correlationId: String) =>
+      (
+        eclRegistrationReference: String,
+        correlationId: String,
+        eitherResult: Either[FinancialDataErrorResponse, FinancialDataResponse]
+      ) =>
         val expectedUrl =
-          s"${appConfig.integrationFrameworkUrl}/enterprise/02.00.00/financial-data/zecl/$eclRegistrationReference/ECL"
+          s"${appConfig.integrationFrameworkUrl}/penalty/financial-data/zecl/$eclRegistrationReference/ECL"
 
         val expectedHeaders: Seq[(String, String)] = Seq(
           (HeaderNames.AUTHORIZATION, s"Bearer ${appConfig.integrationFrameworkBearerToken}"),
@@ -49,20 +51,20 @@ class IntegrationFrameworkConnectorSpec extends SpecBase {
         when(mockCorrelationIdGenerator.generateCorrelationId).thenReturn(correlationId)
 
         when(
-          mockHttpClient.GET[FinancialDetails](
+          mockHttpClient.GET[Either[FinancialDataErrorResponse, FinancialDataResponse]](
             ArgumentMatchers.eq(expectedUrl),
             any(),
             ArgumentMatchers.eq(expectedHeaders)
           )(any(), any(), any())
         )
-          .thenReturn(Future.successful(financialDetails))
+          .thenReturn(Future.successful(eitherResult))
 
         val result = await(connector.getFinancialDetails(eclRegistrationReference))
 
-        result shouldBe financialDetails
+        result shouldBe eitherResult
 
         verify(mockHttpClient, times(1))
-          .GET[ObligationData](
+          .GET[Either[FinancialDataErrorResponse, FinancialDataResponse]](
             ArgumentMatchers.eq(expectedUrl),
             any(),
             ArgumentMatchers.eq(expectedHeaders)
