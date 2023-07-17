@@ -69,7 +69,7 @@ case class Totalisation(
 
 object Totalisation {
   implicit val reads: Reads[Totalisation] = (
-      (JsPath \ "regimeTotalisation" \ "totalAccountBalance").readNullable[BigDecimal] and
+    (JsPath \ "regimeTotalisation" \ "totalAccountBalance").readNullable[BigDecimal] and
       (JsPath \ "regimeTotalisation" \ "totalAccountOverdue").readNullable[BigDecimal] and
       (JsPath \ "targetedSearch_SelectionCriteriaTotalisation" \ "totalOverdue").readNullable[BigDecimal] and
       (JsPath \ "targetedSearch_SelectionCriteriaTotalisation" \ "totalNotYetDue").readNullable[BigDecimal] and
