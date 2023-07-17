@@ -50,7 +50,9 @@ class FinancialDataControllerSpec extends SpecBase {
           totalNotYetDue = Some(BigDecimal("0")),
           totalBalance = Some(BigDecimal("1000")),
           totalCredit = Some(BigDecimal("0")),
-          totalCleared = Some(BigDecimal("0"))
+          totalCleared = Some(BigDecimal("0")),
+          totalAccountOverdue = Some(BigDecimal("1000")),
+          totalAccountBalance = Some(BigDecimal("1000"))
         )
         val response             = validFinancialDataResponse.financialDataResponse
           .copy(totalisation = Some(validTotalisation), documentDetails = Some(Seq(validDocumentDetails)))

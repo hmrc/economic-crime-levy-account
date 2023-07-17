@@ -21,7 +21,7 @@ import org.scalacheck.{Arbitrary, Gen}
 import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier, Enrolments}
 import uk.gov.hmrc.economiccrimelevyaccount.generators.CachedArbitraries._
 import uk.gov.hmrc.economiccrimelevyaccount.models.eacd.EclEnrolment
-import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.{DocumentDetails, FinancialDataResponse, LineItemDetails, Totalisation}
+import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.{DocumentDetails, FinancialDataResponse, LineItemDetails, PenaltyTotals, Totalisation}
 
 import java.time.{Instant, LocalDate}
 
@@ -61,36 +61,61 @@ trait EclTestData {
   implicit val arbValidFinancialDataResponse: Arbitrary[ValidFinancialDataResponse] = Arbitrary {
     for {
       totalisation    <- Arbitrary.arbitrary[Totalisation]
+      penaltyTotals   <- Arbitrary.arbitrary[Seq[PenaltyTotals]]
       postingDateArb  <- Arbitrary.arbitrary[LocalDate]
       issueDateArb    <- Arbitrary.arbitrary[LocalDate]
       totalAmount     <- Arbitrary.arbitrary[Int]
       clearedAmount   <- Arbitrary.arbitrary[Int]
       documentDetails <- Arbitrary.arbitrary[DocumentDetails]
       lineItemDetails <- Arbitrary.arbitrary[LineItemDetails]
-      itemNetDueDate   = Arbitrary.arbitrary[LocalDate]
+      itemNetDueDate  <- Arbitrary.arbitrary[LocalDate]
+      randomNumber    <- Arbitrary.arbitrary[Int]
+    } yield {
 
-    } yield ValidFinancialDataResponse(
-      FinancialDataResponse(
-        totalisation = Some(totalisation),
-        documentDetails = Some(
-          Seq(
-            documentDetails.copy(
-              documentType = Some("TRM New Charge"),
-              chargeReferenceNumber = Some("XMECL0000000001"),
-              postingDate = Some(postingDateArb.toString),
-              issueDate = Some(issueDateArb.toString),
-              documentTotalAmount = Some(BigDecimal(totalAmount.toString)),
-              documentClearedAmount = Some(BigDecimal(clearedAmount.toString)),
-              documentOutstandingAmount = Some(BigDecimal(totalAmount.toString) - BigDecimal(clearedAmount.toString)),
-              lineItemDetails = Some(
-                Seq(
-                  lineItemDetails.copy(
-                    chargeDescription = Some("XMECL0000000001"),
-                    periodFromDate = Some(postingDateArb.toString),
-                    periodToDate = Some(postingDateArb.toString),
-                    periodKey = Some(calculatePeriodKey(postingDateArb.toString.takeRight(4))),
-                    netDueDate = Some(itemNetDueDate.toString),
-                    amount = Some(BigDecimal(clearedAmount.toString))
+      val randomBigDecimal = Some(BigDecimal(randomNumber.toString))
+
+      ValidFinancialDataResponse(
+        FinancialDataResponse(
+          totalisation = Some(
+            totalisation.copy(
+              totalAccountBalance = randomBigDecimal,
+              totalAccountOverdue = randomBigDecimal,
+              totalOverdue = randomBigDecimal,
+              totalNotYetDue = randomBigDecimal,
+              totalBalance = randomBigDecimal,
+              totalCredit = randomBigDecimal,
+              totalCleared = randomBigDecimal
+            )
+          ),
+          documentDetails = Some(
+            Seq(
+              documentDetails.copy(
+                documentType = Some("TRM New Charge"),
+                chargeReferenceNumber = Some("XMECL0000000001"),
+                postingDate = Some(postingDateArb.toString),
+                issueDate = Some(issueDateArb.toString),
+                documentTotalAmount = Some(BigDecimal(randomNumber.toString)),
+                documentClearedAmount = Some(BigDecimal(clearedAmount.toString)),
+                documentOutstandingAmount = Some(BigDecimal(totalAmount.toString) - BigDecimal(clearedAmount.toString)),
+                lineItemDetails = Some(
+                  Seq(
+                    lineItemDetails.copy(
+                      chargeDescription = Some("XMECL0000000001"),
+                      periodFromDate = Some(postingDateArb.toString),
+                      periodToDate = Some(postingDateArb.toString),
+                      periodKey = Some(calculatePeriodKey(postingDateArb.toString.takeRight(4))),
+                      netDueDate = Some(itemNetDueDate.toString),
+                      amount = Some(BigDecimal(clearedAmount.toString))
+                    )
+                  )
+                ),
+                interestPostedAmount = randomBigDecimal,
+                interestAccruingAmount = randomBigDecimal,
+                penaltyTotals = Some(
+                  penaltyTotals.map(p =>
+                    p.copy(
+                      penaltyAmount = randomBigDecimal
+                    )
                   )
                 )
               )
@@ -98,9 +123,10 @@ trait EclTestData {
           )
         )
       )
-    )
+    }
   }
-  implicit val arbEnrolmentsWithoutEcl: Arbitrary[EnrolmentsWithoutEcl]             = Arbitrary {
+
+  implicit val arbEnrolmentsWithoutEcl: Arbitrary[EnrolmentsWithoutEcl] = Arbitrary {
     Arbitrary
       .arbitrary[Enrolments]
       .retryUntil(
