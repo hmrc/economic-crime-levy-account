@@ -58,6 +58,8 @@ object FinancialDataResponse {
 }
 
 case class Totalisation(
+  totalAccountBalance: Option[BigDecimal],
+  totalAccountOverdue: Option[BigDecimal],
   totalOverdue: Option[BigDecimal],
   totalNotYetDue: Option[BigDecimal],
   totalBalance: Option[BigDecimal],
@@ -67,7 +69,9 @@ case class Totalisation(
 
 object Totalisation {
   implicit val reads: Reads[Totalisation] = (
-    (JsPath \ "targetedSearch_SelectionCriteriaTotalisation" \ "totalOverdue").readNullable[BigDecimal] and
+    (JsPath \ "regimeTotalisation" \ "totalAccountBalance").readNullable[BigDecimal] and
+      (JsPath \ "regimeTotalisation" \ "totalAccountOverdue").readNullable[BigDecimal] and
+      (JsPath \ "targetedSearch_SelectionCriteriaTotalisation" \ "totalOverdue").readNullable[BigDecimal] and
       (JsPath \ "targetedSearch_SelectionCriteriaTotalisation" \ "totalNotYetDue").readNullable[BigDecimal] and
       (JsPath \ "targetedSearch_SelectionCriteriaTotalisation" \ "totalBalance").readNullable[BigDecimal] and
       (JsPath \ "targetedSearch_SelectionCriteriaTotalisation" \ "totalCredit").readNullable[BigDecimal] and
@@ -85,7 +89,11 @@ case class DocumentDetails(
   documentTotalAmount: Option[BigDecimal],
   documentClearedAmount: Option[BigDecimal],
   documentOutstandingAmount: Option[BigDecimal],
-  lineItemDetails: Option[Seq[LineItemDetails]]
+  lineItemDetails: Option[Seq[LineItemDetails]],
+  interestPostedAmount: Option[BigDecimal],
+  interestAccruingAmount: Option[BigDecimal],
+  interestPostedChargeRef: Option[String],
+  penaltyTotals: Option[Seq[PenaltyTotals]]
 )
 object DocumentDetails {
 
@@ -97,7 +105,11 @@ object DocumentDetails {
       (JsPath \ "documentTotalAmount").readNullable[BigDecimal] and
       (JsPath \ "documentClearedAmount").readNullable[BigDecimal] and
       (JsPath \ "documentOutstandingAmount").readNullable[BigDecimal] and
-      (JsPath \ "lineItemDetails").readNullable[Seq[LineItemDetails]]
+      (JsPath \ "lineItemDetails").readNullable[Seq[LineItemDetails]] and
+      (JsPath \ "documentInterestTotals" \ "interestPostedAmount").readNullable[BigDecimal] and
+      (JsPath \ "documentInterestTotals" \ "interestAccruingAmount").readNullable[BigDecimal] and
+      (JsPath \ "documentInterestTotals" \ "interestPostedChargeRef").readNullable[String] and
+      (JsPath \ "documentPenaltyTotals").readNullable[Seq[PenaltyTotals]]
   )(DocumentDetails.apply _)
 
   implicit var writes: OWrites[DocumentDetails] = Json.writes[DocumentDetails]
@@ -115,4 +127,15 @@ case class LineItemDetails(
 
 object LineItemDetails {
   implicit val format: OFormat[LineItemDetails] = Json.format[LineItemDetails]
+}
+
+case class PenaltyTotals(
+  penaltyType: Option[String],
+  penaltyStatus: Option[String],
+  penaltyAmount: Option[BigDecimal],
+  postedChargeReference: Option[String]
+)
+
+object PenaltyTotals {
+  implicit val format: OFormat[PenaltyTotals] = Json.format[PenaltyTotals]
 }
