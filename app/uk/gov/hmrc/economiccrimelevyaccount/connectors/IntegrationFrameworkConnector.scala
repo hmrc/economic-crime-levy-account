@@ -43,7 +43,7 @@ class IntegrationFrameworkConnector @Inject() (
     eclRegistrationReference: String
   )(implicit hc: HeaderCarrier): Future[Either[FinancialDataErrorResponse, FinancialDataResponse]] =
     httpClient.GET[Either[FinancialDataErrorResponse, FinancialDataResponse]](
-      s"${appConfig.integrationFrameworkUrl}/penalty/financial-data/zecl/$eclRegistrationReference/ECL",
+      s"${appConfig.integrationFrameworkUrl}/penalty/financial-data/ZECL/$eclRegistrationReference/ECL",
       headers = integrationFrameworkHeaders
     )
 }
