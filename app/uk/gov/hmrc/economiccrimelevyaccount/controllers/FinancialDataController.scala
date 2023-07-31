@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.economiccrimelevyaccount.controllers
 
+import play.api.Logging
 import play.api.libs.json.Json
 import play.api.mvc._
 import uk.gov.hmrc.economiccrimelevyaccount.connectors.IntegrationFrameworkConnector
@@ -31,14 +32,21 @@ class FinancialDataController @Inject() (
   authorise: AuthorisedAction,
   integrationFramework: IntegrationFrameworkConnector
 )(implicit ec: ExecutionContext)
-    extends BackendController(cc) {
+    extends BackendController(cc)
+    with Logging {
 
   def getFinancialData: Action[AnyContent] = authorise.async { implicit request =>
     integrationFramework
       .getFinancialDetails(request.eclRegistrationReference)
       .map {
-        case Left(errorResponse)  => InternalServerError(Json.toJson(errorResponse))
-        case Right(validResponse) => Ok(Json.toJson(validResponse))
+        case Left(errorResponse)  =>
+          val json = Json.toJson(errorResponse).toString
+          logger.info(s"GetFinancialData ${request.eclRegistrationReference} Error: " + json)
+          InternalServerError(json)
+        case Right(validResponse) =>
+          val json = Json.toJson(validResponse).toString
+          logger.info(s"GetFinancialData ${request.eclRegistrationReference} Success: " + json)
+          Ok(json)
       }
   }
 }
