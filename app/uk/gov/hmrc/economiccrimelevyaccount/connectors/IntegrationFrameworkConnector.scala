@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.economiccrimelevyaccount.connectors
 
+import play.api.Logging
 import play.api.http.HeaderNames
 import uk.gov.hmrc.economiccrimelevyaccount.config.AppConfig
 import uk.gov.hmrc.economiccrimelevyaccount.models.CustomHeaderNames
@@ -31,7 +32,7 @@ class IntegrationFrameworkConnector @Inject() (
   appConfig: AppConfig,
   httpClient: HttpClient,
   correlationIdGenerator: CorrelationIdGenerator
-)(implicit ec: ExecutionContext) {
+)(implicit ec: ExecutionContext) extends Logging {
 
   private def integrationFrameworkHeaders: Seq[(String, String)] = Seq(
     (HeaderNames.AUTHORIZATION, s"Bearer ${appConfig.integrationFrameworkBearerToken}"),
@@ -41,9 +42,19 @@ class IntegrationFrameworkConnector @Inject() (
 
   def getFinancialDetails(
     eclRegistrationReference: String
-  )(implicit hc: HeaderCarrier): Future[Either[FinancialDataErrorResponse, FinancialDataResponse]] =
-    httpClient.GET[Either[FinancialDataErrorResponse, FinancialDataResponse]](
-      s"${appConfig.integrationFrameworkUrl}/penalty/financial-data/ZECL/$eclRegistrationReference/ECL",
-      headers = integrationFrameworkHeaders
-    )
+  )(implicit hc: HeaderCarrier): Future[Either[FinancialDataErrorResponse, FinancialDataResponse]] = {
+
+    for {
+      _ <- httpClient.GET[String](
+              s"${appConfig.integrationFrameworkUrl}/penalty/financial-data/ZECL/$eclRegistrationReference/ECL",
+              headers = integrationFrameworkHeaders
+            ).map { response =>
+              logger.info(s"GetFinancialData for $eclRegistrationReference " + response)
+            }
+      r2 <- httpClient.GET[Either[FinancialDataErrorResponse, FinancialDataResponse]](
+            s"${appConfig.integrationFrameworkUrl}/penalty/financial-data/ZECL/$eclRegistrationReference/ECL",
+            headers = integrationFrameworkHeaders
+          )
+    } yield r2
+  }
 }
