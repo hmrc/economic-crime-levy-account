@@ -44,18 +44,17 @@ class IntegrationFrameworkConnector @Inject() (
   def getFinancialDetails(
     eclRegistrationReference: String
   )(implicit hc: HeaderCarrier): Future[Either[FinancialDataErrorResponse, FinancialDataResponse]] =
-    for {
-      _  <- httpClient
-              .GET[String](
-                s"${appConfig.integrationFrameworkUrl}/penalty/financial-data/ZECL/$eclRegistrationReference/ECL",
-                headers = integrationFrameworkHeaders
-              )
-              .map { response =>
-                logger.info(s"GetFinancialData for $eclRegistrationReference " + response)
-              }
-      r2 <- httpClient.GET[Either[FinancialDataErrorResponse, FinancialDataResponse]](
-              s"${appConfig.integrationFrameworkUrl}/penalty/financial-data/ZECL/$eclRegistrationReference/ECL",
-              headers = integrationFrameworkHeaders
-            )
-    } yield r2
+    httpClient
+      .doGet(
+        s"${appConfig.integrationFrameworkUrl}/penalty/financial-data/ZECL/$eclRegistrationReference/ECL",
+        headers = integrationFrameworkHeaders
+      )
+      .flatMap { response =>
+        logger.info(s"GetFinancialDetails for $eclRegistrationReference " + response.body)
+
+        httpClient.GET[Either[FinancialDataErrorResponse, FinancialDataResponse]](
+          s"${appConfig.integrationFrameworkUrl}/penalty/financial-data/ZECL/$eclRegistrationReference/ECL",
+          headers = integrationFrameworkHeaders
+        )
+      }
 }

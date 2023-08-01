@@ -23,8 +23,9 @@ import uk.gov.hmrc.economiccrimelevyaccount.base.SpecBase
 import uk.gov.hmrc.economiccrimelevyaccount.models.CustomHeaderNames
 import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.{FinancialDataErrorResponse, FinancialDataResponse}
 import uk.gov.hmrc.economiccrimelevyaccount.utils.CorrelationIdGenerator
-import uk.gov.hmrc.http.HttpClient
+import uk.gov.hmrc.http.{HttpClient, HttpResponse}
 import uk.gov.hmrc.economiccrimelevyaccount.generators.CachedArbitraries._
+
 import scala.concurrent.Future
 
 class IntegrationFrameworkConnectorSpec extends SpecBase {
@@ -49,6 +50,13 @@ class IntegrationFrameworkConnectorSpec extends SpecBase {
         )
 
         when(mockCorrelationIdGenerator.generateCorrelationId).thenReturn(correlationId)
+
+        when(
+          mockHttpClient.doGet(
+            ArgumentMatchers.eq(expectedUrl),
+            ArgumentMatchers.eq(expectedHeaders)
+          )(any())
+        ).thenReturn(Future.successful(HttpResponse(200, "")))
 
         when(
           mockHttpClient.GET[Either[FinancialDataErrorResponse, FinancialDataResponse]](
