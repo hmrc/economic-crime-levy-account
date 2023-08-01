@@ -39,14 +39,8 @@ class FinancialDataController @Inject() (
     integrationFramework
       .getFinancialDetails(request.eclRegistrationReference)
       .map {
-        case Left(errorResponse)  =>
-          val json = Json.toJson(errorResponse).toString
-          logger.info(s"GetFinancialData ${request.eclRegistrationReference} Error: " + json)
-          InternalServerError(json)
-        case Right(validResponse) =>
-          val json = Json.toJson(validResponse).toString
-          logger.info(s"GetFinancialData ${request.eclRegistrationReference} Success: " + json)
-          Ok(json)
+        case Left(errorResponse)  => InternalServerError(Json.toJson(errorResponse))
+        case Right(validResponse) => Ok(Json.toJson(validResponse))
       }
   }
 }
