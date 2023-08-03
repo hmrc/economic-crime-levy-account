@@ -54,8 +54,7 @@ class IntegrationFrameworkConnector @Inject() (
   )(implicit hc: HeaderCarrier): Future[Either[FinancialDataErrorResponse, FinancialDataResponse]] =
     httpClient
       .doGet(
-        url =
-          s"${appConfig.integrationFrameworkUrl}/penalty/financial-data/ZECL/$eclRegistrationReference/ECL",
+      s"${appConfig.integrationFrameworkUrl}/penalty/financial-data/ZECL/$eclRegistrationReference/ECL?includeClearedItems=true&addRegimeTotalisation=true&addPenaltyDetails=true&addPostedInterestDetails=true&addAccruingInterestDetails=true",
         headers = integrationFrameworkHeaders
       )
       .flatMap { response =>
