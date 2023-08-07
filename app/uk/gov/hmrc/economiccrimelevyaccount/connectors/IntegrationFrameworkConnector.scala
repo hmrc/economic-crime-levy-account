@@ -52,7 +52,7 @@ class IntegrationFrameworkConnector @Inject() (
     (QueryParams.ACCRUING_INTEREST, "true"),
     (QueryParams.CLEARED_ITEMS, "true"),
     (QueryParams.LOCK_INFORMATION, "true"),
-    (QueryParams.PAYMENT, "true"),
+    (QueryParams.PAYMENT, "false"),
     (QueryParams.PENALTY_DETAILS, "true"),
     (QueryParams.POSTED_INTEREST, "true"),
     (QueryParams.REGIME_TOTALISATION, "true"),
