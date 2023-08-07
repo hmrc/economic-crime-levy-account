@@ -47,12 +47,17 @@ class IntegrationFrameworkConnector @Inject() (
     )
 
   private def financialDetailsQueryParams: Seq[(String, String)] = Seq(
-    (QueryParams.CLEARED_ITEMS, "true"),
-    (QueryParams.PAYMENT, "true"),
-    (QueryParams.STATISTICAL_ITEMS, "true"),
-    (QueryParams.DATE_TYPE, "POSTING"),
     (QueryParams.DATE_FROM, LocalDate.of(2023, 1, 1).format(DateTimeFormatter.ISO_LOCAL_DATE)),
-    (QueryParams.DATE_TO, LocalDate.now().plusYears(1).format(DateTimeFormatter.ISO_LOCAL_DATE))
+    (QueryParams.DATE_TO, LocalDate.now().plusYears(1).format(DateTimeFormatter.ISO_LOCAL_DATE)),
+    (QueryParams.ACCRUING_INTEREST, "true"),
+    (QueryParams.CLEARED_ITEMS, "true"),
+    (QueryParams.LOCK_INFORMATION, "true"),
+    (QueryParams.PAYMENT, "true"),
+    (QueryParams.PENALTY_DETAILS, "true"),
+    (QueryParams.POSTED_INTEREST, "true"),
+    (QueryParams.REGIME_TOTALISATION, "true"),
+    (QueryParams.STATISTICAL_ITEMS, "true"),
+    (QueryParams.DATE_TYPE, "POSTING")
   )
 
   private def integrationFrameworkHeaders: Seq[(String, String)] = Seq(

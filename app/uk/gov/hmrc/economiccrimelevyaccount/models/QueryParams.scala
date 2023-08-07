@@ -23,6 +23,7 @@ object QueryParams {
   val DATE_FROM           = "dateFrom"
   val DATE_TO             = "dateTo"
   val DATE_TYPE           = "dateType"
+  val LOCK_INFORMATION    = "addLockInformation"
   val PAYMENT             = "includePaymentOnAccount"
   val PENALTY_DETAILS     = "addPenaltyDetails"
   val POSTED_INTEREST     = "addPostedInterestDetails"

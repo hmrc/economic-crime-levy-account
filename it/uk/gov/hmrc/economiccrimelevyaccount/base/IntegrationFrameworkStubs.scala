@@ -1,9 +1,8 @@
 package uk.gov.hmrc.economiccrimelevyaccount.base
 
-import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, get, urlEqualTo, urlMatching, urlPathMatching}
+import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, get, urlPathMatching}
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import play.api.http.Status.OK
-import play.api.libs.json.Json
 import uk.gov.hmrc.economiccrimelevyaccount.base.WireMockHelper.stub
 import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.FinancialDataResponse
 
