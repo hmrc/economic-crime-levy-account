@@ -52,13 +52,6 @@ class IntegrationFrameworkConnectorSpec extends SpecBase {
         when(mockCorrelationIdGenerator.generateCorrelationId).thenReturn(correlationId)
 
         when(
-          mockHttpClient.doGet(
-            ArgumentMatchers.eq(expectedUrl),
-            ArgumentMatchers.eq(expectedHeaders)
-          )(any())
-        ).thenReturn(Future.successful(HttpResponse(200, "")))
-
-        when(
           mockHttpClient.GET[Either[FinancialDataErrorResponse, FinancialDataResponse]](
             ArgumentMatchers.eq(expectedUrl),
             any(),
