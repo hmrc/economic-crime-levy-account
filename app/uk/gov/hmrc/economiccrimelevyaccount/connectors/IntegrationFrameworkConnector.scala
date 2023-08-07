@@ -24,6 +24,8 @@ import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework._
 import uk.gov.hmrc.economiccrimelevyaccount.utils.CorrelationIdGenerator
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
+import java.time.format.DateTimeFormatter
+import java.time.LocalDate
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -35,25 +37,27 @@ class IntegrationFrameworkConnector @Inject() (
 )(implicit ec: ExecutionContext)
     extends Logging {
 
-  private def integrationFrameworkHeaders: Seq[(String, String)] = Seq(
-    (HeaderNames.AUTHORIZATION, s"Bearer ${appConfig.integrationFrameworkBearerToken}"),
-    (CustomHeaderNames.Environment, appConfig.integrationFrameworkEnvironment),
-    (CustomHeaderNames.CorrelationId, correlationIdGenerator.generateCorrelationId)
-  )
-
-  private def financialDetailsQueryParams: Seq[(String, String)] = Seq(
-    (QueryParams.CLEARED_ITEMS, "true"),
-    (QueryParams.PENALTY_DETAILS, "true"),
-    (QueryParams.POSTED_INTEREST, "true"),
-    (QueryParams.ACCRUING_INTEREST, "true"),
-    (QueryParams.REGIME_TOTALISATION, "true")
-  )
-
   def getFinancialDetails(
     eclRegistrationReference: String
   )(implicit hc: HeaderCarrier): Future[Either[FinancialDataErrorResponse, FinancialDataResponse]] =
     httpClient.GET[Either[FinancialDataErrorResponse, FinancialDataResponse]](
       s"${appConfig.integrationFrameworkUrl}/penalty/financial-data/ZECL/$eclRegistrationReference/ECL",
-      headers = integrationFrameworkHeaders
+      headers = integrationFrameworkHeaders,
+      queryParams = financialDetailsQueryParams
     )
+
+  private def financialDetailsQueryParams: Seq[(String, String)] = Seq(
+    (QueryParams.CLEARED_ITEMS, "true"),
+    (QueryParams.PAYMENT, "true"),
+    (QueryParams.STATISTICAL_ITEMS, "true"),
+    (QueryParams.DATE_TYPE, "POSTING"),
+    (QueryParams.DATE_FROM, LocalDate.of(2023, 1, 1).format(DateTimeFormatter.ISO_LOCAL_DATE)),
+    (QueryParams.DATE_TO, LocalDate.now().plusYears(1).format(DateTimeFormatter.ISO_LOCAL_DATE))
+  )
+
+  private def integrationFrameworkHeaders: Seq[(String, String)] = Seq(
+    (HeaderNames.AUTHORIZATION, s"Bearer ${appConfig.integrationFrameworkBearerToken}"),
+    (CustomHeaderNames.Environment, appConfig.integrationFrameworkEnvironment),
+    (CustomHeaderNames.CorrelationId, correlationIdGenerator.generateCorrelationId)
+  )
 }

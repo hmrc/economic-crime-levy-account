@@ -18,9 +18,14 @@ package uk.gov.hmrc.economiccrimelevyaccount.models
 
 object QueryParams {
 
+  val ACCRUING_INTEREST   = "addAccruingInterestDetails"
   val CLEARED_ITEMS       = "includeClearedItems"
-  val REGIME_TOTALISATION = "addRegimeTotalisation"
+  val DATE_FROM           = "dateFrom"
+  val DATE_TO             = "dateTo"
+  val DATE_TYPE           = "dateType"
+  val PAYMENT             = "includePaymentOnAccount"
   val PENALTY_DETAILS     = "addPenaltyDetails"
   val POSTED_INTEREST     = "addPostedInterestDetails"
-  val ACCRUING_INTEREST   = "addAccruingInterestDetails"
+  val REGIME_TOTALISATION = "addRegimeTotalisation"
+  val STATISTICAL_ITEMS   = "includeStatisticalItems"
 }
