@@ -123,7 +123,9 @@ case class LineItemDetails(
   periodKey: Option[String],
   netDueDate: Option[String],
   amount: Option[BigDecimal],
-  clearingDate: Option[String]
+  clearingDate: Option[String],
+  clearingReason: Option[String],
+  clearingDocument: Option[String]
 )
 
 object LineItemDetails {
