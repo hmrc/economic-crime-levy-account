@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.economiccrimelevyaccount.controllers
 
+import play.api.Logging
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.economiccrimelevyaccount.services.ObligationDataService
@@ -31,14 +32,26 @@ class ObligationDataController @Inject() (
   authorise: AuthorisedAction,
   obligationDataService: ObligationDataService
 )(implicit ec: ExecutionContext)
-    extends BackendController(cc) {
+    extends BackendController(cc)
+    with Logging {
 
+  private val loggerContext                 = "ObligationDataController"
   def getObligationData: Action[AnyContent] = authorise.async { implicit request =>
     obligationDataService
       .getObligationData(request.eclRegistrationReference)
       .map {
-        case Some(obligationData) => Ok(Json.toJson(obligationData))
-        case None                 => NotFound("No obligation data found")
+        case Some(obligationData) =>
+          logger.info(
+            s"$loggerContext - Successful call to DES for obligation data " +
+              s"for eclReference: ${request.eclRegistrationReference}"
+          )
+          Ok(Json.toJson(obligationData))
+        case None                 =>
+          logger.error(
+            s"$loggerContext - No obligation data found for " +
+              s"eclReference ${request.eclRegistrationReference}"
+          )
+          NotFound("No obligation data found")
       }
   }
 

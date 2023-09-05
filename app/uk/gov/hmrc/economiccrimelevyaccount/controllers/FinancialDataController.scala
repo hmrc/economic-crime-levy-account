@@ -35,12 +35,24 @@ class FinancialDataController @Inject() (
     extends BackendController(cc)
     with Logging {
 
+  private val loggerContext = "FinancialDataController"
+
   def getFinancialData: Action[AnyContent] = authorise.async { implicit request =>
     integrationFramework
       .getFinancialDetails(request.eclRegistrationReference)
       .map {
-        case Left(errorResponse)  => InternalServerError(Json.toJson(errorResponse))
-        case Right(validResponse) => Ok(Json.toJson(validResponse))
+        case Left(errorResponse)  =>
+          logger.error(
+            s"$loggerContext - Integration Framework error: ${Json.toJson(errorResponse)}" +
+              s" for eclReference ${request.eclRegistrationReference}"
+          )
+          InternalServerError(Json.toJson(errorResponse))
+        case Right(validResponse) =>
+          logger.info(
+            s"$loggerContext - Successful call to Integration Framework" +
+              s" with eclReference ${request.eclRegistrationReference}"
+          );
+          Ok(Json.toJson(validResponse))
       }
   }
 }
