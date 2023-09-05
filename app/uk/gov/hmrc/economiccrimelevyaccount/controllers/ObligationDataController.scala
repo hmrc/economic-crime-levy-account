@@ -42,14 +42,12 @@ class ObligationDataController @Inject() (
       .map {
         case Some(obligationData) =>
           logger.info(
-            s"$loggerContext - Successful call to DES for obligation data " +
-              s"for eclReference: ${request.eclRegistrationReference}"
+            s"$loggerContext - Successful call to DES for obligation data for eclReference: ${request.eclRegistrationReference}"
           )
           Ok(Json.toJson(obligationData))
         case None                 =>
           logger.error(
-            s"$loggerContext - No obligation data found for " +
-              s"eclReference ${request.eclRegistrationReference}"
+            s"$loggerContext - No obligation data found for eclReference ${request.eclRegistrationReference}"
           )
           NotFound("No obligation data found")
       }
