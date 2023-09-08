@@ -45,12 +45,18 @@ class FinancialDataController @Inject() (
           logger.error(
             s"$loggerContext - Integration Framework error: ${errorResponse.getMessage()} for eclReference ${request.eclRegistrationReference}"
           )
-          Status(errorResponse.errorCode)(Json.toJson(presentationError))
+          Status(errorResponse.statusCode)(Json.toJson(errorResponse.getMessage()))
         case Right(validResponse) =>
           logger.info(
             s"$loggerContext - Successful call to Integration Framework with eclReference ${request.eclRegistrationReference}"
           );
           Ok(Json.toJson(validResponse))
+      }
+      .recover { case e =>
+        logger.error(
+          s"$loggerContext - Integration Framework unexpected error: ${e.getMessage} for eclReference ${request.eclRegistrationReference}"
+        )
+        InternalServerError("Unexpected error")
       }
   }
 }

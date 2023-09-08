@@ -18,13 +18,13 @@ package uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework
 
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
-case class FinancialDataErrorResponse(errorCode: Option[String], reason: Option[String])
+case class FinancialDataErrorResponse(errorCode: Int, reason: String)
 
 object FinancialDataErrorResponse {
 
   implicit val reads: Reads[FinancialDataErrorResponse] = (
-    (JsPath \ "failures" \ "code").readNullable[String] and
-      (JsPath \ "failures" \ "reason").readNullable[String]
+    (JsPath \ "failures" \ "code").read[Int] and
+      (JsPath \ "failures" \ "reason").read[String]
   )(FinancialDataErrorResponse.apply _)
 
   implicit val writes: OWrites[FinancialDataErrorResponse] = Json.format[FinancialDataErrorResponse]

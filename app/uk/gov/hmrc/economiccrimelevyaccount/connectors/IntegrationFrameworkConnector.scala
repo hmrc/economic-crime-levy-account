@@ -41,7 +41,7 @@ class IntegrationFrameworkConnector @Inject() (
 
   def getFinancialDetails(
     eclRegistrationReference: String
-  )(implicit hc: HeaderCarrier): Future[Either[FinancialDataErrorResponse, Option[FinancialDataResponse]]] =
+  )(implicit hc: HeaderCarrier): Future[Either[UpstreamErrorResponse, Option[FinancialDataResponse]]] =
     httpClient
       .get(url"${appConfig.integrationFrameworkUrl}/penalty/financial-data/ZECL/$eclRegistrationReference/ECL")
       .setHeader(integrationFrameworkHeaders: _*)
@@ -52,7 +52,7 @@ class IntegrationFrameworkConnector @Inject() (
           case OK        => Right(Some(response.asInstanceOf[FinancialDataResponse]))
           case NOT_FOUND => Right(None)
           case _         =>
-            Left(response.asInstanceOf[FinancialDataErrorResponse])
+            Left(response.asInstanceOf[UpstreamErrorResponse])
         }
       }
 
