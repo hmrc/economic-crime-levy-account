@@ -39,6 +39,8 @@ class IntegrationFrameworkConnector @Inject() (
 )(implicit ec: ExecutionContext)
     extends Logging {
 
+  private val loggerContext = "IntegrationFrameworkConnector"
+
   def getFinancialDetails(
     eclRegistrationReference: String
   )(implicit hc: HeaderCarrier): Future[Either[UpstreamErrorResponse, Option[FinancialDataResponse]]] =
@@ -49,9 +51,22 @@ class IntegrationFrameworkConnector @Inject() (
       .execute[HttpResponse]
       .map { response =>
         response.status match {
-          case OK        => Right(Some(response.asInstanceOf[FinancialDataResponse]))
-          case NOT_FOUND => Right(None)
+          case OK        =>
+            logger.info(
+              s"$loggerContext  - Successful response with status ${response.status} from Integration Framework for eclRegistrationReference: $eclRegistrationReference"
+            )
+
+            Right(Some(response.asInstanceOf[FinancialDataResponse]))
+          case NOT_FOUND =>
+            logger.info(
+              s"$loggerContext  - Successful response with status ${response.status} from Integration Framework for eclRegistrationReference: $eclRegistrationReference"
+            )
+
+            Right(None)
           case _         =>
+            logger.error(
+              s"$loggerContext - Unsuccessful response from Integration Framework with response: ${response.body}"
+            )
             Left(response.asInstanceOf[UpstreamErrorResponse])
         }
       }
