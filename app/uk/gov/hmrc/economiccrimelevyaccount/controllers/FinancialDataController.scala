@@ -43,9 +43,9 @@ class FinancialDataController @Inject() (
       .map {
         case Left(errorResponse)  =>
           logger.error(
-            s"$loggerContext - Integration Framework error: ${Json.toJson(errorResponse)} for eclReference ${request.eclRegistrationReference}"
+            s"$loggerContext - Integration Framework error: ${errorResponse.getMessage()} for eclReference ${request.eclRegistrationReference}"
           )
-          InternalServerError(Json.toJson(errorResponse))
+          Status(errorResponse.errorCode)(Json.toJson(presentationError))
         case Right(validResponse) =>
           logger.info(
             s"$loggerContext - Successful call to Integration Framework with eclReference ${request.eclRegistrationReference}"

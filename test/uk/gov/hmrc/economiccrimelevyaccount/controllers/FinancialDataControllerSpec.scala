@@ -58,7 +58,7 @@ class FinancialDataControllerSpec extends SpecBase {
           .copy(totalisation = Some(validTotalisation), documentDetails = Some(Seq(validDocumentDetails)))
 
         when(mockFinancialDataConnector.getFinancialDetails(any())(any()))
-          .thenReturn(Future.successful(Right(response)))
+          .thenReturn(Future.successful(Right(Some(response))))
 
         val result: Future[Result] =
           controller.getFinancialData()(fakeRequest)

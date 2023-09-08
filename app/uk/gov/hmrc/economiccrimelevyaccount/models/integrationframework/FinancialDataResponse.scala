@@ -19,37 +19,12 @@ package uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework
 import play.api.http.Status._
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
-import uk.gov.hmrc.http.{HttpReads, HttpResponse}
+import uk.gov.hmrc.http.{HttpReads, HttpResponse, UpstreamErrorResponse}
 
 case class FinancialDataResponse(totalisation: Option[Totalisation], documentDetails: Option[Seq[DocumentDetails]])
 
 object FinancialDataResponse {
 
-  implicit object FinancialDataResponseReads
-      extends HttpReads[Either[FinancialDataErrorResponse, FinancialDataResponse]] {
-    override def read(
-      method: String,
-      url: String,
-      response: HttpResponse
-    ): Either[FinancialDataErrorResponse, FinancialDataResponse] =
-      response.status match {
-        case OK                                                                                                      =>
-          response.json.validate[FinancialDataResponse] match {
-            case JsSuccess(response, _) => Right(response)
-            case JsError(errors)        =>
-              Left(
-                FinancialDataErrorResponse(
-                  Some(INTERNAL_SERVER_ERROR.toString),
-                  Some(errors.flatMap(_._2).mkString(","))
-                )
-              )
-          }
-        case BAD_REQUEST | NOT_FOUND | CONFLICT | UNPROCESSABLE_ENTITY | INTERNAL_SERVER_ERROR | SERVICE_UNAVAILABLE =>
-          response.json.validate[FinancialDataErrorResponse] match {
-            case JsSuccess(errorResponse, _) => Left(errorResponse)
-          }
-      }
-  }
   implicit val reads: Reads[FinancialDataResponse] = (
     (JsPath \ "getFinancialData" \ "financialDetails" \ "totalisation").readNullable[Totalisation] and
       (JsPath \ "getFinancialData" \ "financialDetails" \ "documentDetails").readNullable[Seq[DocumentDetails]]

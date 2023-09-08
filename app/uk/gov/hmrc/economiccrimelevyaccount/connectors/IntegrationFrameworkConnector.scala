@@ -18,11 +18,13 @@ package uk.gov.hmrc.economiccrimelevyaccount.connectors
 
 import play.api.Logging
 import play.api.http.HeaderNames
+import play.api.http.Status.{NOT_FOUND, OK}
 import uk.gov.hmrc.economiccrimelevyaccount.config.AppConfig
 import uk.gov.hmrc.economiccrimelevyaccount.models.{CustomHeaderNames, QueryParams}
 import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework._
 import uk.gov.hmrc.economiccrimelevyaccount.utils.CorrelationIdGenerator
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps, UpstreamErrorResponse}
 
 import java.time.format.DateTimeFormatter
 import java.time.LocalDate
@@ -32,19 +34,27 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class IntegrationFrameworkConnector @Inject() (
   appConfig: AppConfig,
-  httpClient: HttpClient,
+  httpClient: HttpClientV2,
   correlationIdGenerator: CorrelationIdGenerator
 )(implicit ec: ExecutionContext)
     extends Logging {
 
   def getFinancialDetails(
     eclRegistrationReference: String
-  )(implicit hc: HeaderCarrier): Future[Either[FinancialDataErrorResponse, FinancialDataResponse]] =
-    httpClient.GET[Either[FinancialDataErrorResponse, FinancialDataResponse]](
-      s"${appConfig.integrationFrameworkUrl}/penalty/financial-data/ZECL/$eclRegistrationReference/ECL",
-      headers = integrationFrameworkHeaders,
-      queryParams = financialDetailsQueryParams
-    )
+  )(implicit hc: HeaderCarrier): Future[Either[FinancialDataErrorResponse, Option[FinancialDataResponse]]] =
+    httpClient
+      .get(url"${appConfig.integrationFrameworkUrl}/penalty/financial-data/ZECL/$eclRegistrationReference/ECL")
+      .setHeader(integrationFrameworkHeaders: _*)
+      .transform(_.addQueryStringParameters(financialDetailsQueryParams: _*))
+      .execute[HttpResponse]
+      .map { response =>
+        response.status match {
+          case OK        => Right(Some(response.asInstanceOf[FinancialDataResponse]))
+          case NOT_FOUND => Right(None)
+          case _         =>
+            Left(response.asInstanceOf[FinancialDataErrorResponse])
+        }
+      }
 
   private def financialDetailsQueryParams: Seq[(String, String)] = Seq(
     (QueryParams.DATE_FROM, LocalDate.of(2023, 1, 1).format(DateTimeFormatter.ISO_LOCAL_DATE)),
