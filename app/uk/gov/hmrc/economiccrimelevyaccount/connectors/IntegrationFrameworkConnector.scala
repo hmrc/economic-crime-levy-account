@@ -23,7 +23,7 @@ import uk.gov.hmrc.economiccrimelevyaccount.config.AppConfig
 import uk.gov.hmrc.economiccrimelevyaccount.models.{CustomHeaderNames, QueryParams}
 import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework._
 import uk.gov.hmrc.economiccrimelevyaccount.utils.CorrelationIdGenerator
-import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.HttpClient
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps, UpstreamErrorResponse}
 
 import java.time.format.DateTimeFormatter
@@ -34,40 +34,29 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class IntegrationFrameworkConnector @Inject() (
   appConfig: AppConfig,
-  httpClient: HttpClientV2,
+  httpClient: HttpClient,
   correlationIdGenerator: CorrelationIdGenerator
 )(implicit ec: ExecutionContext)
-    extends Logging {
+    extends BaseConnector
+    with Logging {
 
   private val loggerContext = "IntegrationFrameworkConnector"
 
   def getFinancialDetails(
     eclRegistrationReference: String
-  )(implicit hc: HeaderCarrier): Future[Either[UpstreamErrorResponse, Option[FinancialDataResponse]]] =
+  )(implicit hc: HeaderCarrier): Future[Option[FinancialDataResponse]] =
     httpClient
-      .get(url"${appConfig.integrationFrameworkUrl}/penalty/financial-data/ZECL/$eclRegistrationReference/ECL")
-      .setHeader(integrationFrameworkHeaders: _*)
-      .transform(_.addQueryStringParameters(financialDetailsQueryParams: _*))
-      .execute[HttpResponse]
-      .map { response =>
+      .GET[HttpResponse](
+        s"${appConfig.integrationFrameworkUrl}/penalty/financial-data/ZECL/$eclRegistrationReference/ECL",
+        headers = integrationFrameworkHeaders,
+        queryParams = financialDetailsQueryParams
+      )
+      .flatMap { response =>
         response.status match {
-          case OK        =>
-            logger.info(
-              s"$loggerContext  - Successful response with status ${response.status} from Integration Framework for eclRegistrationReference: $eclRegistrationReference"
-            )
-
-            Right(Some(response.asInstanceOf[FinancialDataResponse]))
-          case NOT_FOUND =>
-            logger.info(
-              s"$loggerContext  - Successful response with status ${response.status} from Integration Framework for eclRegistrationReference: $eclRegistrationReference"
-            )
-
-            Right(None)
+          case OK        => response.as[FinancialDataResponse].map(Some(_))
+          case NOT_FOUND => Future.successful(None)
           case _         =>
-            logger.error(
-              s"$loggerContext - Unsuccessful response from Integration Framework with response: ${response.body}"
-            )
-            Left(response.asInstanceOf[UpstreamErrorResponse])
+            response.error
         }
       }
 

@@ -21,6 +21,7 @@ import play.api.libs.json.Json
 import play.api.mvc._
 import uk.gov.hmrc.economiccrimelevyaccount.connectors.IntegrationFrameworkConnector
 import uk.gov.hmrc.economiccrimelevyreturns.controllers.actions.AuthorisedAction
+import uk.gov.hmrc.http.UpstreamErrorResponse
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.{Inject, Singleton}
@@ -41,22 +42,22 @@ class FinancialDataController @Inject() (
     integrationFramework
       .getFinancialDetails(request.eclRegistrationReference)
       .map {
-        case Left(errorResponse)  =>
-          logger.error(
-            s"$loggerContext - Integration Framework error: ${errorResponse.getMessage()} for eclReference ${request.eclRegistrationReference}"
+        case None                        =>
+          logger.info(
+            s"$loggerContext - Integration Framework : no financial data present for eclReference ${request.eclRegistrationReference}"
           )
-          Status(errorResponse.statusCode)(Json.toJson(errorResponse.getMessage()))
-        case Right(validResponse) =>
+          NotFound
+        case Some(financialDataResponse) =>
           logger.info(
             s"$loggerContext - Successful call to Integration Framework with eclReference ${request.eclRegistrationReference}"
           );
-          Ok(Json.toJson(validResponse))
+          Ok(Json.toJson(financialDataResponse))
       }
-      .recover { case e =>
+      .recover { case errorResponse: UpstreamErrorResponse =>
         logger.error(
-          s"$loggerContext - Integration Framework unexpected error: ${e.getMessage} for eclReference ${request.eclRegistrationReference}"
+          s"$loggerContext - Integration Framework unexpected error: ${errorResponse.getMessage} for eclReference ${request.eclRegistrationReference}"
         )
-        InternalServerError("Unexpected error")
+        BadGateway
       }
   }
 }
