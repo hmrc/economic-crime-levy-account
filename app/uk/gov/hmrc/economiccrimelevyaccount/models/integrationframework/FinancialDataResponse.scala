@@ -69,7 +69,9 @@ case class DocumentDetails(
   interestPostedAmount: Option[BigDecimal],
   interestAccruingAmount: Option[BigDecimal],
   interestPostedChargeRef: Option[String],
-  penaltyTotals: Option[Seq[PenaltyTotals]]
+  penaltyTotals: Option[Seq[PenaltyTotals]],
+  contractObjectNumber: Option[String],
+  contractObjectType: Option[String]
 )
 object DocumentDetails {
 
@@ -85,7 +87,9 @@ object DocumentDetails {
       (JsPath \ "documentInterestTotals" \ "interestPostedAmount").readNullable[BigDecimal] and
       (JsPath \ "documentInterestTotals" \ "interestAccruingAmount").readNullable[BigDecimal] and
       (JsPath \ "documentInterestTotals" \ "interestPostedChargeRef").readNullable[String] and
-      (JsPath \ "documentPenaltyTotals").readNullable[Seq[PenaltyTotals]]
+      (JsPath \ "documentPenaltyTotals").readNullable[Seq[PenaltyTotals]] and
+      (JsPath \ "contractObjectNumber").readNullable[String] and
+      (JsPath \ "contractObjectType").readNullable[String]
   )(DocumentDetails.apply _)
 
   implicit var writes: OWrites[DocumentDetails] = Json.writes[DocumentDetails]
