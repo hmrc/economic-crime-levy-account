@@ -24,7 +24,7 @@ import uk.gov.hmrc.economiccrimelevyaccount.models.{CustomHeaderNames, QueryPara
 import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework._
 import uk.gov.hmrc.economiccrimelevyaccount.utils.CorrelationIdGenerator
 import uk.gov.hmrc.http.HttpClient
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps, UpstreamErrorResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
 import java.time.format.DateTimeFormatter
 import java.time.LocalDate
