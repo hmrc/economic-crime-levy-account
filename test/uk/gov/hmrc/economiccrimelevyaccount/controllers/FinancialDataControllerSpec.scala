@@ -24,6 +24,7 @@ import uk.gov.hmrc.economiccrimelevyaccount.base.SpecBase
 import uk.gov.hmrc.economiccrimelevyaccount.connectors.IntegrationFrameworkConnector
 import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.{FinancialDataErrorResponse, FinancialDataResponse}
 import uk.gov.hmrc.economiccrimelevyaccount.generators.CachedArbitraries._
+import uk.gov.hmrc.http.UpstreamErrorResponse
 
 import scala.concurrent.Future
 
@@ -58,7 +59,7 @@ class FinancialDataControllerSpec extends SpecBase {
           .copy(totalisation = Some(validTotalisation), documentDetails = Some(Seq(validDocumentDetails)))
 
         when(mockFinancialDataConnector.getFinancialDetails(any())(any()))
-          .thenReturn(Future.successful(Right(response)))
+          .thenReturn(Future.successful(Some(response)))
 
         val result: Future[Result] =
           controller.getFinancialData()(fakeRequest)
@@ -70,17 +71,14 @@ class FinancialDataControllerSpec extends SpecBase {
   }
 
   "getFinancialData" should {
-    "return 500 INTERNAL_SERVER_ERROR with the JSON payload when FinancialDataErrorResponse is returned from service" in forAll {
-      financialDataErrorResponse: FinancialDataErrorResponse =>
-        when(mockFinancialDataConnector.getFinancialDetails(any())(any()))
-          .thenReturn(Future.successful(Left(financialDataErrorResponse)))
+    "return 502 BadGateway when an error is returned from integration framework" in {
+      when(mockFinancialDataConnector.getFinancialDetails(any())(any()))
+        .thenReturn(Future.failed(UpstreamErrorResponse("response body", INTERNAL_SERVER_ERROR)))
 
-        val result: Future[Result] =
-          controller.getFinancialData(fakeRequest)
+      val result: Future[Result] =
+        controller.getFinancialData(fakeRequest)
 
-        status(result) shouldBe INTERNAL_SERVER_ERROR
-
-        contentAsJson(result) shouldBe Json.toJson(financialDataErrorResponse)
+      status(result) shouldBe BAD_GATEWAY
     }
   }
 }

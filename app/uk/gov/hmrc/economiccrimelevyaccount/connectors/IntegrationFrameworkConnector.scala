@@ -18,11 +18,13 @@ package uk.gov.hmrc.economiccrimelevyaccount.connectors
 
 import play.api.Logging
 import play.api.http.HeaderNames
+import play.api.http.Status.{NOT_FOUND, OK}
 import uk.gov.hmrc.economiccrimelevyaccount.config.AppConfig
 import uk.gov.hmrc.economiccrimelevyaccount.models.{CustomHeaderNames, QueryParams}
 import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework._
 import uk.gov.hmrc.economiccrimelevyaccount.utils.CorrelationIdGenerator
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
+import uk.gov.hmrc.http.HttpClient
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
 import java.time.format.DateTimeFormatter
 import java.time.LocalDate
@@ -35,16 +37,28 @@ class IntegrationFrameworkConnector @Inject() (
   httpClient: HttpClient,
   correlationIdGenerator: CorrelationIdGenerator
 )(implicit ec: ExecutionContext)
-    extends Logging {
+    extends BaseConnector
+    with Logging {
+
+  private val loggerContext = "IntegrationFrameworkConnector"
 
   def getFinancialDetails(
     eclRegistrationReference: String
-  )(implicit hc: HeaderCarrier): Future[Either[FinancialDataErrorResponse, FinancialDataResponse]] =
-    httpClient.GET[Either[FinancialDataErrorResponse, FinancialDataResponse]](
-      s"${appConfig.integrationFrameworkUrl}/penalty/financial-data/ZECL/$eclRegistrationReference/ECL",
-      headers = integrationFrameworkHeaders,
-      queryParams = financialDetailsQueryParams
-    )
+  )(implicit hc: HeaderCarrier): Future[Option[FinancialDataResponse]] =
+    httpClient
+      .GET[HttpResponse](
+        s"${appConfig.integrationFrameworkUrl}/penalty/financial-data/ZECL/$eclRegistrationReference/ECL",
+        headers = integrationFrameworkHeaders,
+        queryParams = financialDetailsQueryParams
+      )
+      .flatMap { response =>
+        response.status match {
+          case OK        => response.as[FinancialDataResponse].map(Some(_))
+          case NOT_FOUND => Future.successful(None)
+          case _         =>
+            response.error
+        }
+      }
 
   private def financialDetailsQueryParams: Seq[(String, String)] = Seq(
     (QueryParams.DATE_FROM, LocalDate.of(2023, 1, 1).format(DateTimeFormatter.ISO_LOCAL_DATE)),
