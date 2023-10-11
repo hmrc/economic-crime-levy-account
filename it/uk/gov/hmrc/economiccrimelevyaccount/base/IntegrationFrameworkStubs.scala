@@ -6,7 +6,7 @@ import play.api.http.Status.OK
 import uk.gov.hmrc.economiccrimelevyaccount.base.WireMockHelper.stub
 import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.FinancialDataResponse
 
-trait IntegrationFrameworkStubs {  self: WireMockStubs =>
+trait IntegrationFrameworkStubs { self: WireMockStubs =>
 
   var validFinancialDetailsResponse =
     """
