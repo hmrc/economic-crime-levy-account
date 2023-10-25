@@ -23,8 +23,8 @@ import uk.gov.hmrc.economiccrimelevyaccount.config.AppConfig
 import uk.gov.hmrc.economiccrimelevyaccount.models.{CustomHeaderNames, QueryParams}
 import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework._
 import uk.gov.hmrc.economiccrimelevyaccount.utils.CorrelationIdGenerator
-import uk.gov.hmrc.http.HttpClient
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse, StringContextOps}
+import uk.gov.hmrc.http.client.HttpClientV2
 
 import java.time.format.DateTimeFormatter
 import java.time.LocalDate
@@ -34,7 +34,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class IntegrationFrameworkConnector @Inject() (
   appConfig: AppConfig,
-  httpClient: HttpClient,
+  httpClient: HttpClientV2,
   correlationIdGenerator: CorrelationIdGenerator
 )(implicit ec: ExecutionContext)
     extends BaseConnector
@@ -42,23 +42,36 @@ class IntegrationFrameworkConnector @Inject() (
 
   private val loggerContext = "IntegrationFrameworkConnector"
 
+  private def ifUrl(eclRegistrationReference: String) =
+    s"${appConfig.integrationFrameworkUrl}/penalty/financial-data/ZECL/$eclRegistrationReference/ECL"
+
+  private def ifUrl(eclRegistrationReference: String) = Url(
+    path = s"${appConfig.integrationFrameworkUrl}/penalty/financial-data/ZECL/$eclRegistrationReference/ECL",
+    query = QueryString.fromPairs("triggerId" -> messageId.value)
+  ).toStringRaw
+
   def getFinancialDetails(
     eclRegistrationReference: String
   )(implicit hc: HeaderCarrier): Future[Option[FinancialDataResponse]] =
     httpClient
-      .GET[HttpResponse](
-        s"${appConfig.integrationFrameworkUrl}/penalty/financial-data/ZECL/$eclRegistrationReference/ECL",
-        headers = integrationFrameworkHeaders,
-        queryParams = financialDetailsQueryParams
-      )
-      .flatMap { response =>
-        response.status match {
-          case OK        => response.as[FinancialDataResponse].map(Some(_))
-          case NOT_FOUND => Future.successful(None)
-          case _         =>
-            response.error
-        }
+      .get(url"${ifUrl(eclRegistrationReference)}")
+      .setHeader(integrationFrameworkHeaders: _*)
+      .executeAndDeserialiseOption[ObligationData]
+
+  httpClient
+    .GET[HttpResponse](
+      s"${appConfig.integrationFrameworkUrl}/penalty/financial-data/ZECL/$eclRegistrationReference/ECL",
+      headers = integrationFrameworkHeaders,
+      queryParams = financialDetailsQueryParams
+    )
+    .flatMap { response =>
+      response.status match {
+        case OK        => response.as[FinancialDataResponse].map(Some(_))
+        case NOT_FOUND => Future.successful(None)
+        case _         =>
+          response.error
       }
+    }
 
   private def financialDetailsQueryParams: Seq[(String, String)] = Seq(
     (QueryParams.DATE_FROM, LocalDate.of(2023, 1, 1).format(DateTimeFormatter.ISO_LOCAL_DATE)),

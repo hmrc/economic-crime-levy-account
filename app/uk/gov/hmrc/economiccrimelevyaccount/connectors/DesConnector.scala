@@ -22,7 +22,8 @@ import uk.gov.hmrc.economiccrimelevyaccount.models.CustomHeaderNames
 import uk.gov.hmrc.economiccrimelevyaccount.models.des.ObligationData
 import uk.gov.hmrc.economiccrimelevyaccount.utils.CorrelationIdGenerator
 import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 
 import java.time.{LocalDate, ZoneOffset}
 import javax.inject.{Inject, Singleton}
@@ -31,23 +32,26 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class DesConnector @Inject() (
   appConfig: AppConfig,
-  httpClient: HttpClient,
+  httpClient: HttpClientV2,
   correlationIdGenerator: CorrelationIdGenerator
-)(implicit ec: ExecutionContext) {
+)(implicit ec: ExecutionContext)
+    extends BaseConnector {
+
+  private def desHeaders: Seq[(String, String)] = Seq(
+    (HeaderNames.AUTHORIZATION, s"Bearer ${appConfig.desBearerToken}"),
+    (CustomHeaderNames.Environment, appConfig.desEnvironment),
+    (CustomHeaderNames.CorrelationId, correlationIdGenerator.generateCorrelationId)
+  )
+
+  private def desUrl(eclRegistrationReference: String) =
+    s"${appConfig.desUrl}/enterprise/obligation-data/zecl/$eclRegistrationReference/ECL?from=2022-04-01&to=${LocalDate.now(ZoneOffset.UTC).toString}"
 
   def getObligationData(
     eclRegistrationReference: String
-  )(implicit hc: HeaderCarrier): Future[Option[ObligationData]] = {
-    val desHeaders: Seq[(String, String)] = Seq(
-      (HeaderNames.AUTHORIZATION, s"Bearer ${appConfig.desBearerToken}"),
-      (CustomHeaderNames.Environment, appConfig.desEnvironment),
-      (CustomHeaderNames.CorrelationId, correlationIdGenerator.generateCorrelationId)
-    )
-
-    httpClient.GET[Option[ObligationData]](
-      s"${appConfig.desUrl}/enterprise/obligation-data/zecl/$eclRegistrationReference/ECL?from=2022-04-01&to=${LocalDate.now(ZoneOffset.UTC).toString}",
-      headers = desHeaders
-    )
-  }
+  )(implicit hc: HeaderCarrier): Future[Option[ObligationData]] =
+    httpClient
+      .get(url"${desUrl(eclRegistrationReference)}")
+      .setHeader(desHeaders: _*)
+      .executeAndDeserialiseOption[ObligationData]
 
 }
