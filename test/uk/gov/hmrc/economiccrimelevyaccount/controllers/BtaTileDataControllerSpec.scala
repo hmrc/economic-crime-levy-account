@@ -23,14 +23,14 @@ import uk.gov.hmrc.economiccrimelevyaccount.base.SpecBase
 import uk.gov.hmrc.economiccrimelevyaccount.generators.CachedArbitraries._
 import uk.gov.hmrc.economiccrimelevyaccount.models.bta.{BtaTileData, DueReturn}
 import uk.gov.hmrc.economiccrimelevyaccount.models.des._
-import uk.gov.hmrc.economiccrimelevyaccount.services.ObligationDataService
+import uk.gov.hmrc.economiccrimelevyaccount.services.DesService
 
 import java.time.LocalDate
 import scala.concurrent.Future
 
 class BtaTileDataControllerSpec extends SpecBase {
 
-  val mockObligationDataService: ObligationDataService = mock[ObligationDataService]
+  val mockObligationDataService: DesService = mock[DesService]
 
   val controller = new BtaTileDataController(
     cc,

@@ -19,7 +19,7 @@ package uk.gov.hmrc.economiccrimelevyaccount.controllers
 import play.api.Logging
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import uk.gov.hmrc.economiccrimelevyaccount.services.ObligationDataService
+import uk.gov.hmrc.economiccrimelevyaccount.services.DesService
 import uk.gov.hmrc.economiccrimelevyreturns.controllers.actions.AuthorisedAction
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
@@ -30,7 +30,7 @@ import scala.concurrent.ExecutionContext
 class ObligationDataController @Inject() (
   cc: ControllerComponents,
   authorise: AuthorisedAction,
-  obligationDataService: ObligationDataService
+  obligationDataService: DesService
 )(implicit ec: ExecutionContext)
     extends BackendController(cc)
     with Logging {

@@ -20,7 +20,7 @@ import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.economiccrimelevyaccount.models.bta.{BtaTileData, DueReturn}
 import uk.gov.hmrc.economiccrimelevyaccount.models.des.{ObligationData, Open}
-import uk.gov.hmrc.economiccrimelevyaccount.services.ObligationDataService
+import uk.gov.hmrc.economiccrimelevyaccount.services.DesService
 import uk.gov.hmrc.economiccrimelevyreturns.controllers.actions.AuthorisedAction
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
@@ -31,7 +31,7 @@ import scala.concurrent.ExecutionContext
 class BtaTileDataController @Inject() (
   cc: ControllerComponents,
   authorise: AuthorisedAction,
-  obligationDataService: ObligationDataService
+  obligationDataService: DesService
 )(implicit ec: ExecutionContext)
     extends BackendController(cc) {
 

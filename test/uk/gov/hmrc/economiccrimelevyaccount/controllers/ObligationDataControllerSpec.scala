@@ -22,13 +22,13 @@ import play.api.mvc.Result
 import uk.gov.hmrc.economiccrimelevyaccount.base.SpecBase
 import uk.gov.hmrc.economiccrimelevyaccount.generators.CachedArbitraries._
 import uk.gov.hmrc.economiccrimelevyaccount.models.des.ObligationData
-import uk.gov.hmrc.economiccrimelevyaccount.services.ObligationDataService
+import uk.gov.hmrc.economiccrimelevyaccount.services.DesService
 
 import scala.concurrent.Future
 
 class ObligationDataControllerSpec extends SpecBase {
 
-  val mockObligationDataService: ObligationDataService = mock[ObligationDataService]
+  val mockObligationDataService: DesService = mock[DesService]
 
   val controller = new ObligationDataController(
     cc,

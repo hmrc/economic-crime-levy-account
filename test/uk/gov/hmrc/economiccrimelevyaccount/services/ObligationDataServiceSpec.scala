@@ -31,7 +31,7 @@ class ObligationDataServiceSpec extends SpecBase {
   private val fixedPointInTime       = Instant.parse("2023-06-14T10:15:30.00Z")
   private val stubClock: Clock       = Clock.fixed(fixedPointInTime, ZoneId.systemDefault)
 
-  val service = new ObligationDataService(
+  val service = new DesService(
     mockDesConnector,
     stubClock
   )
