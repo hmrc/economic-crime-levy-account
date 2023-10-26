@@ -18,7 +18,7 @@ package uk.gov.hmrc.economiccrimelevyaccount.controllers
 
 import cats.data.EitherT
 import play.api.Logging
-import uk.gov.hmrc.economiccrimelevyaccount.models.errors.{BadGateway, InternalServiceError, ResponseError}
+import uk.gov.hmrc.economiccrimelevyaccount.models.errors.{BadGateway, DesSubmissionError, IntegrationFrameworkError, InternalServiceError, ResponseError}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -59,14 +59,29 @@ trait ErrorHandler extends Logging {
     def convert(error: E): ResponseError
   }
 
-//  implicit val dataRetrievalErrorConverter: Converter[DataRetrievalError] =
-//    new Converter[DataRetrievalError] {
-//      override def convert(error: DataRetrievalError): ResponseError = error match {
-//        case DataRetrievalError.NotFound(id)                            => ResponseError.notFoundError(s"Unable to find record with id: $id")
-//        case DataRetrievalError.InternalUnexpectedError(message, cause) =>
-//          ResponseError.internalServiceError(message = message, cause = cause)
-//      }
-//    }
+  implicit val desSubmissionErrorConverter: Converter[DesSubmissionError] =
+    new Converter[DesSubmissionError] {
+      override def convert(error: DesSubmissionError): ResponseError = error match {
+        case DesSubmissionError.NotFound(id)                            =>
+          ResponseError.notFoundError(s"Unable to find record with id: $id")
+        case DesSubmissionError.BadGateway(message, code)               =>
+          ResponseError.badGateway(message = message, code = code)
+        case DesSubmissionError.InternalUnexpectedError(message, cause) =>
+          ResponseError.internalServiceError(message = message, cause = cause)
+      }
+    }
+
+  implicit val Converter: Converter[IntegrationFrameworkError] =
+    new Converter[IntegrationFrameworkError] {
+      override def convert(error: IntegrationFrameworkError): ResponseError = error match {
+        case IntegrationFrameworkError.NotFound(id)                            =>
+          ResponseError.notFoundError(s"Unable to find record with id: $id")
+        case IntegrationFrameworkError.BadGateway(message, code)               =>
+          ResponseError.badGateway(message = message, code = code)
+        case IntegrationFrameworkError.InternalUnexpectedError(message, cause) =>
+          ResponseError.internalServiceError(message = message, cause = cause)
+      }
+    }
 
 //  implicit val dataValidationErrorConverter: Converter[DataValidationErrorList] =
 //    new Converter[DataValidationErrorList] {

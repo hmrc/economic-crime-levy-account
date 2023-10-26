@@ -18,6 +18,7 @@ package uk.gov.hmrc.economiccrimelevyaccount.controllers
 
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import uk.gov.hmrc.economiccrimelevyaccount.models.EclReference
 import uk.gov.hmrc.economiccrimelevyaccount.models.bta.{BtaTileData, DueReturn}
 import uk.gov.hmrc.economiccrimelevyaccount.models.des.{ObligationData, Open}
 import uk.gov.hmrc.economiccrimelevyaccount.services.DesService
@@ -33,49 +34,46 @@ class BtaTileDataController @Inject() (
   authorise: AuthorisedAction,
   obligationDataService: DesService
 )(implicit ec: ExecutionContext)
-    extends BackendController(cc) {
+    extends BackendController(cc)
+    with BaseController
+    with ErrorHandler {
 
   def getBtaTileData: Action[AnyContent] = authorise.async { implicit request =>
-    obligationDataService
-      .getObligationData(request.eclRegistrationReference)
-      .map { obligationData =>
-        val btaTileData: BtaTileData = constructBtaTileData(request.eclRegistrationReference, obligationData)
-        Ok(Json.toJson(btaTileData))
-      }
+    (for {
+      obligationData <- obligationDataService.getObligationData(request.eclReference).asResponseError
+      btaTilaData     = constructBtaTileData(request.eclReference, obligationData)
+    } yield btaTilaData).convertToResultWithJsonBody(OK)
   }
 
   private def constructBtaTileData(
-    eclRegistrationReference: String,
-    obligationData: Option[ObligationData]
-  ): BtaTileData =
-    obligationData match {
-      case None    => BtaTileData(eclRegistrationReference, None)
-      case Some(o) =>
-        val highestPriorityDueReturn = o.obligations
-          .flatMap(
-            _.obligationDetails
-              .filter(_.status == Open)
-              .sortBy(_.inboundCorrespondenceDueDate)
-          )
-          .headOption
+    eclReference: EclReference,
+    obligationData: ObligationData
+  ): BtaTileData = {
+    val highestPriorityDueReturn = obligationData.obligations
+      .flatMap(
+        _.obligationDetails
+          .filter(_.status == Open)
+          .sortBy(_.inboundCorrespondenceDueDate)
+      )
+      .headOption
 
-        highestPriorityDueReturn match {
-          case Some(obligationDetails) =>
-            BtaTileData(
-              eclRegistrationReference,
-              Some(
-                DueReturn(
-                  isOverdue = obligationDetails.isOverdue,
-                  dueDate = obligationDetails.inboundCorrespondenceDueDate,
-                  periodStartDate = obligationDetails.inboundCorrespondenceFromDate,
-                  periodEndDate = obligationDetails.inboundCorrespondenceToDate,
-                  fyStartYear = obligationDetails.inboundCorrespondenceFromDate.getYear.toString,
-                  fyEndYear = obligationDetails.inboundCorrespondenceToDate.getYear.toString
-                )
-              )
+    highestPriorityDueReturn match {
+      case Some(obligationDetails) =>
+        BtaTileData(
+          eclReference,
+          Some(
+            DueReturn(
+              isOverdue = obligationDetails.isOverdue,
+              dueDate = obligationDetails.inboundCorrespondenceDueDate,
+              periodStartDate = obligationDetails.inboundCorrespondenceFromDate,
+              periodEndDate = obligationDetails.inboundCorrespondenceToDate,
+              fyStartYear = obligationDetails.inboundCorrespondenceFromDate.getYear.toString,
+              fyEndYear = obligationDetails.inboundCorrespondenceToDate.getYear.toString
             )
-          case None                    => BtaTileData(eclRegistrationReference, None)
-        }
+          )
+        )
+      case None                    => BtaTileData(eclReference, None)
     }
+  }
 
 }

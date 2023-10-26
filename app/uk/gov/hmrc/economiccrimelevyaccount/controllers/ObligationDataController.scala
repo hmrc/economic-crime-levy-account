@@ -33,24 +33,15 @@ class ObligationDataController @Inject() (
   obligationDataService: DesService
 )(implicit ec: ExecutionContext)
     extends BackendController(cc)
-    with Logging {
+    with BaseController
+    with ErrorHandler {
 
-  private val loggerContext                 = "ObligationDataController"
   def getObligationData: Action[AnyContent] = authorise.async { implicit request =>
-    obligationDataService
-      .getObligationData(request.eclRegistrationReference)
-      .map {
-        case Some(obligationData) =>
-          logger.info(
-            s"$loggerContext - Successful call to DES for obligation data for eclReference: ${request.eclRegistrationReference}"
-          )
-          Ok(Json.toJson(obligationData))
-        case None                 =>
-          logger.error(
-            s"$loggerContext - No obligation data found for eclReference ${request.eclRegistrationReference}"
-          )
-          NotFound("No obligation data found")
-      }
+    (for {
+      obligationData <- obligationDataService
+                          .getObligationData(request.eclReference)
+                          .asResponseError
+    } yield obligationData).convertToResultWithJsonBody(OK)
   }
 
 }

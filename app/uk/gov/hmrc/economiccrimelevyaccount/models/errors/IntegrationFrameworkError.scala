@@ -14,29 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.economiccrimelevyaccount.models.bta
+package uk.gov.hmrc.economiccrimelevyaccount.models.errors
 
-import play.api.libs.json.{Format, Json, OFormat}
 import uk.gov.hmrc.economiccrimelevyaccount.models.EclReference
 
-import java.time.LocalDate
+trait IntegrationFrameworkError
 
-case class DueReturn(
-  isOverdue: Boolean,
-  dueDate: LocalDate,
-  periodStartDate: LocalDate,
-  periodEndDate: LocalDate,
-  fyStartYear: String,
-  fyEndYear: String
-)
-
-object DueReturn {
-  implicit val format: OFormat[DueReturn] = Json.format[DueReturn]
-  implicitly[Format[LocalDate]]
-}
-
-case class BtaTileData(eclReference: EclReference, dueReturn: Option[DueReturn])
-
-object BtaTileData {
-  implicit val format: OFormat[BtaTileData] = Json.format[BtaTileData]
+object IntegrationFrameworkError {
+  case class InternalUnexpectedError(message: String, cause: Option[Throwable]) extends IntegrationFrameworkError
+  case class BadGateway(reason: String, code: Int) extends IntegrationFrameworkError
+  case class NotFound(eclReference: EclReference) extends IntegrationFrameworkError
 }

@@ -21,7 +21,7 @@ import play.api.Logging
 import play.api.http.HeaderNames
 import play.api.http.Status.{NOT_FOUND, OK}
 import uk.gov.hmrc.economiccrimelevyaccount.config.AppConfig
-import uk.gov.hmrc.economiccrimelevyaccount.models.{CustomHeaderNames, QueryParams}
+import uk.gov.hmrc.economiccrimelevyaccount.models.{CustomHeaderNames, EclReference, QueryParams}
 import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework._
 import uk.gov.hmrc.economiccrimelevyaccount.utils.CorrelationIdGenerator
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
@@ -47,20 +47,12 @@ class IntegrationFrameworkConnector @Inject() (
   ).toStringRaw
 
   def getFinancialDetails(
-    eclRegistrationReference: String
-  )(implicit hc: HeaderCarrier): Future[Option[FinancialDataResponse]] =
+    eclReference: EclReference
+  )(implicit hc: HeaderCarrier): Future[FinancialDataResponse] =
     httpClient
-      .get(url"${ifUrl(eclRegistrationReference)}")
+      .get(url"${ifUrl(eclReference.value)}")
       .setHeader(integrationFrameworkHeaders: _*)
-      .execute[HttpResponse]
-      .flatMap { response =>
-        response.status match {
-          case OK        => response.as[FinancialDataResponse].map(Some(_))
-          case NOT_FOUND => Future.successful(None)
-          case _         =>
-            response.error
-        }
-      }
+      .executeAndDeserialise[FinancialDataResponse]
 
   private def financialDetailsQueryParams: Seq[(String, String)] = Seq(
     (

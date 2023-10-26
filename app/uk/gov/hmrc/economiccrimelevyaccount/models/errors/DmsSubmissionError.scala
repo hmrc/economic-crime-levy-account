@@ -16,9 +16,12 @@
 
 package uk.gov.hmrc.economiccrimelevyaccount.models.errors
 
+import uk.gov.hmrc.economiccrimelevyaccount.models.EclReference
+
 trait DesSubmissionError
 
 object DesSubmissionError {
   case class InternalUnexpectedError(message: String, cause: Option[Throwable]) extends DesSubmissionError
   case class BadGateway(reason: String, code: Int) extends DesSubmissionError
+  case class NotFound(eclReference: EclReference) extends DesSubmissionError
 }

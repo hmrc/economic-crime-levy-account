@@ -55,17 +55,6 @@ trait BaseConnector {
           }
         }
 
-    def executeAndDeserialiseOption[T](implicit ec: ExecutionContext, reads: Reads[T]): Future[Option[T]] =
-      requestBuilder
-        .execute[HttpResponse]
-        .flatMap { response =>
-          response.status match {
-            case OK | CREATED | ACCEPTED => response.asOption[T]
-            case _                       =>
-              response.error
-          }
-        }
-
     def executeAndExpect(expected: Int)(implicit ec: ExecutionContext): Future[Unit] =
       requestBuilder
         .execute[HttpResponse]

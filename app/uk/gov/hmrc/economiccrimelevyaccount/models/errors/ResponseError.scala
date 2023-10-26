@@ -95,7 +95,6 @@ object BadGateway {
 }
 
 object UpstreamServiceError {
-
   def causedBy(cause: UpstreamErrorResponse): ResponseError =
     ResponseError.upstreamServiceError(cause = cause)
 }

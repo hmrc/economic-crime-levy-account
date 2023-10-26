@@ -18,7 +18,7 @@ package uk.gov.hmrc.economiccrimelevyaccount.connectors
 
 import play.api.http.HeaderNames
 import uk.gov.hmrc.economiccrimelevyaccount.config.AppConfig
-import uk.gov.hmrc.economiccrimelevyaccount.models.CustomHeaderNames
+import uk.gov.hmrc.economiccrimelevyaccount.models.{CustomHeaderNames, EclReference}
 import uk.gov.hmrc.economiccrimelevyaccount.models.des.ObligationData
 import uk.gov.hmrc.economiccrimelevyaccount.utils.CorrelationIdGenerator
 import uk.gov.hmrc.http.HttpReads.Implicits._
@@ -47,11 +47,11 @@ class DesConnector @Inject() (
     s"${appConfig.desUrl}/enterprise/obligation-data/zecl/$eclRegistrationReference/ECL?from=2022-04-01&to=${LocalDate.now(ZoneOffset.UTC).toString}"
 
   def getObligationData(
-    eclRegistrationReference: String
-  )(implicit hc: HeaderCarrier): Future[Option[ObligationData]] =
+    eclRegistrationReference: EclReference
+  )(implicit hc: HeaderCarrier): Future[ObligationData] =
     httpClient
-      .get(url"${desUrl(eclRegistrationReference)}")
+      .get(url"${desUrl(eclRegistrationReference.value)}")
       .setHeader(desHeaders: _*)
-      .executeAndDeserialiseOption[ObligationData]
+      .executeAndDeserialise[ObligationData]
 
 }

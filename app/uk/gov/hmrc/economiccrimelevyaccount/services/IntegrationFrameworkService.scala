@@ -17,13 +17,13 @@
 package uk.gov.hmrc.economiccrimelevyaccount.services
 
 import cats.data.EitherT
-import play.api.Logging
+import play.api.http.Status.NOT_FOUND
 import uk.gov.hmrc.economiccrimelevyaccount.connectors.IntegrationFrameworkConnector
-import uk.gov.hmrc.economiccrimelevyaccount.models.des.ObligationData
-import uk.gov.hmrc.economiccrimelevyaccount.models.errors.DesSubmissionError
+import uk.gov.hmrc.economiccrimelevyaccount.models.EclReference
+import uk.gov.hmrc.economiccrimelevyaccount.models.errors.IntegrationFrameworkError
+import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.FinancialDataResponse
 import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
 
-import java.time.Clock
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
@@ -33,19 +33,21 @@ class IntegrationFrameworkService @Inject() (
 )(implicit ec: ExecutionContext) {
 
   def getFinancialData(
-    eclRegistrationReference: String
-  )(implicit hc: HeaderCarrier): EitherT[Future, DesSubmissionError, Option[ObligationData]] =
+    eclReference: EclReference
+  )(implicit hc: HeaderCarrier): EitherT[Future, IntegrationFrameworkError, FinancialDataResponse] =
     EitherT {
       ifConnector
-        .getFinancialDetails(eclRegistrationReference)
+        .getFinancialDetails(eclReference)
         .map(Right(_))
         .recover {
+          case UpstreamErrorResponse(_, NOT_FOUND, _, _) =>
+            Left(IntegrationFrameworkError.NotFound(eclReference))
           case error @ UpstreamErrorResponse(message, code, _, _)
               if UpstreamErrorResponse.Upstream5xxResponse
                 .unapply(error)
                 .isDefined || UpstreamErrorResponse.Upstream4xxResponse.unapply(error).isDefined =>
-            Left(DesSubmissionError.BadGateway(reason = message, code = code))
-          case NonFatal(thr) => Left(DesSubmissionError.InternalUnexpectedError(thr.getMessage, Some(thr)))
+            Left(IntegrationFrameworkError.BadGateway(reason = message, code = code))
+          case NonFatal(thr)                             => Left(IntegrationFrameworkError.InternalUnexpectedError(thr.getMessage, Some(thr)))
         }
     }
 
