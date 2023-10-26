@@ -16,9 +16,11 @@
 
 package uk.gov.hmrc.economiccrimelevyaccount.controllers
 
+import cats.data.EitherT
 import play.api.libs.json.Json
 import play.api.mvc.Result
 import play.api.mvc.Results.{Ok, Status}
+import uk.gov.hmrc.economiccrimelevyaccount.models.errors.ResponseError
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -46,10 +48,10 @@ trait BaseController {
     def getResponse(response: R): Result
   }
 
-  implicit val submitEclReturnResponse: Converter[SubmitEclReturnResponse] =
-    new Converter[SubmitEclReturnResponse] {
-      override def getResponse(response: SubmitEclReturnResponse) = Ok(Json.toJson(response))
-    }
+//  implicit val submitEclReturnResponse: Converter[SubmitEclReturnResponse] =
+//    new Converter[SubmitEclReturnResponse] {
+//      override def getResponse(response: SubmitEclReturnResponse) = Ok(Json.toJson(response))
+//    }
 
   implicit val unitResponse: Converter[Unit] =
     new Converter[Unit] {

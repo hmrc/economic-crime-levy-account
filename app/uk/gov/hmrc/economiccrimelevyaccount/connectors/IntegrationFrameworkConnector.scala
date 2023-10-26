@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.economiccrimelevyaccount.connectors
 
+import io.lemonlabs.uri.{QueryString, Url}
 import play.api.Logging
 import play.api.http.HeaderNames
 import play.api.http.Status.{NOT_FOUND, OK}
@@ -23,7 +24,7 @@ import uk.gov.hmrc.economiccrimelevyaccount.config.AppConfig
 import uk.gov.hmrc.economiccrimelevyaccount.models.{CustomHeaderNames, QueryParams}
 import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework._
 import uk.gov.hmrc.economiccrimelevyaccount.utils.CorrelationIdGenerator
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse, StringContextOps}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.http.client.HttpClientV2
 
 import java.time.format.DateTimeFormatter
@@ -40,14 +41,9 @@ class IntegrationFrameworkConnector @Inject() (
     extends BaseConnector
     with Logging {
 
-  private val loggerContext = "IntegrationFrameworkConnector"
-
-  private def ifUrl(eclRegistrationReference: String) =
-    s"${appConfig.integrationFrameworkUrl}/penalty/financial-data/ZECL/$eclRegistrationReference/ECL"
-
   private def ifUrl(eclRegistrationReference: String) = Url(
     path = s"${appConfig.integrationFrameworkUrl}/penalty/financial-data/ZECL/$eclRegistrationReference/ECL",
-    query = QueryString.fromPairs("triggerId" -> messageId.value)
+    query = QueryString.fromTraversable(financialDetailsQueryParams)
   ).toStringRaw
 
   def getFinancialDetails(
@@ -56,25 +52,21 @@ class IntegrationFrameworkConnector @Inject() (
     httpClient
       .get(url"${ifUrl(eclRegistrationReference)}")
       .setHeader(integrationFrameworkHeaders: _*)
-      .executeAndDeserialiseOption[ObligationData]
-
-  httpClient
-    .GET[HttpResponse](
-      s"${appConfig.integrationFrameworkUrl}/penalty/financial-data/ZECL/$eclRegistrationReference/ECL",
-      headers = integrationFrameworkHeaders,
-      queryParams = financialDetailsQueryParams
-    )
-    .flatMap { response =>
-      response.status match {
-        case OK        => response.as[FinancialDataResponse].map(Some(_))
-        case NOT_FOUND => Future.successful(None)
-        case _         =>
-          response.error
+      .execute[HttpResponse]
+      .flatMap { response =>
+        response.status match {
+          case OK        => response.as[FinancialDataResponse].map(Some(_))
+          case NOT_FOUND => Future.successful(None)
+          case _         =>
+            response.error
+        }
       }
-    }
 
   private def financialDetailsQueryParams: Seq[(String, String)] = Seq(
-    (QueryParams.DATE_FROM, LocalDate.of(2023, 1, 1).format(DateTimeFormatter.ISO_LOCAL_DATE)),
+    (
+      QueryParams.DATE_FROM,
+      LocalDate.of(2023, 1, 1).format(DateTimeFormatter.ISO_LOCAL_DATE)
+    ), //TODO: should we be using the current tax year here
     (QueryParams.DATE_TO, LocalDate.now().plusYears(1).format(DateTimeFormatter.ISO_LOCAL_DATE)),
     (QueryParams.ACCRUING_INTEREST, "true"),
     (QueryParams.CLEARED_ITEMS, "true"),
