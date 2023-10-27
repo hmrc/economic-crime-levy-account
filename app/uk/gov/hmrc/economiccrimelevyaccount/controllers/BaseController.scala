@@ -21,7 +21,7 @@ import play.api.libs.json.{Json, Writes}
 import play.api.mvc.Result
 import play.api.mvc.Results.{Ok, Status}
 import uk.gov.hmrc.economiccrimelevyaccount.models.errors.ResponseError
-import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.FinancialDataResponse
+import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.FinancialData
 
 import scala.concurrent.{ExecutionContext, Future}
 

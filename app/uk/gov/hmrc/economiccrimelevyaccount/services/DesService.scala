@@ -16,7 +16,9 @@
 
 package uk.gov.hmrc.economiccrimelevyaccount.services
 
+import akka.event.Logging
 import cats.data.EitherT
+import play.api.Logging
 import play.api.http.Status.NOT_FOUND
 import uk.gov.hmrc.economiccrimelevyaccount.connectors.DesConnector
 import uk.gov.hmrc.economiccrimelevyaccount.models.EclReference
@@ -53,17 +55,19 @@ class DesService @Inject() (
         }
     }
 
-  private def getObligationDataDueLessThanYearFromNow: ObligationData => ObligationData =
+  private val getObligationDataDueLessThanYearFromNow: ObligationData => ObligationData = {
+    def oneYearFromNow = LocalDate.ofInstant(Instant.now(clock), ZoneOffset.UTC).plusYears(1)
+
     obligationData => {
       val obligationDetails = obligationData.obligations
         .flatMap(_.obligationDetails)
-        .filterNot(
+        .filter(
           _.inboundCorrespondenceDueDate
-            .isAfter(LocalDate.ofInstant(Instant.now(clock), ZoneOffset.UTC).plusYears(1))
+            .isBefore(oneYearFromNow)
         )
       val identification    = obligationData.obligations.headOption.flatMap(_.identification)
 
       ObligationData(Seq(Obligation(identification, obligationDetails)))
     }
-
+  }
 }

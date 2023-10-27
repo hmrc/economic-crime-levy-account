@@ -21,7 +21,7 @@ import org.scalacheck.{Arbitrary, Gen}
 import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier, Enrolments}
 import uk.gov.hmrc.economiccrimelevyaccount.generators.CachedArbitraries._
 import uk.gov.hmrc.economiccrimelevyaccount.models.eacd.EclEnrolment
-import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.{DocumentDetails, FinancialDataResponse, LineItemDetails, PenaltyTotals, Totalisation}
+import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.{DocumentDetails, FinancialData, LineItemDetails, NewCharge, PenaltyTotals, Totalisation}
 
 import java.time.{Instant, LocalDate}
 
@@ -29,7 +29,7 @@ case class EnrolmentsWithEcl(enrolments: Enrolments)
 
 case class EnrolmentsWithoutEcl(enrolments: Enrolments)
 
-case class ValidFinancialDataResponse(financialDataResponse: FinancialDataResponse)
+case class ValidFinancialDataResponse(financialDataResponse: FinancialData)
 
 trait EclTestData {
 
@@ -75,7 +75,7 @@ trait EclTestData {
       val randomBigDecimal = Some(BigDecimal(randomNumber.toString))
 
       ValidFinancialDataResponse(
-        FinancialDataResponse(
+        FinancialData(
           totalisation = Some(
             totalisation.copy(
               totalAccountBalance = randomBigDecimal,
@@ -90,7 +90,7 @@ trait EclTestData {
           documentDetails = Some(
             Seq(
               documentDetails.copy(
-                documentType = Some("TRM New Charge"),
+                documentType = Some(NewCharge),
                 chargeReferenceNumber = Some("XMECL0000000001"),
                 postingDate = Some(postingDateArb.toString),
                 issueDate = Some(issueDateArb.toString),

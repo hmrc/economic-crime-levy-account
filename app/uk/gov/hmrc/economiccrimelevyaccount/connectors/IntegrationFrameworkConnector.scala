@@ -52,12 +52,12 @@ class IntegrationFrameworkConnector @Inject() (
 
   def getFinancialDetails(
     eclReference: EclReference
-  )(implicit hc: HeaderCarrier): Future[FinancialDataResponse] =
-    retryFor[FinancialDataResponse]("Integration framework - financial data")(retryCondition) {
+  )(implicit hc: HeaderCarrier): Future[FinancialData] =
+    retryFor[FinancialData]("Integration framework - financial data")(retryCondition) {
       httpClient
         .get(url"${ifUrl(eclReference.value)}")
         .setHeader(integrationFrameworkHeaders: _*)
-        .executeAndDeserialise[FinancialDataResponse]
+        .executeAndDeserialise[FinancialData]
     }
 
   private def financialDetailsQueryParams: Seq[(String, String)] = Seq(

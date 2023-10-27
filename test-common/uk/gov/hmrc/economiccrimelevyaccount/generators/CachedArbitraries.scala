@@ -21,7 +21,7 @@ import org.scalacheck.Arbitrary
 import org.scalacheck.derive.MkArbitrary
 import uk.gov.hmrc.economiccrimelevyaccount.EclTestData
 import uk.gov.hmrc.economiccrimelevyaccount.models.des.{ObligationData, ObligationStatus}
-import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.{FinancialDataErrorResponse, FinancialDataResponse}
+import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.{FinancialDataErrorResponse, FinancialData}
 import uk.gov.hmrc.economiccrimelevyaccount.models.des.ObligationDetails
 
 object CachedArbitraries extends EclTestData with Generators {
@@ -29,8 +29,8 @@ object CachedArbitraries extends EclTestData with Generators {
   private def mkArb[T](implicit mkArb: MkArbitrary[T]): Arbitrary[T] = MkArbitrary[T].arbitrary
 
   implicit lazy val arbEitherErrorResponseOrDataResponse
-    : Arbitrary[Either[FinancialDataErrorResponse, FinancialDataResponse]]               = mkArb
-  implicit lazy val arbFinancialDataResponse: Arbitrary[FinancialDataResponse]           = mkArb
+    : Arbitrary[Either[FinancialDataErrorResponse, FinancialData]]               = mkArb
+  implicit lazy val arbFinancialDataResponse: Arbitrary[FinancialData]           = mkArb
   implicit lazy val arbFinancialDataErrorResponse: Arbitrary[FinancialDataErrorResponse] = mkArb
   implicit lazy val arbOptObligationData: Arbitrary[Option[ObligationData]]              = mkArb
   implicit lazy val arbObligationData: Arbitrary[ObligationData]                         = mkArb

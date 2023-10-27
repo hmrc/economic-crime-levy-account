@@ -22,7 +22,7 @@ import play.api.mvc.Result
 import uk.gov.hmrc.economiccrimelevyaccount.ValidFinancialDataResponse
 import uk.gov.hmrc.economiccrimelevyaccount.base.SpecBase
 import uk.gov.hmrc.economiccrimelevyaccount.connectors.IntegrationFrameworkConnector
-import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.{FinancialDataErrorResponse, FinancialDataResponse}
+import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.{FinancialDataErrorResponse, FinancialData}
 import uk.gov.hmrc.economiccrimelevyaccount.generators.CachedArbitraries._
 import uk.gov.hmrc.http.UpstreamErrorResponse
 

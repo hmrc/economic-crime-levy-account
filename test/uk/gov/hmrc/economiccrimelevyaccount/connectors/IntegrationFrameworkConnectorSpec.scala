@@ -22,7 +22,7 @@ import play.api.http.HeaderNames
 import play.api.libs.json.Json
 import uk.gov.hmrc.economiccrimelevyaccount.base.SpecBase
 import uk.gov.hmrc.economiccrimelevyaccount.models.CustomHeaderNames
-import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.FinancialDataResponse
+import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.FinancialData
 import uk.gov.hmrc.economiccrimelevyaccount.utils.CorrelationIdHelper
 import uk.gov.hmrc.http.{HttpClient, HttpResponse}
 import uk.gov.hmrc.economiccrimelevyaccount.generators.CachedArbitraries._
@@ -39,7 +39,7 @@ class IntegrationFrameworkConnectorSpec extends SpecBase {
       (
         eclRegistrationReference: String,
         correlationId: String,
-        financialDataResponse: FinancialDataResponse
+        financialDataResponse: FinancialData
       ) =>
         val expectedUrl =
           s"${appConfig.integrationFrameworkUrl}/penalty/financial-data/ZECL/$eclRegistrationReference/ECL"
@@ -68,7 +68,7 @@ class IntegrationFrameworkConnectorSpec extends SpecBase {
         val result = await(connector.getFinancialDetails(eclRegistrationReference))
 
         result match {
-          case Some(result) => result.isInstanceOf[FinancialDataResponse] shouldBe true
+          case Some(result) => result.isInstanceOf[FinancialData] shouldBe true
           case _            => fail("expected FinancialDataResponse to be returned")
         }
 

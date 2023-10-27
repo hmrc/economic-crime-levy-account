@@ -17,11 +17,13 @@
 package uk.gov.hmrc.economiccrimelevyaccount.services
 
 import cats.data.EitherT
+import play.api.Logging
 import play.api.http.Status.NOT_FOUND
 import uk.gov.hmrc.economiccrimelevyaccount.connectors.IntegrationFrameworkConnector
 import uk.gov.hmrc.economiccrimelevyaccount.models.EclReference
 import uk.gov.hmrc.economiccrimelevyaccount.models.errors.IntegrationFrameworkError
-import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.FinancialDataResponse
+import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.DocumentType.Other
+import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.{DocumentType, FinancialData}
 import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
 
 import javax.inject.Inject
@@ -30,25 +32,47 @@ import scala.util.control.NonFatal
 
 class IntegrationFrameworkService @Inject() (
   ifConnector: IntegrationFrameworkConnector
-)(implicit ec: ExecutionContext) {
+)(implicit ec: ExecutionContext)
+    extends Logging {
 
   def getFinancialData(
     eclReference: EclReference
-  )(implicit hc: HeaderCarrier): EitherT[Future, IntegrationFrameworkError, FinancialDataResponse] =
+  )(implicit hc: HeaderCarrier): EitherT[Future, IntegrationFrameworkError, FinancialData] =
     EitherT {
-      ifConnector
-        .getFinancialDetails(eclReference)
-        .map(Right(_))
-        .recover {
-          case UpstreamErrorResponse(_, NOT_FOUND, _, _) =>
-            Left(IntegrationFrameworkError.NotFound(eclReference))
-          case error @ UpstreamErrorResponse(message, code, _, _)
-              if UpstreamErrorResponse.Upstream5xxResponse
-                .unapply(error)
-                .isDefined || UpstreamErrorResponse.Upstream4xxResponse.unapply(error).isDefined =>
-            Left(IntegrationFrameworkError.BadGateway(reason = message, code = code))
-          case NonFatal(thr)                             => Left(IntegrationFrameworkError.InternalUnexpectedError(thr.getMessage, Some(thr)))
-        }
+      (for {
+        financialData <- ifConnector.getFinancialDetails(eclReference)
+        filteredResult = filterOutUnknownDocumentTypes(financialData)
+        _              = logFinancialDataDetails(eclReference, financialData)
+      } yield Right(filteredResult)).recover {
+        case UpstreamErrorResponse(_, NOT_FOUND, _, _) =>
+          Left(IntegrationFrameworkError.NotFound(eclReference))
+        case error @ UpstreamErrorResponse(message, code, _, _)
+            if UpstreamErrorResponse.Upstream5xxResponse
+              .unapply(error)
+              .isDefined || UpstreamErrorResponse.Upstream4xxResponse.unapply(error).isDefined =>
+          Left(IntegrationFrameworkError.BadGateway(reason = message, code = code))
+        case NonFatal(thr)                             => Left(IntegrationFrameworkError.InternalUnexpectedError(thr.getMessage, Some(thr)))
+      }
     }
+
+  private val getDocumentTypesOption: FinancialData => Option[Seq[Option[DocumentType]]] = { financialData =>
+    financialData.documentDetails.map(documentDetailList => documentDetailList.map(_.documentType))
+  }
+
+  private def logFinancialDataDetails(eclReference: EclReference, financialData: FinancialData): Unit =
+    logger.info(s"""
+         | Financial data details
+         | ECL Reference: ${eclReference.value}
+         | Charge types:  ${getDocumentTypesOption(financialData).getOrElse("N/A")}
+    )}
+         |""".stripMargin)
+
+  private def filterOutUnknownDocumentTypes(financialData: FinancialData): FinancialData = {
+    val documentsWithKnownTypes = financialData.documentDetails.map(documentDetailsList =>
+      documentDetailsList.filterNot(_.documentType.exists(_.isInstanceOf[Other]))
+    )
+
+    FinancialData(financialData.totalisation, documentsWithKnownTypes)
+  }
 
 }
