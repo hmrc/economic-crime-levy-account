@@ -16,14 +16,17 @@
 
 package uk.gov.hmrc.economiccrimelevyaccount.connectors
 
+import akka.actor.ActorSystem
+import com.typesafe.config.Config
+import play.api.Logging
 import play.api.http.HeaderNames
 import uk.gov.hmrc.economiccrimelevyaccount.config.AppConfig
 import uk.gov.hmrc.economiccrimelevyaccount.models.{CustomHeaderNames, EclReference}
 import uk.gov.hmrc.economiccrimelevyaccount.models.des.ObligationData
-import uk.gov.hmrc.economiccrimelevyaccount.utils.CorrelationIdGenerator
+import uk.gov.hmrc.economiccrimelevyaccount.utils.CorrelationIdHelper
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
+import uk.gov.hmrc.http.{HeaderCarrier, Retries, StringContextOps}
 
 import java.time.{LocalDate, ZoneOffset}
 import javax.inject.{Inject, Singleton}
@@ -33,14 +36,16 @@ import scala.concurrent.{ExecutionContext, Future}
 class DesConnector @Inject() (
   appConfig: AppConfig,
   httpClient: HttpClientV2,
-  correlationIdGenerator: CorrelationIdGenerator
+  override val configuration: Config,
+  override val actorSystem: ActorSystem
 )(implicit ec: ExecutionContext)
-    extends BaseConnector {
+    extends BaseConnector
+    with Retries
+    with Logging {
 
-  private def desHeaders: Seq[(String, String)] = Seq(
+  private def desHeaders(implicit hc: HeaderCarrier): Seq[(String, String)] = Seq(
     (HeaderNames.AUTHORIZATION, s"Bearer ${appConfig.desBearerToken}"),
-    (CustomHeaderNames.Environment, appConfig.desEnvironment),
-    (CustomHeaderNames.CorrelationId, correlationIdGenerator.generateCorrelationId)
+    (CustomHeaderNames.Environment, appConfig.desEnvironment)
   )
 
   private def desUrl(eclRegistrationReference: String) =
@@ -49,9 +54,11 @@ class DesConnector @Inject() (
   def getObligationData(
     eclRegistrationReference: EclReference
   )(implicit hc: HeaderCarrier): Future[ObligationData] =
-    httpClient
-      .get(url"${desUrl(eclRegistrationReference.value)}")
-      .setHeader(desHeaders: _*)
-      .executeAndDeserialise[ObligationData]
+    retryFor[ObligationData]("DES - obligation data")(retryCondition) {
+      httpClient
+        .get(url"${desUrl(eclRegistrationReference.value)}")
+        .setHeader(desHeaders: _*)
+        .executeAndDeserialise[ObligationData]
+    }
 
 }

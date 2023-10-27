@@ -23,7 +23,7 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.economiccrimelevyaccount.base.SpecBase
 import uk.gov.hmrc.economiccrimelevyaccount.models.CustomHeaderNames
 import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.FinancialDataResponse
-import uk.gov.hmrc.economiccrimelevyaccount.utils.CorrelationIdGenerator
+import uk.gov.hmrc.economiccrimelevyaccount.utils.CorrelationIdHelper
 import uk.gov.hmrc.http.{HttpClient, HttpResponse}
 import uk.gov.hmrc.economiccrimelevyaccount.generators.CachedArbitraries._
 
@@ -31,7 +31,7 @@ import scala.concurrent.Future
 
 class IntegrationFrameworkConnectorSpec extends SpecBase {
   val mockHttpClient: HttpClient                         = mock[HttpClient]
-  val mockCorrelationIdGenerator: CorrelationIdGenerator = mock[CorrelationIdGenerator]
+  val mockCorrelationIdGenerator: CorrelationIdHelper = mock[CorrelationIdHelper]
   val connector                                          = new IntegrationFrameworkConnector(appConfig, mockHttpClient, mockCorrelationIdGenerator)
 
   "getFinancialDetails" should {
@@ -50,7 +50,7 @@ class IntegrationFrameworkConnectorSpec extends SpecBase {
           (CustomHeaderNames.CorrelationId, correlationId)
         )
 
-        when(mockCorrelationIdGenerator.generateCorrelationId).thenReturn(correlationId)
+        when(mockCorrelationIdGenerator.getCorrelationId).thenReturn(correlationId)
 
         when(
           mockHttpClient.GET[HttpResponse](

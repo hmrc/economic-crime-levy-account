@@ -22,7 +22,9 @@ import uk.gov.hmrc.economiccrimelevyaccount.models.EclReference
 import uk.gov.hmrc.economiccrimelevyaccount.models.bta.{BtaTileData, DueReturn}
 import uk.gov.hmrc.economiccrimelevyaccount.models.des.{ObligationData, Open}
 import uk.gov.hmrc.economiccrimelevyaccount.services.DesService
+import uk.gov.hmrc.economiccrimelevyaccount.utils.CorrelationIdHelper
 import uk.gov.hmrc.economiccrimelevyreturns.controllers.actions.AuthorisedAction
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.{Inject, Singleton}
@@ -36,9 +38,11 @@ class BtaTileDataController @Inject() (
 )(implicit ec: ExecutionContext)
     extends BackendController(cc)
     with BaseController
-    with ErrorHandler {
+    with ErrorHandler
+    with CorrelationIdHelper {
 
   def getBtaTileData: Action[AnyContent] = authorise.async { implicit request =>
+    implicit val hc: HeaderCarrier = getOrCreateCorrelationID(request)
     (for {
       obligationData <- obligationDataService.getObligationData(request.eclReference).asResponseError
       btaTilaData     = constructBtaTileData(request.eclReference, obligationData)

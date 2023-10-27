@@ -20,7 +20,9 @@ import play.api.mvc._
 import uk.gov.hmrc.economiccrimelevyaccount.services.IntegrationFrameworkService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.economiccrimelevyaccount.controllers.BaseController
+import uk.gov.hmrc.economiccrimelevyaccount.utils.CorrelationIdHelper
 import uk.gov.hmrc.economiccrimelevyreturns.controllers.actions.AuthorisedAction
+import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
@@ -33,9 +35,11 @@ class FinancialDataController @Inject() (
 )(implicit ec: ExecutionContext)
     extends BackendController(cc)
     with BaseController
-    with ErrorHandler {
+    with ErrorHandler
+    with CorrelationIdHelper {
 
   def getFinancialData: Action[AnyContent] = authorise.async { implicit request =>
+    implicit val hc: HeaderCarrier = getOrCreateCorrelationID(request)
     (for {
       financialData <- integrationFrameworkService
                          .getFinancialData(request.eclReference)

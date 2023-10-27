@@ -16,15 +16,17 @@
 
 package uk.gov.hmrc.economiccrimelevyaccount.connectors
 
+import akka.actor.ActorSystem
+import com.typesafe.config.Config
 import io.lemonlabs.uri.{QueryString, Url}
 import play.api.Logging
 import play.api.http.HeaderNames
-import play.api.http.Status.{NOT_FOUND, OK}
 import uk.gov.hmrc.economiccrimelevyaccount.config.AppConfig
+import uk.gov.hmrc.economiccrimelevyaccount.models.des.ObligationData
 import uk.gov.hmrc.economiccrimelevyaccount.models.{CustomHeaderNames, EclReference, QueryParams}
 import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework._
-import uk.gov.hmrc.economiccrimelevyaccount.utils.CorrelationIdGenerator
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
+import uk.gov.hmrc.economiccrimelevyaccount.utils.CorrelationIdHelper
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, Retries, StringContextOps, UpstreamErrorResponse}
 import uk.gov.hmrc.http.client.HttpClientV2
 
 import java.time.format.DateTimeFormatter
@@ -36,9 +38,11 @@ import scala.concurrent.{ExecutionContext, Future}
 class IntegrationFrameworkConnector @Inject() (
   appConfig: AppConfig,
   httpClient: HttpClientV2,
-  correlationIdGenerator: CorrelationIdGenerator
+  override val configuration: Config,
+  override val actorSystem: ActorSystem
 )(implicit ec: ExecutionContext)
     extends BaseConnector
+    with Retries
     with Logging {
 
   private def ifUrl(eclRegistrationReference: String) = Url(
@@ -49,10 +53,12 @@ class IntegrationFrameworkConnector @Inject() (
   def getFinancialDetails(
     eclReference: EclReference
   )(implicit hc: HeaderCarrier): Future[FinancialDataResponse] =
-    httpClient
-      .get(url"${ifUrl(eclReference.value)}")
-      .setHeader(integrationFrameworkHeaders: _*)
-      .executeAndDeserialise[FinancialDataResponse]
+    retryFor[FinancialDataResponse]("Integration framework - financial data")(retryCondition) {
+      httpClient
+        .get(url"${ifUrl(eclReference.value)}")
+        .setHeader(integrationFrameworkHeaders: _*)
+        .executeAndDeserialise[FinancialDataResponse]
+    }
 
   private def financialDetailsQueryParams: Seq[(String, String)] = Seq(
     (
@@ -73,7 +79,6 @@ class IntegrationFrameworkConnector @Inject() (
 
   private def integrationFrameworkHeaders: Seq[(String, String)] = Seq(
     (HeaderNames.AUTHORIZATION, s"Bearer ${appConfig.integrationFrameworkBearerToken}"),
-    (CustomHeaderNames.Environment, appConfig.integrationFrameworkEnvironment),
-    (CustomHeaderNames.CorrelationId, correlationIdGenerator.generateCorrelationId)
+    (CustomHeaderNames.Environment, appConfig.integrationFrameworkEnvironment)
   )
 }

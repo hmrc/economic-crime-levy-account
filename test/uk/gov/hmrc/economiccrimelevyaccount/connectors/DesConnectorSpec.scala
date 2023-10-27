@@ -23,7 +23,7 @@ import uk.gov.hmrc.economiccrimelevyaccount.base.SpecBase
 import uk.gov.hmrc.economiccrimelevyaccount.generators.CachedArbitraries.arbOptObligationData
 import uk.gov.hmrc.economiccrimelevyaccount.models.CustomHeaderNames
 import uk.gov.hmrc.economiccrimelevyaccount.models.des.ObligationData
-import uk.gov.hmrc.economiccrimelevyaccount.utils.CorrelationIdGenerator
+import uk.gov.hmrc.economiccrimelevyaccount.utils.CorrelationIdHelper
 import uk.gov.hmrc.http.HttpClient
 
 import java.time.{LocalDate, ZoneOffset}
@@ -31,7 +31,7 @@ import scala.concurrent.Future
 
 class DesConnectorSpec extends SpecBase {
   val mockHttpClient: HttpClient                         = mock[HttpClient]
-  val mockCorrelationIdGenerator: CorrelationIdGenerator = mock[CorrelationIdGenerator]
+  val mockCorrelationIdGenerator: CorrelationIdHelper = mock[CorrelationIdHelper]
   val connector                                          = new DesConnector(appConfig, mockHttpClient, mockCorrelationIdGenerator)
 
   "getObligationData" should {
@@ -45,7 +45,7 @@ class DesConnectorSpec extends SpecBase {
           (CustomHeaderNames.CorrelationId, correlationId)
         )
 
-        when(mockCorrelationIdGenerator.generateCorrelationId).thenReturn(correlationId)
+        when(mockCorrelationIdGenerator.getCorrelationId).thenReturn(correlationId)
 
         when(
           mockHttpClient.GET[Option[ObligationData]](
