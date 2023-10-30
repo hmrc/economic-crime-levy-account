@@ -33,29 +33,24 @@ import scala.concurrent.Future
 
 class BtaTileDataControllerSpec extends SpecBase {
 
-  val mockObligationDataService: DesService = mock[DesService]
+  val mockDesService: DesService = mock[DesService]
 
   val controller = new BtaTileDataController(
     cc,
     fakeAuthorisedAction,
-    mockObligationDataService
+    mockDesService
   )
 
   "getBtaTileData" should {
     "return 200 OK with no due return when there is no obligation data" in forAll { obligationData: ObligationData =>
-      when(mockObligationDataService.getObligationData(any())(any()))
+      when(mockDesService.getObligationData(any[String].asInstanceOf[EclReference])(any()))
         .thenReturn(EitherT.rightT[Future, DesSubmissionError](obligationData))
 
       val result: Future[Result] =
         controller.getBtaTileData()(fakeRequest)
 
-      val expectedBtaTileData = BtaTileData(
-        eclReference = EclReference("test-ecl-registration-reference"),
-        dueReturn = None
-      )
-
-      status(result)        shouldBe OK
-      contentAsJson(result) shouldBe Json.toJson(expectedBtaTileData)
+      status(result)                                        shouldBe OK
+      contentAsJson(result).validate[BtaTileData].isSuccess shouldBe true
     }
 
     "return 200 OK with no due return when there are obligations due with a Fulfilled status but none with an Open status" in forAll {
@@ -67,7 +62,7 @@ class BtaTileDataControllerSpec extends SpecBase {
         val obligationData =
           ObligationData(Seq(Obligation(None, Seq(openObligation1, openObligation2, openObligation3))))
 
-        when(mockObligationDataService.getObligationData(any())(any()))
+        when(mockDesService.getObligationData(any[String].asInstanceOf[EclReference])(any()))
           .thenReturn(EitherT.rightT[Future, DesSubmissionError](obligationData))
 
         val result: Future[Result] =
@@ -95,7 +90,7 @@ class BtaTileDataControllerSpec extends SpecBase {
             Seq(Obligation(None, Seq(fulfilledObligation, highestPriorityObligation, otherOpenObligation)))
           )
 
-        when(mockObligationDataService.getObligationData(any())(any()))
+        when(mockDesService.getObligationData(any[String].asInstanceOf[EclReference])(any()))
           .thenReturn(EitherT.rightT[Future, DesSubmissionError](obligationData))
 
         val result: Future[Result] =

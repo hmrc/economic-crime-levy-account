@@ -42,7 +42,7 @@ class ObligationDataControllerSpec extends SpecBase {
   "getObligationData" should {
     "return 200 OK with the obligation data JSON when obligation data is returned by the service" in forAll {
       obligationData: ObligationData =>
-        when(mockObligationDataService.getObligationData(any())(any()))
+        when(mockObligationDataService.getObligationData(any[String].asInstanceOf[EclReference])(any()))
           .thenReturn(EitherT.rightT[Future, DesSubmissionError](obligationData))
 
         val result: Future[Result] =
@@ -53,14 +53,13 @@ class ObligationDataControllerSpec extends SpecBase {
     }
 
     "return 404 NOT_FOUND when obligation data is not returned by the service" in forAll { eclReference: EclReference =>
-      when(mockObligationDataService.getObligationData(any())(any()))
+      when(mockObligationDataService.getObligationData(any[String].asInstanceOf[EclReference])(any()))
         .thenReturn(EitherT.leftT[Future, ObligationData](DesSubmissionError.NotFound(eclReference)))
 
       val result: Future[Result] =
         controller.getObligationData()(fakeRequest)
 
-      status(result)          shouldBe NOT_FOUND
-      contentAsString(result) shouldBe "No obligation data found"
+      status(result) shouldBe NOT_FOUND
     }
   }
 

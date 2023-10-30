@@ -26,22 +26,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 trait BaseController {
 
-  def checkOptionalValueExists[T](value: Option[T]): EitherT[Future, ResponseError, T] = EitherT(
-    Future.successful(
-      value match {
-        case Some(value) => Right(value)
-        case None        => Left(ResponseError.internalServiceError())
-      }
-    )
-  )
-
   implicit class ResponseHandler[R](value: EitherT[Future, ResponseError, R]) {
-
-    def convertToResultWithoutBody(statusCode: Int)(implicit ec: ExecutionContext): Future[Result] =
-      value.fold(
-        err => Status(err.code.statusCode)(Json.toJson(err)),
-        response => Status(statusCode)
-      )
 
     def convertToResultWithJsonBody(
       statusCode: Int

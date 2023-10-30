@@ -33,7 +33,7 @@ import scala.concurrent.ExecutionContext
 class BtaTileDataController @Inject() (
   cc: ControllerComponents,
   authorise: AuthorisedAction,
-  obligationDataService: DesService
+  desService: DesService
 )(implicit ec: ExecutionContext)
     extends BackendController(cc)
     with BaseController
@@ -42,7 +42,7 @@ class BtaTileDataController @Inject() (
   def getBtaTileData: Action[AnyContent] = authorise.async { implicit request =>
     implicit val hc: HeaderCarrier = CorrelationIdHelper.getOrCreateCorrelationID(request)
     (for {
-      obligationData <- obligationDataService.getObligationData(request.eclReference).asResponseError
+      obligationData <- desService.getObligationData(request.eclReference).asResponseError
       btaTileData     = constructBtaTileData(request.eclReference, obligationData)
     } yield btaTileData).convertToResultWithJsonBody(OK)
   }

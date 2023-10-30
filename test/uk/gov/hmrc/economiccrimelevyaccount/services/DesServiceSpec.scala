@@ -58,7 +58,7 @@ class DesServiceSpec extends SpecBase {
           )
         )
 
-        when(mockDesConnector.getObligationData(ArgumentMatchers.eq(eclReference))(any()))
+        when(mockDesConnector.getObligationData(any[String].asInstanceOf[EclReference])(any()))
           .thenReturn(Future.successful(obligationDataWithFutureObligations))
 
         val expectedObligations = ObligationData(

@@ -22,6 +22,7 @@ import play.api.libs.json.Json
 import play.api.mvc.Result
 import uk.gov.hmrc.economiccrimelevyaccount.ValidFinancialDataResponse
 import uk.gov.hmrc.economiccrimelevyaccount.base.SpecBase
+import uk.gov.hmrc.economiccrimelevyaccount.models.EclReference
 import uk.gov.hmrc.economiccrimelevyaccount.models.errors.IntegrationFrameworkError
 import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.FinancialData
 import uk.gov.hmrc.economiccrimelevyaccount.services.IntegrationFrameworkService
@@ -61,7 +62,7 @@ class FinancialDataControllerSpec extends SpecBase {
         val response             = validFinancialDataResponse.financialDataResponse
           .copy(totalisation = Some(validTotalisation), documentDetails = Some(Seq(validDocumentDetails)))
 
-        when(mockIntegrationFrameworkService.getFinancialData(any())(any()))
+        when(mockIntegrationFrameworkService.getFinancialData(any[String].asInstanceOf[EclReference])(any()))
           .thenReturn(EitherT.rightT[Future, IntegrationFrameworkError](response))
 
         val result: Future[Result] =
@@ -75,9 +76,9 @@ class FinancialDataControllerSpec extends SpecBase {
 
   "getFinancialData" should {
     "return 502 BadGateway when an error is returned from integration framework" in {
-      when(mockIntegrationFrameworkService.getFinancialData(any())(any()))
+      when(mockIntegrationFrameworkService.getFinancialData(any[String].asInstanceOf[EclReference])(any()))
         .thenReturn(
-          EitherT.leftT[Future, FinancialData](IntegrationFrameworkError.InternalUnexpectedError("response body", None))
+          EitherT.leftT[Future, FinancialData](IntegrationFrameworkError.BadGateway("response body", NOT_FOUND))
         )
 
       val result: Future[Result] =
