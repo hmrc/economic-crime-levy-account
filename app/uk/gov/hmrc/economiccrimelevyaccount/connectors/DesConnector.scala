@@ -23,8 +23,6 @@ import play.api.http.HeaderNames
 import uk.gov.hmrc.economiccrimelevyaccount.config.AppConfig
 import uk.gov.hmrc.economiccrimelevyaccount.models.{CustomHeaderNames, EclReference}
 import uk.gov.hmrc.economiccrimelevyaccount.models.des.ObligationData
-import uk.gov.hmrc.economiccrimelevyaccount.utils.CorrelationIdHelper
-import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, Retries, StringContextOps}
 
@@ -43,7 +41,7 @@ class DesConnector @Inject() (
     with Retries
     with Logging {
 
-  private def desHeaders(implicit hc: HeaderCarrier): Seq[(String, String)] = Seq(
+  val desHeaders: Seq[(String, String)] = Seq(
     (HeaderNames.AUTHORIZATION, s"Bearer ${appConfig.desBearerToken}"),
     (CustomHeaderNames.Environment, appConfig.desEnvironment)
   )
@@ -60,5 +58,4 @@ class DesConnector @Inject() (
         .setHeader(desHeaders: _*)
         .executeAndDeserialise[ObligationData]
     }
-
 }

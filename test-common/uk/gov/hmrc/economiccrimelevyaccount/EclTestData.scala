@@ -19,9 +19,10 @@ package uk.gov.hmrc.economiccrimelevyaccount
 import com.danielasfregola.randomdatagenerator.RandomDataGenerator.derivedArbitrary
 import org.scalacheck.{Arbitrary, Gen}
 import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier, Enrolments}
-import uk.gov.hmrc.economiccrimelevyaccount.generators.CachedArbitraries._
+import uk.gov.hmrc.economiccrimelevyaccount.models.EclReference
 import uk.gov.hmrc.economiccrimelevyaccount.models.eacd.EclEnrolment
-import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.{DocumentDetails, FinancialData, LineItemDetails, NewCharge, PenaltyTotals, Totalisation}
+import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.DocumentType.NewCharge
+import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.{DocumentDetails, FinancialData, LineItemDetails, PenaltyTotals, Totalisation}
 
 import java.time.{Instant, LocalDate}
 
@@ -32,12 +33,6 @@ case class EnrolmentsWithoutEcl(enrolments: Enrolments)
 case class ValidFinancialDataResponse(financialDataResponse: FinancialData)
 
 trait EclTestData {
-
-  private val currentYear       = LocalDate.now().getYear
-  private val startDayFY: Int   = 1
-  private val endDayFY: Int     = 31
-  private val startMonthFY: Int = 4
-  private val endMonthFY: Int   = 3
 
   implicit val arbInstant: Arbitrary[Instant] = Arbitrary {
     Instant.now()
@@ -57,6 +52,8 @@ trait EclTestData {
         enrolment.copy(key = EclEnrolment.ServiceName, identifiers = enrolment.identifiers :+ eclEnrolmentIdentifier)
     } yield EnrolmentsWithEcl(enrolments.copy(enrolments.enrolments + eclEnrolment))
   }
+
+  private def calculatePeriodKey(year: String): String = s"${year.takeRight(2)}XY"
 
   implicit val arbValidFinancialDataResponse: Arbitrary[ValidFinancialDataResponse] = Arbitrary {
     for {
@@ -137,9 +134,9 @@ trait EclTestData {
       .map(EnrolmentsWithoutEcl)
   }
 
-  def alphaNumericString: String = Gen.alphaNumStr.retryUntil(_.nonEmpty).sample.get
+  implicit val arbEclReference: Arbitrary[EclReference] = Arbitrary(Gen.alphaNumStr.map(EclReference(_)))
 
-  private def calculatePeriodKey(year: String): String = s"${year.takeRight(2)}XY"
+  def alphaNumericString: String = Gen.alphaNumStr.retryUntil(_.nonEmpty).sample.get
 
   val testInternalId: String               = alphaNumericString
   val testEclRegistrationReference: String = alphaNumericString

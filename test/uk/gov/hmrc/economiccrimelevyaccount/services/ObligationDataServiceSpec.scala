@@ -20,6 +20,7 @@ import org.mockito.ArgumentMatchers.any
 import uk.gov.hmrc.economiccrimelevyaccount.base.SpecBase
 import uk.gov.hmrc.economiccrimelevyaccount.connectors.DesConnector
 import uk.gov.hmrc.economiccrimelevyaccount.generators.CachedArbitraries._
+import uk.gov.hmrc.economiccrimelevyaccount.models.EclReference
 import uk.gov.hmrc.economiccrimelevyaccount.models.des.{Obligation, ObligationData, ObligationDetails}
 
 import java.time.{Clock, Instant, LocalDate, ZoneId}
@@ -38,7 +39,7 @@ class ObligationDataServiceSpec extends SpecBase {
 
   "getObligationData" should {
     "filter out any obligations that are due more than a year from the current date" in forAll {
-      (obligationDetails: ObligationDetails, eclRegistrationReference: String) =>
+      (obligationDetails: ObligationDetails, eclReference: EclReference) =>
         val obligationDataWithFutureObligations = ObligationData(
           obligations = Seq(
             Obligation(
@@ -54,7 +55,7 @@ class ObligationDataServiceSpec extends SpecBase {
         )
 
         when(mockDesConnector.getObligationData(any())(any()))
-          .thenReturn(Future.successful(Some(obligationDataWithFutureObligations)))
+          .thenReturn(Future.successful(obligationDataWithFutureObligations))
 
         val expectedObligations = ObligationData(
           obligations = Seq(
@@ -68,10 +69,10 @@ class ObligationDataServiceSpec extends SpecBase {
           )
         )
 
-        val result: Option[ObligationData] =
-          await(service.getObligationData(eclRegistrationReference))
+        val result =
+          await(service.getObligationData(eclReference).value)
 
-        result shouldBe Some(expectedObligations)
+        result shouldBe Right(expectedObligations)
     }
   }
 

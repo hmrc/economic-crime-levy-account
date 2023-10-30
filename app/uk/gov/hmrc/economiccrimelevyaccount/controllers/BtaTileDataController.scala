@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.economiccrimelevyaccount.controllers
 
-import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.economiccrimelevyaccount.models.EclReference
 import uk.gov.hmrc.economiccrimelevyaccount.models.bta.{BtaTileData, DueReturn}
@@ -45,8 +44,8 @@ class BtaTileDataController @Inject() (
     implicit val hc: HeaderCarrier = getOrCreateCorrelationID(request)
     (for {
       obligationData <- obligationDataService.getObligationData(request.eclReference).asResponseError
-      btaTilaData     = constructBtaTileData(request.eclReference, obligationData)
-    } yield btaTilaData).convertToResultWithJsonBody(OK)
+      btaTileData     = constructBtaTileData(request.eclReference, obligationData)
+    } yield btaTileData).convertToResultWithJsonBody(OK)
   }
 
   private def constructBtaTileData(

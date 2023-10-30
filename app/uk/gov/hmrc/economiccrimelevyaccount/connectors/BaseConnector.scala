@@ -20,7 +20,7 @@ import play.api.http.Status._
 import play.api.libs.json.{JsResult, Reads}
 import uk.gov.hmrc.http.client.RequestBuilder
 import uk.gov.hmrc.http.{HttpResponse, UpstreamErrorResponse}
-
+import uk.gov.hmrc.http.HttpReads.Implicits._
 import scala.concurrent.{ExecutionContext, Future}
 
 trait BaseConnector {

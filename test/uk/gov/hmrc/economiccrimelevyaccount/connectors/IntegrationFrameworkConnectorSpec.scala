@@ -16,70 +16,48 @@
 
 package uk.gov.hmrc.economiccrimelevyaccount.connectors
 
+import akka.actor.ActorSystem
+import com.typesafe.config.Config
 import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.any
-import play.api.http.HeaderNames
-import play.api.libs.json.Json
 import uk.gov.hmrc.economiccrimelevyaccount.base.SpecBase
-import uk.gov.hmrc.economiccrimelevyaccount.models.CustomHeaderNames
+import uk.gov.hmrc.economiccrimelevyaccount.models.EclReference
 import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.FinancialData
 import uk.gov.hmrc.economiccrimelevyaccount.utils.CorrelationIdHelper
-import uk.gov.hmrc.http.{HttpClient, HttpResponse}
+import uk.gov.hmrc.http.StringContextOps
 import uk.gov.hmrc.economiccrimelevyaccount.generators.CachedArbitraries._
+import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
 
 import scala.concurrent.Future
 
 class IntegrationFrameworkConnectorSpec extends SpecBase {
-  val mockHttpClient: HttpClient                         = mock[HttpClient]
-  val mockCorrelationIdGenerator: CorrelationIdHelper = mock[CorrelationIdHelper]
-  val connector                                          = new IntegrationFrameworkConnector(appConfig, mockHttpClient, mockCorrelationIdGenerator)
+  val mockHttpClient: HttpClientV2       = mock[HttpClientV2]
+  val mockConfiguration: Config          = mock[Config]
+  val mockActorSystem: ActorSystem       = mock[ActorSystem]
+  val mockRequestBuilder: RequestBuilder = mock[RequestBuilder]
+  val connector                          = new IntegrationFrameworkConnector(appConfig, mockHttpClient, mockConfiguration, mockActorSystem)
+
+  override def beforeEach(): Unit = {
+    reset(mockRequestBuilder)
+    reset(mockHttpClient)
+  }
 
   "getFinancialDetails" should {
     "return financial details when the http client returns financial details" in forAll {
       (
-        eclRegistrationReference: String,
-        correlationId: String,
-        financialDataResponse: FinancialData
+        eclReference: EclReference,
+        financialData: FinancialData
       ) =>
         val expectedUrl =
-          s"${appConfig.integrationFrameworkUrl}/penalty/financial-data/ZECL/$eclRegistrationReference/ECL"
+          s"${appConfig.integrationFrameworkUrl}/penalty/financial-data/ZECL/${eclReference.value}/ECL"
 
-        val expectedHeaders: Seq[(String, String)] = Seq(
-          (HeaderNames.AUTHORIZATION, s"Bearer ${appConfig.integrationFrameworkBearerToken}"),
-          (CustomHeaderNames.Environment, appConfig.integrationFrameworkEnvironment),
-          (CustomHeaderNames.CorrelationId, correlationId)
-        )
+        when(mockHttpClient.get(ArgumentMatchers.eq(url"$expectedUrl"))(any())).thenReturn(mockRequestBuilder)
+        when(mockRequestBuilder.setHeader(any())).thenReturn(mockRequestBuilder)
+        when(mockRequestBuilder.withBody(any())(any(), any(), any())).thenReturn(mockRequestBuilder)
+        when(mockRequestBuilder.execute[FinancialData](any(), any()))
+          .thenReturn(Future.successful(financialData))
 
-        when(mockCorrelationIdGenerator.getCorrelationId).thenReturn(correlationId)
-
-        when(
-          mockHttpClient.GET[HttpResponse](
-            ArgumentMatchers.eq(expectedUrl),
-            any(),
-            ArgumentMatchers.eq(expectedHeaders)
-          )(any(), any(), any())
-        )
-          .thenReturn(
-            Future.successful(
-              HttpResponse.apply(OK, Json.stringify(Json.toJson(financialDataResponse)))
-            )
-          )
-
-        val result = await(connector.getFinancialDetails(eclRegistrationReference))
-
-        result match {
-          case Some(result) => result.isInstanceOf[FinancialData] shouldBe true
-          case _            => fail("expected FinancialDataResponse to be returned")
-        }
-
-        verify(mockHttpClient, times(1))
-        mockHttpClient.GET[HttpResponse](
-          ArgumentMatchers.eq(expectedUrl),
-          any(),
-          ArgumentMatchers.eq(expectedHeaders)
-        )(any(), any(), any())
-
-        reset(mockHttpClient)
+        await(connector.getFinancialDetails(eclReference)) shouldBe financialData
     }
   }
 }

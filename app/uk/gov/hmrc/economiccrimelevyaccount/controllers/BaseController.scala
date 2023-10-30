@@ -19,9 +19,8 @@ package uk.gov.hmrc.economiccrimelevyaccount.controllers
 import cats.data.EitherT
 import play.api.libs.json.{Json, Writes}
 import play.api.mvc.Result
-import play.api.mvc.Results.{Ok, Status}
+import play.api.mvc.Results.Status
 import uk.gov.hmrc.economiccrimelevyaccount.models.errors.ResponseError
-import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.FinancialData
 
 import scala.concurrent.{ExecutionContext, Future}
 

@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.economiccrimelevyaccount.controllers
 
-import play.api.Logging
-import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.economiccrimelevyaccount.services.DesService
 import uk.gov.hmrc.economiccrimelevyaccount.utils.CorrelationIdHelper

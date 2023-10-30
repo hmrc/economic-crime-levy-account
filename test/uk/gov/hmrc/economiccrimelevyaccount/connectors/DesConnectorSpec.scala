@@ -16,58 +16,49 @@
 
 package uk.gov.hmrc.economiccrimelevyaccount.connectors
 
+import akka.actor.ActorSystem
+import com.typesafe.config.Config
 import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.any
-import play.api.http.HeaderNames
 import uk.gov.hmrc.economiccrimelevyaccount.base.SpecBase
-import uk.gov.hmrc.economiccrimelevyaccount.generators.CachedArbitraries.arbOptObligationData
-import uk.gov.hmrc.economiccrimelevyaccount.models.CustomHeaderNames
+import uk.gov.hmrc.economiccrimelevyaccount.generators.CachedArbitraries._
+import uk.gov.hmrc.economiccrimelevyaccount.models.EclReference
 import uk.gov.hmrc.economiccrimelevyaccount.models.des.ObligationData
 import uk.gov.hmrc.economiccrimelevyaccount.utils.CorrelationIdHelper
-import uk.gov.hmrc.http.HttpClient
+import uk.gov.hmrc.http.StringContextOps
+import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
 
 import java.time.{LocalDate, ZoneOffset}
 import scala.concurrent.Future
 
 class DesConnectorSpec extends SpecBase {
-  val mockHttpClient: HttpClient                         = mock[HttpClient]
+  val mockHttpClient: HttpClientV2                    = mock[HttpClientV2]
+  val mockConfiguration: Config                       = mock[Config]
+  val mockActorSystem: ActorSystem                    = mock[ActorSystem]
   val mockCorrelationIdGenerator: CorrelationIdHelper = mock[CorrelationIdHelper]
-  val connector                                          = new DesConnector(appConfig, mockHttpClient, mockCorrelationIdGenerator)
+  val mockRequestBuilder: RequestBuilder              = mock[RequestBuilder]
+  val connector                                       = new DesConnector(appConfig, mockHttpClient, mockConfiguration, mockActorSystem)
+
+  override def beforeEach(): Unit = {
+    reset(mockRequestBuilder)
+    reset(mockHttpClient)
+  }
 
   "getObligationData" should {
     "return obligation data when the http client returns obligation data" in forAll {
-      (eclRegistrationReference: String, obligationData: Option[ObligationData], correlationId: String) =>
-        val expectedUrl                            =
+      (eclRegistrationReference: EclReference, obligationData: ObligationData) =>
+        val expectedUrl =
           s"${appConfig.desUrl}/enterprise/obligation-data/zecl/$eclRegistrationReference/ECL?from=2022-04-01&to=${LocalDate.now(ZoneOffset.UTC).toString}"
-        val expectedHeaders: Seq[(String, String)] = Seq(
-          (HeaderNames.AUTHORIZATION, s"Bearer ${appConfig.desBearerToken}"),
-          (CustomHeaderNames.Environment, appConfig.desEnvironment),
-          (CustomHeaderNames.CorrelationId, correlationId)
-        )
 
-        when(mockCorrelationIdGenerator.getCorrelationId).thenReturn(correlationId)
-
-        when(
-          mockHttpClient.GET[Option[ObligationData]](
-            ArgumentMatchers.eq(expectedUrl),
-            any(),
-            ArgumentMatchers.eq(expectedHeaders)
-          )(any(), any(), any())
-        )
+        when(mockHttpClient.get(ArgumentMatchers.eq(url"$expectedUrl"))(any())).thenReturn(mockRequestBuilder)
+        when(mockRequestBuilder.setHeader(any())).thenReturn(mockRequestBuilder)
+        when(mockRequestBuilder.withBody(any())(any(), any(), any())).thenReturn(mockRequestBuilder)
+        when(mockRequestBuilder.execute[ObligationData](any(), any()))
           .thenReturn(Future.successful(obligationData))
 
         val result = await(connector.getObligationData(eclRegistrationReference))
 
         result shouldBe obligationData
-
-        verify(mockHttpClient, times(1))
-          .GET[ObligationData](
-            ArgumentMatchers.eq(expectedUrl),
-            any(),
-            ArgumentMatchers.eq(expectedHeaders)
-          )(any(), any(), any())
-
-        reset(mockHttpClient)
     }
   }
 

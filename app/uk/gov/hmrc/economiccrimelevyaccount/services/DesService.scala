@@ -16,9 +16,7 @@
 
 package uk.gov.hmrc.economiccrimelevyaccount.services
 
-import akka.event.Logging
 import cats.data.EitherT
-import play.api.Logging
 import play.api.http.Status.NOT_FOUND
 import uk.gov.hmrc.economiccrimelevyaccount.connectors.DesConnector
 import uk.gov.hmrc.economiccrimelevyaccount.models.EclReference

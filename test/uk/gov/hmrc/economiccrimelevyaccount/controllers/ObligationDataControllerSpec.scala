@@ -16,12 +16,15 @@
 
 package uk.gov.hmrc.economiccrimelevyaccount.controllers
 
+import cats.data.EitherT
 import org.mockito.ArgumentMatchers.any
 import play.api.libs.json.Json
 import play.api.mvc.Result
 import uk.gov.hmrc.economiccrimelevyaccount.base.SpecBase
 import uk.gov.hmrc.economiccrimelevyaccount.generators.CachedArbitraries._
+import uk.gov.hmrc.economiccrimelevyaccount.models.EclReference
 import uk.gov.hmrc.economiccrimelevyaccount.models.des.ObligationData
+import uk.gov.hmrc.economiccrimelevyaccount.models.errors.DesSubmissionError
 import uk.gov.hmrc.economiccrimelevyaccount.services.DesService
 
 import scala.concurrent.Future
@@ -40,7 +43,7 @@ class ObligationDataControllerSpec extends SpecBase {
     "return 200 OK with the obligation data JSON when obligation data is returned by the service" in forAll {
       obligationData: ObligationData =>
         when(mockObligationDataService.getObligationData(any())(any()))
-          .thenReturn(Future.successful(Some(obligationData)))
+          .thenReturn(EitherT.rightT[Future, DesSubmissionError](obligationData))
 
         val result: Future[Result] =
           controller.getObligationData()(fakeRequest)
@@ -49,8 +52,9 @@ class ObligationDataControllerSpec extends SpecBase {
         contentAsJson(result) shouldBe Json.toJson(obligationData)
     }
 
-    "return 404 NOT_FOUND when obligation data is not returned by the service" in {
-      when(mockObligationDataService.getObligationData(any())(any())).thenReturn(Future.successful(None))
+    "return 404 NOT_FOUND when obligation data is not returned by the service" in forAll { eclReference: EclReference =>
+      when(mockObligationDataService.getObligationData(any())(any()))
+        .thenReturn(EitherT.leftT[Future, ObligationData](DesSubmissionError.NotFound(eclReference)))
 
       val result: Future[Result] =
         controller.getObligationData()(fakeRequest)
