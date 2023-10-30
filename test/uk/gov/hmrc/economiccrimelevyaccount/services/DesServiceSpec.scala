@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.economiccrimelevyaccount.services
 
+import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.any
 import uk.gov.hmrc.economiccrimelevyaccount.base.SpecBase
 import uk.gov.hmrc.economiccrimelevyaccount.connectors.DesConnector
@@ -26,7 +27,7 @@ import uk.gov.hmrc.economiccrimelevyaccount.models.des.{Obligation, ObligationDa
 import java.time.{Clock, Instant, LocalDate, ZoneId}
 import scala.concurrent.Future
 
-class ObligationDataServiceSpec extends SpecBase {
+class DesServiceSpec extends SpecBase {
 
   val mockDesConnector: DesConnector = mock[DesConnector]
   private val fixedPointInTime       = Instant.parse("2023-06-14T10:15:30.00Z")
@@ -36,6 +37,9 @@ class ObligationDataServiceSpec extends SpecBase {
     mockDesConnector,
     stubClock
   )
+
+  override def beforeEach(): Unit =
+    reset(mockDesConnector)
 
   "getObligationData" should {
     "filter out any obligations that are due more than a year from the current date" in forAll {
@@ -54,7 +58,7 @@ class ObligationDataServiceSpec extends SpecBase {
           )
         )
 
-        when(mockDesConnector.getObligationData(any())(any()))
+        when(mockDesConnector.getObligationData(ArgumentMatchers.eq(eclReference))(any()))
           .thenReturn(Future.successful(obligationDataWithFutureObligations))
 
         val expectedObligations = ObligationData(

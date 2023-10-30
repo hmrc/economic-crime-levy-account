@@ -38,6 +38,9 @@ class FinancialDataControllerSpec extends SpecBase {
     mockIntegrationFrameworkService
   )
 
+  override def beforeEach(): Unit =
+    reset(mockIntegrationFrameworkService)
+
   "getFinancialData" should {
     "return 200 OK with the JSON payload when FinancialDataResponse is returned from service" in forAll {
       validFinancialDataResponse: ValidFinancialDataResponse =>

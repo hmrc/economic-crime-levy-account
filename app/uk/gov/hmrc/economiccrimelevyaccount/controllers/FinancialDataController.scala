@@ -35,11 +35,10 @@ class FinancialDataController @Inject() (
 )(implicit ec: ExecutionContext)
     extends BackendController(cc)
     with BaseController
-    with ErrorHandler
-    with CorrelationIdHelper {
+    with ErrorHandler {
 
   def getFinancialData: Action[AnyContent] = authorise.async { implicit request =>
-    implicit val hc: HeaderCarrier = getOrCreateCorrelationID(request)
+    implicit val hc: HeaderCarrier = CorrelationIdHelper.getOrCreateCorrelationID(request)
     (for {
       financialData <- integrationFrameworkService
                          .getFinancialData(request.eclReference)

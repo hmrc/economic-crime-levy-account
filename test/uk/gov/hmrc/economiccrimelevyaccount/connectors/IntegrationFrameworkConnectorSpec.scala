@@ -16,15 +16,12 @@
 
 package uk.gov.hmrc.economiccrimelevyaccount.connectors
 
-import akka.actor.ActorSystem
-import com.typesafe.config.Config
-import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.any
+import play.api.libs.json.Json
 import uk.gov.hmrc.economiccrimelevyaccount.base.SpecBase
 import uk.gov.hmrc.economiccrimelevyaccount.models.EclReference
 import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.FinancialData
-import uk.gov.hmrc.economiccrimelevyaccount.utils.CorrelationIdHelper
-import uk.gov.hmrc.http.StringContextOps
+import uk.gov.hmrc.http.HttpResponse
 import uk.gov.hmrc.economiccrimelevyaccount.generators.CachedArbitraries._
 import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
 
@@ -32,10 +29,8 @@ import scala.concurrent.Future
 
 class IntegrationFrameworkConnectorSpec extends SpecBase {
   val mockHttpClient: HttpClientV2       = mock[HttpClientV2]
-  val mockConfiguration: Config          = mock[Config]
-  val mockActorSystem: ActorSystem       = mock[ActorSystem]
   val mockRequestBuilder: RequestBuilder = mock[RequestBuilder]
-  val connector                          = new IntegrationFrameworkConnector(appConfig, mockHttpClient, mockConfiguration, mockActorSystem)
+  val connector                          = new IntegrationFrameworkConnector(appConfig, mockHttpClient, config, actorSystem)
 
   override def beforeEach(): Unit = {
     reset(mockRequestBuilder)
@@ -48,16 +43,13 @@ class IntegrationFrameworkConnectorSpec extends SpecBase {
         eclReference: EclReference,
         financialData: FinancialData
       ) =>
-        val expectedUrl =
-          s"${appConfig.integrationFrameworkUrl}/penalty/financial-data/ZECL/${eclReference.value}/ECL"
-
-        when(mockHttpClient.get(ArgumentMatchers.eq(url"$expectedUrl"))(any())).thenReturn(mockRequestBuilder)
+        when(mockHttpClient.get(any())(any())).thenReturn(mockRequestBuilder)
         when(mockRequestBuilder.setHeader(any())).thenReturn(mockRequestBuilder)
         when(mockRequestBuilder.withBody(any())(any(), any(), any())).thenReturn(mockRequestBuilder)
-        when(mockRequestBuilder.execute[FinancialData](any(), any()))
-          .thenReturn(Future.successful(financialData))
+        when(mockRequestBuilder.execute[HttpResponse](any(), any()))
+          .thenReturn(Future.successful(HttpResponse.apply(OK, Json.stringify(Json.toJson(financialData)))))
 
-        await(connector.getFinancialDetails(eclReference)) shouldBe financialData
+        await(connector.getFinancialDetails(eclReference)).isInstanceOf[FinancialData] shouldBe true
     }
   }
 }

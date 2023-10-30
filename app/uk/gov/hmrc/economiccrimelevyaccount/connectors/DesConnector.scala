@@ -41,7 +41,7 @@ class DesConnector @Inject() (
     with Retries
     with Logging {
 
-  val desHeaders: Seq[(String, String)] = Seq(
+  private val desHeaders: Seq[(String, String)] = Seq(
     (HeaderNames.AUTHORIZATION, s"Bearer ${appConfig.desBearerToken}"),
     (CustomHeaderNames.Environment, appConfig.desEnvironment)
   )

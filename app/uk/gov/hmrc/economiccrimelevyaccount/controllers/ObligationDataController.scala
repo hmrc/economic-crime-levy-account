@@ -34,11 +34,10 @@ class ObligationDataController @Inject() (
 )(implicit ec: ExecutionContext)
     extends BackendController(cc)
     with BaseController
-    with ErrorHandler
-    with CorrelationIdHelper {
+    with ErrorHandler {
 
   def getObligationData: Action[AnyContent] = authorise.async { implicit request =>
-    implicit val hc: HeaderCarrier = getOrCreateCorrelationID(request)
+    implicit val hc: HeaderCarrier = CorrelationIdHelper.getOrCreateCorrelationID(request)
     (for {
       obligationData <- obligationDataService
                           .getObligationData(request.eclReference)
