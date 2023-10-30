@@ -1,7 +1,6 @@
 package uk.gov.hmrc.economiccrimelevyaccount
 
 import com.danielasfregola.randomdatagenerator.RandomDataGenerator.random
-import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import uk.gov.hmrc.economiccrimelevyaccount.base.ISpecBase
 import uk.gov.hmrc.economiccrimelevyaccount.controllers.routes

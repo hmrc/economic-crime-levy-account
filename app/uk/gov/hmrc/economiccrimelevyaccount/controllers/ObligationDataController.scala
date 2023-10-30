@@ -30,7 +30,7 @@ import scala.concurrent.ExecutionContext
 class ObligationDataController @Inject() (
   cc: ControllerComponents,
   authorise: AuthorisedAction,
-  obligationDataService: DesService
+  desService: DesService
 )(implicit ec: ExecutionContext)
     extends BackendController(cc)
     with BaseController
@@ -39,7 +39,7 @@ class ObligationDataController @Inject() (
   def getObligationData: Action[AnyContent] = authorise.async { implicit request =>
     implicit val hc: HeaderCarrier = CorrelationIdHelper.getOrCreateCorrelationID(request)
     (for {
-      obligationData <- obligationDataService
+      obligationData <- desService
                           .getObligationData(request.eclReference)
                           .asResponseError
     } yield obligationData).convertToResultWithJsonBody(OK)

@@ -136,8 +136,9 @@ trait EclTestData {
 
   implicit val arbEclReference: Arbitrary[EclReference] = Arbitrary(Gen.alphaNumStr.map(EclReference(_)))
 
-  def alphaNumericString: String = Gen.alphaNumStr.retryUntil(_.nonEmpty).sample.get
+  def alphaNumericString: String = Gen.alphaNumStr.sample.get
 
-  val testInternalId: String               = alphaNumericString
-  val testEclRegistrationReference: String = alphaNumericString
+  val testInternalId: String = alphaNumericString
+
+  val testEclReference: EclReference = arbEclReference.arbitrary.sample.get
 }

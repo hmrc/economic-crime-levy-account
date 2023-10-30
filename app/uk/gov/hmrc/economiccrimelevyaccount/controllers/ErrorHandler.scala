@@ -62,8 +62,8 @@ trait ErrorHandler extends Logging {
   implicit val desSubmissionErrorConverter: Converter[DesSubmissionError] =
     new Converter[DesSubmissionError] {
       override def convert(error: DesSubmissionError): ResponseError = error match {
-        case DesSubmissionError.NotFound(id)                            =>
-          ResponseError.notFoundError(s"Unable to find record with id: $id")
+        case DesSubmissionError.NotFound(eclReference)                  =>
+          ResponseError.notFoundError(s"Unable to find record with id: ${eclReference.value}")
         case DesSubmissionError.BadGateway(message, code)               =>
           ResponseError.badGateway(message = message, code = code)
         case DesSubmissionError.InternalUnexpectedError(message, cause) =>
@@ -74,30 +74,12 @@ trait ErrorHandler extends Logging {
   implicit val Converter: Converter[IntegrationFrameworkError] =
     new Converter[IntegrationFrameworkError] {
       override def convert(error: IntegrationFrameworkError): ResponseError = error match {
-        case IntegrationFrameworkError.NotFound(id)                            =>
-          ResponseError.notFoundError(s"Unable to find record with id: $id")
+        case IntegrationFrameworkError.NotFound(eclReference)                  =>
+          ResponseError.notFoundError(s"Unable to find record with id: ${eclReference.value}")
         case IntegrationFrameworkError.BadGateway(message, code)               =>
           ResponseError.badGateway(message = message, code = code)
         case IntegrationFrameworkError.InternalUnexpectedError(message, cause) =>
           ResponseError.internalServiceError(message = message, cause = cause)
       }
     }
-
-//  implicit val dataValidationErrorConverter: Converter[DataValidationErrorList] =
-//    new Converter[DataValidationErrorList] {
-//      override def convert(value: DataValidationErrorList): ResponseError = {
-//        val errorMessage = value.errors.map {
-//          case DataValidationError.SchemaValidationError(cause) =>
-//            s"""
-//             |Schema validation error: $cause
-//             |""".stripMargin
-//          case DataValidationError.DataMissing(cause)           =>
-//            s"""
-//             |Data missing: $cause
-//             |""".stripMargin
-//        }.mkString
-//
-//        ResponseError.badRequestError(errorMessage)
-//      }
-//    }
 }

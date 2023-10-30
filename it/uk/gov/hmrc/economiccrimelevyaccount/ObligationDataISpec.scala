@@ -23,6 +23,7 @@ import uk.gov.hmrc.economiccrimelevyaccount.base.ISpecBase
 import uk.gov.hmrc.economiccrimelevyaccount.controllers.routes
 import uk.gov.hmrc.economiccrimelevyaccount.generators.CachedArbitraries._
 import uk.gov.hmrc.economiccrimelevyaccount.models.des.{Obligation, ObligationData, ObligationDetails}
+import uk.gov.hmrc.economiccrimelevyaccount.models.errors.ResponseError
 
 import java.time.LocalDate
 
@@ -65,8 +66,10 @@ class ObligationDataISpec extends ISpecBase {
         FakeRequest(routes.ObligationDataController.getObligationData)
       )
 
-      status(result)          shouldBe NOT_FOUND
-      contentAsString(result) shouldBe "No obligation data found"
+      status(result)        shouldBe NOT_FOUND
+      contentAsJson(result) shouldBe Json.toJson(
+        ResponseError.notFoundError(s"Unable to find record with id: ${testEclReference.value}")
+      )
     }
   }
 

@@ -24,6 +24,7 @@ import uk.gov.hmrc.economiccrimelevyaccount.controllers.routes
 import uk.gov.hmrc.economiccrimelevyaccount.generators.CachedArbitraries._
 import uk.gov.hmrc.economiccrimelevyaccount.models.bta.{BtaTileData, DueReturn}
 import uk.gov.hmrc.economiccrimelevyaccount.models.des._
+import uk.gov.hmrc.economiccrimelevyaccount.models.errors.ResponseError
 
 import java.time.LocalDate
 
@@ -53,7 +54,7 @@ class BtaTileDataISpec extends ISpecBase {
       )
 
       val expectedBtaTileData = BtaTileData(
-        eclRegistrationReference = testEclRegistrationReference,
+        eclReference = testEclReference,
         dueReturn = Some(
           DueReturn(
             isOverdue = true,
@@ -70,7 +71,7 @@ class BtaTileDataISpec extends ISpecBase {
       contentAsJson(result) shouldBe Json.toJson(expectedBtaTileData)
     }
 
-    "return 200 OK with no due return when there is no obligation data" in {
+    "return 404 NOT_FOUND with no due return when there is no obligation data" in {
       stubAuthorised()
 
       stubObligationsNotFound()
@@ -79,13 +80,11 @@ class BtaTileDataISpec extends ISpecBase {
         FakeRequest(routes.BtaTileDataController.getBtaTileData)
       )
 
-      val expectedBtaTileData = BtaTileData(
-        eclRegistrationReference = testEclRegistrationReference,
-        dueReturn = None
+      status(result)        shouldBe NOT_FOUND
+      contentAsJson(result) shouldBe Json.toJson(
+        ResponseError.notFoundError(s"Unable to find record with id: ${testEclReference.value}")
       )
 
-      status(result)        shouldBe OK
-      contentAsJson(result) shouldBe Json.toJson(expectedBtaTileData)
     }
   }
 
