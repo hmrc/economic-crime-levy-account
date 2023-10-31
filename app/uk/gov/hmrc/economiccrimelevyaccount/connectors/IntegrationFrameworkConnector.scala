@@ -62,7 +62,7 @@ class IntegrationFrameworkConnector @Inject() (
     (
       QueryParams.DATE_FROM,
       LocalDate.of(2023, 1, 1).format(DateTimeFormatter.ISO_LOCAL_DATE)
-    ), //TODO: should we be using the current tax year here
+    ),
     (QueryParams.DATE_TO, LocalDate.now().plusYears(1).format(DateTimeFormatter.ISO_LOCAL_DATE)),
     (QueryParams.ACCRUING_INTEREST, "true"),
     (QueryParams.CLEARED_ITEMS, "true"),
