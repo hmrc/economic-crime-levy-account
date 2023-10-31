@@ -23,7 +23,7 @@ import play.api.mvc.Request
 
 object CorrelationIdHelper {
 
-  private val HEADER_X_CORRELATION_ID: String = "X-Correlation-Id"
+  val HEADER_X_CORRELATION_ID: String = "X-Correlation-Id"
 
   def getOrCreateCorrelationID(request: Request[_]): HeaderCarrier = {
     val hcFromRequest: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)

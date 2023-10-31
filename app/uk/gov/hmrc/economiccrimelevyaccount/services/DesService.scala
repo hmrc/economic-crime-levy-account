@@ -21,7 +21,7 @@ import play.api.http.Status.NOT_FOUND
 import uk.gov.hmrc.economiccrimelevyaccount.connectors.DesConnector
 import uk.gov.hmrc.economiccrimelevyaccount.models.EclReference
 import uk.gov.hmrc.economiccrimelevyaccount.models.des.{Obligation, ObligationData}
-import uk.gov.hmrc.economiccrimelevyaccount.models.errors.DesSubmissionError
+import uk.gov.hmrc.economiccrimelevyaccount.models.errors.DesError
 import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
 
 import java.time.{Clock, Instant, LocalDate, ZoneOffset}
@@ -36,20 +36,20 @@ class DesService @Inject() (
 
   def getObligationData(
     eclReference: EclReference
-  )(implicit hc: HeaderCarrier): EitherT[Future, DesSubmissionError, ObligationData] =
+  )(implicit hc: HeaderCarrier): EitherT[Future, DesError, ObligationData] =
     EitherT {
       desConnector
         .getObligationData(eclReference)
         .map(obligationData => Right(getObligationDataDueLessThanYearFromNow(obligationData)))
         .recover {
           case UpstreamErrorResponse(_, NOT_FOUND, _, _) =>
-            Left(DesSubmissionError.NotFound(eclReference))
+            Left(DesError.NotFound(eclReference))
           case error @ UpstreamErrorResponse(message, code, _, _)
               if UpstreamErrorResponse.Upstream5xxResponse
                 .unapply(error)
                 .isDefined || UpstreamErrorResponse.Upstream4xxResponse.unapply(error).isDefined =>
-            Left(DesSubmissionError.BadGateway(reason = message, code = code))
-          case NonFatal(thr)                             => Left(DesSubmissionError.InternalUnexpectedError(thr.getMessage, Some(thr)))
+            Left(DesError.BadGateway(reason = message, code = code))
+          case NonFatal(thr)                             => Left(DesError.InternalUnexpectedError(thr.getMessage, Some(thr)))
         }
     }
 

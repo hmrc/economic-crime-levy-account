@@ -18,7 +18,7 @@ package uk.gov.hmrc.economiccrimelevyaccount.controllers
 
 import cats.data.EitherT
 import play.api.Logging
-import uk.gov.hmrc.economiccrimelevyaccount.models.errors.{BadGateway, DesSubmissionError, IntegrationFrameworkError, InternalServiceError, ResponseError}
+import uk.gov.hmrc.economiccrimelevyaccount.models.errors.{BadGateway, DesError, IntegrationFrameworkError, InternalServiceError, ResponseError}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -59,19 +59,19 @@ trait ErrorHandler extends Logging {
     def convert(error: E): ResponseError
   }
 
-  implicit val desSubmissionErrorConverter: Converter[DesSubmissionError] =
-    new Converter[DesSubmissionError] {
-      override def convert(error: DesSubmissionError): ResponseError = error match {
-        case DesSubmissionError.NotFound(eclReference)                  =>
+  implicit val desErrorConverter: Converter[DesError] =
+    new Converter[DesError] {
+      override def convert(error: DesError): ResponseError = error match {
+        case DesError.NotFound(eclReference)                  =>
           ResponseError.notFoundError(s"Unable to find record with id: ${eclReference.value}")
-        case DesSubmissionError.BadGateway(message, code)               =>
+        case DesError.BadGateway(message, code)               =>
           ResponseError.badGateway(message = message, code = code)
-        case DesSubmissionError.InternalUnexpectedError(message, cause) =>
+        case DesError.InternalUnexpectedError(message, cause) =>
           ResponseError.internalServiceError(message = message, cause = cause)
       }
     }
 
-  implicit val Converter: Converter[IntegrationFrameworkError] =
+  implicit val integrationFrameworkErrorConverter: Converter[IntegrationFrameworkError] =
     new Converter[IntegrationFrameworkError] {
       override def convert(error: IntegrationFrameworkError): ResponseError = error match {
         case IntegrationFrameworkError.NotFound(eclReference)                  =>

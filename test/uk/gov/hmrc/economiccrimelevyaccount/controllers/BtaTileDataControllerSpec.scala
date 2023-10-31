@@ -25,7 +25,7 @@ import uk.gov.hmrc.economiccrimelevyaccount.generators.CachedArbitraries._
 import uk.gov.hmrc.economiccrimelevyaccount.models.EclReference
 import uk.gov.hmrc.economiccrimelevyaccount.models.bta.{BtaTileData, DueReturn}
 import uk.gov.hmrc.economiccrimelevyaccount.models.des._
-import uk.gov.hmrc.economiccrimelevyaccount.models.errors.DesSubmissionError
+import uk.gov.hmrc.economiccrimelevyaccount.models.errors.DesError
 import uk.gov.hmrc.economiccrimelevyaccount.services.DesService
 
 import java.time.LocalDate
@@ -44,7 +44,7 @@ class BtaTileDataControllerSpec extends SpecBase {
   "getBtaTileData" should {
     "return 200 OK with no due return when there is no obligation data" in forAll { obligationData: ObligationData =>
       when(mockDesService.getObligationData(any[String].asInstanceOf[EclReference])(any()))
-        .thenReturn(EitherT.rightT[Future, DesSubmissionError](obligationData))
+        .thenReturn(EitherT.rightT[Future, DesError](obligationData))
 
       val result: Future[Result] =
         controller.getBtaTileData()(fakeRequest)
@@ -63,7 +63,7 @@ class BtaTileDataControllerSpec extends SpecBase {
           ObligationData(Seq(Obligation(None, Seq(openObligation1, openObligation2, openObligation3))))
 
         when(mockDesService.getObligationData(any[String].asInstanceOf[EclReference])(any()))
-          .thenReturn(EitherT.rightT[Future, DesSubmissionError](obligationData))
+          .thenReturn(EitherT.rightT[Future, DesError](obligationData))
 
         val result: Future[Result] =
           controller.getBtaTileData()(fakeRequest)
@@ -91,7 +91,7 @@ class BtaTileDataControllerSpec extends SpecBase {
           )
 
         when(mockDesService.getObligationData(any[String].asInstanceOf[EclReference])(any()))
-          .thenReturn(EitherT.rightT[Future, DesSubmissionError](obligationData))
+          .thenReturn(EitherT.rightT[Future, DesError](obligationData))
 
         val result: Future[Result] =
           controller.getBtaTileData()(fakeRequest)

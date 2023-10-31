@@ -69,8 +69,9 @@ trait SpecBase
   override def fakeApplication(): Application =
     new GuiceApplicationBuilder()
       .configure(
-        "metrics.jvm"     -> false,
-        "metrics.enabled" -> false
+        "metrics.jvm"                  -> false,
+        "metrics.enabled"              -> false,
+        "http-verbs.retries.intervals" -> List("1ms")
       )
       .build()
 
