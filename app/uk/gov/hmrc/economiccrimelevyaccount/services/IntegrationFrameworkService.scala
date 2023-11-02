@@ -37,15 +37,15 @@ class IntegrationFrameworkService @Inject() (
 
   def getFinancialData(
     eclReference: EclReference
-  )(implicit hc: HeaderCarrier): EitherT[Future, IntegrationFrameworkError, FinancialData] =
+  )(implicit hc: HeaderCarrier): EitherT[Future, IntegrationFrameworkError, Option[FinancialData]] =
     EitherT {
       (for {
         financialData <- ifConnector.getFinancialDetails(eclReference)
         filteredResult = filterOutUnknownDocumentTypes(financialData)
         _              = logFinancialDataDetails(eclReference, financialData)
-      } yield Right(filteredResult)).recover {
+      } yield Right(Some(filteredResult))).recover {
         case UpstreamErrorResponse(_, NOT_FOUND, _, _) =>
-          Left(IntegrationFrameworkError.NotFound(eclReference))
+          Right(None)
         case error @ UpstreamErrorResponse(message, code, _, _)
             if UpstreamErrorResponse.Upstream5xxResponse
               .unapply(error)

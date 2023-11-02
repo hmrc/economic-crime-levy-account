@@ -36,14 +36,15 @@ class DesService @Inject() (
 
   def getObligationData(
     eclReference: EclReference
-  )(implicit hc: HeaderCarrier): EitherT[Future, DesError, ObligationData] =
+  )(implicit hc: HeaderCarrier): EitherT[Future, DesError, Option[ObligationData]] =
     EitherT {
       desConnector
         .getObligationData(eclReference)
-        .map(obligationData => Right(getObligationDataDueLessThanYearFromNow(obligationData)))
+        .map(obligationData => getObligationDataDueLessThanYearFromNow(obligationData))
+        .map(obligationDataWithinOneYearFromNow => Right(Some(obligationDataWithinOneYearFromNow)))
         .recover {
           case UpstreamErrorResponse(_, NOT_FOUND, _, _) =>
-            Left(DesError.NotFound(eclReference))
+            Right(None)
           case error @ UpstreamErrorResponse(message, code, _, _)
               if UpstreamErrorResponse.Upstream5xxResponse
                 .unapply(error)

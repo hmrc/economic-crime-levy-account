@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.economiccrimelevyaccount.services
 
-import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.any
 import uk.gov.hmrc.economiccrimelevyaccount.base.SpecBase
 import uk.gov.hmrc.economiccrimelevyaccount.connectors.DesConnector
@@ -76,7 +75,7 @@ class DesServiceSpec extends SpecBase {
         val result =
           await(service.getObligationData(eclReference).value)
 
-        result shouldBe Right(expectedObligations)
+        result shouldBe Right(Some(expectedObligations))
     }
   }
 

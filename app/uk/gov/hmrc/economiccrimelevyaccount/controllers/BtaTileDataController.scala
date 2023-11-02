@@ -49,9 +49,9 @@ class BtaTileDataController @Inject() (
 
   private def constructBtaTileData(
     eclReference: EclReference,
-    obligationData: ObligationData
+    obligationDataOption: Option[ObligationData]
   ): BtaTileData = {
-    val highestPriorityDueReturn = obligationData.obligations
+    def highestPriorityDueReturn(obligationData: ObligationData) = obligationData.obligations
       .flatMap(
         _.obligationDetails
           .filter(_.status == Open)
@@ -59,23 +59,9 @@ class BtaTileDataController @Inject() (
       )
       .headOption
 
-    highestPriorityDueReturn match {
-      case Some(obligationDetails) =>
-        BtaTileData(
-          eclReference,
-          Some(
-            DueReturn(
-              isOverdue = obligationDetails.isOverdue,
-              dueDate = obligationDetails.inboundCorrespondenceDueDate,
-              periodStartDate = obligationDetails.inboundCorrespondenceFromDate,
-              periodEndDate = obligationDetails.inboundCorrespondenceToDate,
-              fyStartYear = obligationDetails.inboundCorrespondenceFromDate.getYear.toString,
-              fyEndYear = obligationDetails.inboundCorrespondenceToDate.getYear.toString
-            )
-          )
-        )
-      case None                    => BtaTileData(eclReference, None)
-    }
+    obligationDataOption
+      .flatMap(obligationData => highestPriorityDueReturn(obligationData))
+      .map(obligationDetails => BtaTileData.apply(eclReference, obligationDetails))
+      .getOrElse(BtaTileData(eclReference, None))
   }
-
 }

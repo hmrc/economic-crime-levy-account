@@ -39,12 +39,6 @@ trait BaseConnector {
         .validate[A]
         .map(result => Future.successful(result))
         .recoverTotal(error => Future.failed(JsResult.Exception(error)))
-
-    def asOption[A](implicit reads: Reads[A]): Future[Option[A]] =
-      response.json
-        .validateOpt[A]
-        .map(result => Future.successful(result))
-        .recoverTotal(error => Future.failed(JsResult.Exception(error)))
   }
 
   implicit class RequestBuilderHelpers(requestBuilder: RequestBuilder) {

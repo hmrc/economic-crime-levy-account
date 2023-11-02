@@ -44,7 +44,7 @@ class BtaTileDataControllerSpec extends SpecBase {
   "getBtaTileData" should {
     "return 200 OK with no due return when there is no obligation data" in forAll { obligationData: ObligationData =>
       when(mockDesService.getObligationData(any[String].asInstanceOf[EclReference])(any()))
-        .thenReturn(EitherT.rightT[Future, DesError](obligationData))
+        .thenReturn(EitherT.rightT[Future, DesError](Some(obligationData)))
 
       val result: Future[Result] =
         controller.getBtaTileData()(fakeRequest)
@@ -63,7 +63,7 @@ class BtaTileDataControllerSpec extends SpecBase {
           ObligationData(Seq(Obligation(None, Seq(openObligation1, openObligation2, openObligation3))))
 
         when(mockDesService.getObligationData(any[String].asInstanceOf[EclReference])(any()))
-          .thenReturn(EitherT.rightT[Future, DesError](obligationData))
+          .thenReturn(EitherT.rightT[Future, DesError](Some(obligationData)))
 
         val result: Future[Result] =
           controller.getBtaTileData()(fakeRequest)
@@ -91,7 +91,7 @@ class BtaTileDataControllerSpec extends SpecBase {
           )
 
         when(mockDesService.getObligationData(any[String].asInstanceOf[EclReference])(any()))
-          .thenReturn(EitherT.rightT[Future, DesError](obligationData))
+          .thenReturn(EitherT.rightT[Future, DesError](Some(obligationData)))
 
         val result: Future[Result] =
           controller.getBtaTileData()(fakeRequest)

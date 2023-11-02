@@ -63,7 +63,7 @@ class FinancialDataControllerSpec extends SpecBase {
           .copy(totalisation = Some(validTotalisation), documentDetails = Some(Seq(validDocumentDetails)))
 
         when(mockIntegrationFrameworkService.getFinancialData(any[String].asInstanceOf[EclReference])(any()))
-          .thenReturn(EitherT.rightT[Future, IntegrationFrameworkError](response))
+          .thenReturn(EitherT.rightT[Future, IntegrationFrameworkError](Some(response)))
 
         val result: Future[Result] =
           controller.getFinancialData()(fakeRequest)
@@ -78,7 +78,7 @@ class FinancialDataControllerSpec extends SpecBase {
     "return 502 BadGateway when an error is returned from integration framework" in {
       when(mockIntegrationFrameworkService.getFinancialData(any[String].asInstanceOf[EclReference])(any()))
         .thenReturn(
-          EitherT.leftT[Future, FinancialData](IntegrationFrameworkError.BadGateway("response body", NOT_FOUND))
+          EitherT.leftT[Future, Option[FinancialData]](IntegrationFrameworkError.BadGateway("response body", NOT_FOUND))
         )
 
       val result: Future[Result] =
