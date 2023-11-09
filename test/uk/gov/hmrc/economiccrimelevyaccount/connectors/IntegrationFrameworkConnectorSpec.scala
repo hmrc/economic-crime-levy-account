@@ -64,7 +64,7 @@ class IntegrationFrameworkConnectorSpec extends SpecBase {
         when(mockRequestBuilder.setHeader(any())).thenReturn(mockRequestBuilder)
         when(mockRequestBuilder.withBody(any())(any(), any(), any())).thenReturn(mockRequestBuilder)
         when(mockRequestBuilder.execute[HttpResponse](any(), any()))
-          .thenReturn(Future.successful(HttpResponse.apply(INTERNAL_SERVER_ERROR, "internal server error")))
+          .thenReturn(Future.successful(HttpResponse.apply(INTERNAL_SERVER_ERROR, errorMessage)))
 
         Try(await(connector.getFinancialDetails(eclReference))) match {
           case Failure(UpstreamErrorResponse(msg, _, _, _)) =>
