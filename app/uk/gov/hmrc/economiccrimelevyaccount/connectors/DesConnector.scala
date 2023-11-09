@@ -55,7 +55,7 @@ class DesConnector @Inject() (
     retryFor[ObligationData]("DES - obligation data")(retryCondition) {
       httpClient
         .get(url"${desUrl(eclRegistrationReference.value)}")
-        .setHeader(desHeaders: _*)
+        .transform(_.addHttpHeaders(desHeaders: _*))
         .executeAndDeserialise[ObligationData]
     }
 }
