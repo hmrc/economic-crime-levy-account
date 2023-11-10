@@ -30,9 +30,7 @@ object CorrelationIdHelper {
     hcFromRequest
       .headers(scala.Seq(HEADER_X_CORRELATION_ID)) match {
       case Nil =>
-        hcFromRequest.copy(otherHeaders =
-          hcFromRequest.otherHeaders ++ Seq((HEADER_X_CORRELATION_ID, UUID.randomUUID().toString))
-        )
+        hcFromRequest.withExtraHeaders((HEADER_X_CORRELATION_ID, UUID.randomUUID().toString))
       case _   =>
         hcFromRequest
     }
