@@ -40,7 +40,7 @@ class BtaTileDataController @Inject() (
     with ErrorHandler {
 
   def getBtaTileData: Action[AnyContent] = authorise.async { implicit request =>
-    implicit val hc: HeaderCarrier = CorrelationIdHelper.getOrCreateCorrelationID(request)
+    implicit val hc: HeaderCarrier = CorrelationIdHelper.headerCarrierWithCorrelationId(request)
     (for {
       obligationData <- desService.getObligationData(request.eclReference).asResponseError
       btaTileData     = constructBtaTileData(request.eclReference, obligationData)

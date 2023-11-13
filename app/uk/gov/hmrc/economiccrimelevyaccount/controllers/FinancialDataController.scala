@@ -38,7 +38,7 @@ class FinancialDataController @Inject() (
     with ErrorHandler {
 
   def getFinancialData: Action[AnyContent] = authorise.async { implicit request =>
-    implicit val hc: HeaderCarrier = CorrelationIdHelper.getOrCreateCorrelationID(request)
+    implicit val hc: HeaderCarrier = CorrelationIdHelper.headerCarrierWithCorrelationId(request)
     (for {
       financialData <- integrationFrameworkService
                          .getFinancialData(request.eclReference)

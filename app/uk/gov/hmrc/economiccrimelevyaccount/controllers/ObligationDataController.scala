@@ -37,7 +37,7 @@ class ObligationDataController @Inject() (
     with ErrorHandler {
 
   def getObligationData: Action[AnyContent] = authorise.async { implicit request =>
-    implicit val hc: HeaderCarrier = CorrelationIdHelper.getOrCreateCorrelationID(request)
+    implicit val hc: HeaderCarrier = CorrelationIdHelper.headerCarrierWithCorrelationId(request)
     (for {
       obligationData <- desService
                           .getObligationData(request.eclReference)

@@ -24,11 +24,14 @@ import play.api.http.HeaderNames
 import uk.gov.hmrc.economiccrimelevyaccount.config.AppConfig
 import uk.gov.hmrc.economiccrimelevyaccount.models.{CustomHeaderNames, EclReference, QueryParams}
 import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework._
+import uk.gov.hmrc.economiccrimelevyaccount.utils.CorrelationIdHelper
+import uk.gov.hmrc.economiccrimelevyaccount.utils.CorrelationIdHelper.HEADER_X_CORRELATION_ID
 import uk.gov.hmrc.http.{HeaderCarrier, Retries, StringContextOps}
 import uk.gov.hmrc.http.client.HttpClientV2
 
 import java.time.format.DateTimeFormatter
 import java.time.LocalDate
+import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -50,13 +53,21 @@ class IntegrationFrameworkConnector @Inject() (
 
   def getFinancialDetails(
     eclReference: EclReference
-  )(implicit hc: HeaderCarrier): Future[FinancialData] =
+  )(implicit hc: HeaderCarrier): Future[FinancialData] = {
+    val correlationId = hc.headers(scala.Seq(HEADER_X_CORRELATION_ID)) match {
+      case Nil          =>
+        UUID.randomUUID().toString
+      case Seq((_, id)) =>
+        id
+    }
+
     retryFor[FinancialData]("Integration framework - financial data")(retryCondition) {
       httpClient
         .get(url"${ifUrl(eclReference.value)}")
-        .setHeader(integrationFrameworkHeaders: _*)
+        .setHeader(integrationFrameworkHeaders(correlationId): _*)
         .executeAndDeserialise[FinancialData]
     }
+  }
 
   private def financialDetailsQueryParams: Seq[(String, String)] = Seq(
     (
@@ -75,8 +86,10 @@ class IntegrationFrameworkConnector @Inject() (
     (QueryParams.DATE_TYPE, "POSTING")
   )
 
-  private def integrationFrameworkHeaders: Seq[(String, String)] = Seq(
-    (HeaderNames.AUTHORIZATION, s"Bearer ${appConfig.integrationFrameworkBearerToken}"),
-    (CustomHeaderNames.Environment, appConfig.integrationFrameworkEnvironment)
-  )
+  private def integrationFrameworkHeaders(correlationId: String): Seq[(String, String)] =
+    Seq(
+      (HeaderNames.AUTHORIZATION, s"Bearer ${appConfig.integrationFrameworkBearerToken}"),
+      (CustomHeaderNames.Environment, appConfig.integrationFrameworkEnvironment),
+      (CustomHeaderNames.CorrelationId, correlationId)
+    )
 }
