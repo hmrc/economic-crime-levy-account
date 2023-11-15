@@ -16,13 +16,13 @@
 
 package uk.gov.hmrc.economiccrimelevyaccount.controllers
 
-import play.api.Logging
-import play.api.libs.json.Json
 import play.api.mvc._
-import uk.gov.hmrc.economiccrimelevyaccount.connectors.IntegrationFrameworkConnector
-import uk.gov.hmrc.economiccrimelevyreturns.controllers.actions.AuthorisedAction
-import uk.gov.hmrc.http.UpstreamErrorResponse
+import uk.gov.hmrc.economiccrimelevyaccount.services.IntegrationFrameworkService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
+import uk.gov.hmrc.economiccrimelevyaccount.controllers.BaseController
+import uk.gov.hmrc.economiccrimelevyaccount.utils.CorrelationIdHelper
+import uk.gov.hmrc.economiccrimelevyreturns.controllers.actions.AuthorisedAction
+import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
@@ -31,33 +31,19 @@ import scala.concurrent.ExecutionContext
 class FinancialDataController @Inject() (
   cc: ControllerComponents,
   authorise: AuthorisedAction,
-  integrationFramework: IntegrationFrameworkConnector
+  integrationFrameworkService: IntegrationFrameworkService
 )(implicit ec: ExecutionContext)
     extends BackendController(cc)
-    with Logging {
-
-  private val loggerContext = "FinancialDataController"
+    with BaseController
+    with ErrorHandler {
 
   def getFinancialData: Action[AnyContent] = authorise.async { implicit request =>
-    integrationFramework
-      .getFinancialDetails(request.eclRegistrationReference)
-      .map {
-        case None                        =>
-          logger.info(
-            s"$loggerContext - Integration Framework : no financial data present for eclReference ${request.eclRegistrationReference}"
-          )
-          NotFound
-        case Some(financialDataResponse) =>
-          logger.info(
-            s"$loggerContext - Successful call to Integration Framework with eclReference ${request.eclRegistrationReference}"
-          );
-          Ok(Json.toJson(financialDataResponse))
-      }
-      .recover { case errorResponse: UpstreamErrorResponse =>
-        logger.error(
-          s"$loggerContext - Integration Framework unexpected error: ${errorResponse.getMessage} for eclReference ${request.eclRegistrationReference}"
-        )
-        BadGateway
-      }
+    implicit val hc: HeaderCarrier = CorrelationIdHelper.headerCarrierWithCorrelationId(request)
+    (for {
+      financialData <- integrationFrameworkService
+                         .getFinancialData(request.eclReference)
+                         .asResponseError
+    } yield financialData).convertToResultWithJsonBody(OK)
   }
+
 }

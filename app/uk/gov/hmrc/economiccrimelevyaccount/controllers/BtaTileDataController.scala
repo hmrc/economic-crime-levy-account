@@ -16,12 +16,14 @@
 
 package uk.gov.hmrc.economiccrimelevyaccount.controllers
 
-import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import uk.gov.hmrc.economiccrimelevyaccount.models.EclReference
 import uk.gov.hmrc.economiccrimelevyaccount.models.bta.{BtaTileData, DueReturn}
 import uk.gov.hmrc.economiccrimelevyaccount.models.des.{ObligationData, Open}
-import uk.gov.hmrc.economiccrimelevyaccount.services.ObligationDataService
+import uk.gov.hmrc.economiccrimelevyaccount.services.DesService
+import uk.gov.hmrc.economiccrimelevyaccount.utils.CorrelationIdHelper
 import uk.gov.hmrc.economiccrimelevyreturns.controllers.actions.AuthorisedAction
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.{Inject, Singleton}
@@ -31,51 +33,35 @@ import scala.concurrent.ExecutionContext
 class BtaTileDataController @Inject() (
   cc: ControllerComponents,
   authorise: AuthorisedAction,
-  obligationDataService: ObligationDataService
+  desService: DesService
 )(implicit ec: ExecutionContext)
-    extends BackendController(cc) {
+    extends BackendController(cc)
+    with BaseController
+    with ErrorHandler {
 
   def getBtaTileData: Action[AnyContent] = authorise.async { implicit request =>
-    obligationDataService
-      .getObligationData(request.eclRegistrationReference)
-      .map { obligationData =>
-        val btaTileData: BtaTileData = constructBtaTileData(request.eclRegistrationReference, obligationData)
-        Ok(Json.toJson(btaTileData))
-      }
+    implicit val hc: HeaderCarrier = CorrelationIdHelper.headerCarrierWithCorrelationId(request)
+    (for {
+      obligationData <- desService.getObligationData(request.eclReference).asResponseError
+      btaTileData     = constructBtaTileData(request.eclReference, obligationData)
+    } yield btaTileData).convertToResultWithJsonBody(OK)
   }
 
   private def constructBtaTileData(
-    eclRegistrationReference: String,
-    obligationData: Option[ObligationData]
-  ): BtaTileData =
-    obligationData match {
-      case None    => BtaTileData(eclRegistrationReference, None)
-      case Some(o) =>
-        val highestPriorityDueReturn = o.obligations
-          .flatMap(
-            _.obligationDetails
-              .filter(_.status == Open)
-              .sortBy(_.inboundCorrespondenceDueDate)
-          )
-          .headOption
+    eclReference: EclReference,
+    obligationDataOption: Option[ObligationData]
+  ): BtaTileData = {
+    def highestPriorityDueReturn(obligationData: ObligationData) = obligationData.obligations
+      .flatMap(
+        _.obligationDetails
+          .filter(_.status == Open)
+          .sortBy(_.inboundCorrespondenceDueDate)
+      )
+      .headOption
 
-        highestPriorityDueReturn match {
-          case Some(obligationDetails) =>
-            BtaTileData(
-              eclRegistrationReference,
-              Some(
-                DueReturn(
-                  isOverdue = obligationDetails.isOverdue,
-                  dueDate = obligationDetails.inboundCorrespondenceDueDate,
-                  periodStartDate = obligationDetails.inboundCorrespondenceFromDate,
-                  periodEndDate = obligationDetails.inboundCorrespondenceToDate,
-                  fyStartYear = obligationDetails.inboundCorrespondenceFromDate.getYear.toString,
-                  fyEndYear = obligationDetails.inboundCorrespondenceToDate.getYear.toString
-                )
-              )
-            )
-          case None                    => BtaTileData(eclRegistrationReference, None)
-        }
-    }
-
+    obligationDataOption
+      .flatMap(obligationData => highestPriorityDueReturn(obligationData))
+      .map(obligationDetails => BtaTileData.apply(eclReference, obligationDetails))
+      .getOrElse(BtaTileData(eclReference, None))
+  }
 }

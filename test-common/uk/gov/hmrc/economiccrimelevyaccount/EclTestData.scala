@@ -19,9 +19,10 @@ package uk.gov.hmrc.economiccrimelevyaccount
 import com.danielasfregola.randomdatagenerator.RandomDataGenerator.derivedArbitrary
 import org.scalacheck.{Arbitrary, Gen}
 import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier, Enrolments}
-import uk.gov.hmrc.economiccrimelevyaccount.generators.CachedArbitraries._
+import uk.gov.hmrc.economiccrimelevyaccount.models.EclReference
 import uk.gov.hmrc.economiccrimelevyaccount.models.eacd.EclEnrolment
-import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.{DocumentDetails, FinancialDataResponse, LineItemDetails, PenaltyTotals, Totalisation}
+import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.DocumentType.NewCharge
+import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.{DocumentDetails, FinancialData, LineItemDetails, PenaltyTotals, Totalisation}
 
 import java.time.{Instant, LocalDate}
 
@@ -29,15 +30,9 @@ case class EnrolmentsWithEcl(enrolments: Enrolments)
 
 case class EnrolmentsWithoutEcl(enrolments: Enrolments)
 
-case class ValidFinancialDataResponse(financialDataResponse: FinancialDataResponse)
+case class ValidFinancialDataResponse(financialDataResponse: FinancialData)
 
 trait EclTestData {
-
-  private val currentYear       = LocalDate.now().getYear
-  private val startDayFY: Int   = 1
-  private val endDayFY: Int     = 31
-  private val startMonthFY: Int = 4
-  private val endMonthFY: Int   = 3
 
   implicit val arbInstant: Arbitrary[Instant] = Arbitrary {
     Instant.now()
@@ -58,6 +53,8 @@ trait EclTestData {
     } yield EnrolmentsWithEcl(enrolments.copy(enrolments.enrolments + eclEnrolment))
   }
 
+  private def calculatePeriodKey(year: String): String = s"${year.takeRight(2)}XY"
+
   implicit val arbValidFinancialDataResponse: Arbitrary[ValidFinancialDataResponse] = Arbitrary {
     for {
       totalisation    <- Arbitrary.arbitrary[Totalisation]
@@ -75,7 +72,7 @@ trait EclTestData {
       val randomBigDecimal = Some(BigDecimal(randomNumber.toString))
 
       ValidFinancialDataResponse(
-        FinancialDataResponse(
+        FinancialData(
           totalisation = Some(
             totalisation.copy(
               totalAccountBalance = randomBigDecimal,
@@ -90,7 +87,7 @@ trait EclTestData {
           documentDetails = Some(
             Seq(
               documentDetails.copy(
-                documentType = Some("TRM New Charge"),
+                documentType = Some(NewCharge),
                 chargeReferenceNumber = Some("XMECL0000000001"),
                 postingDate = Some(postingDateArb.toString),
                 issueDate = Some(issueDateArb.toString),
@@ -137,10 +134,11 @@ trait EclTestData {
       .map(EnrolmentsWithoutEcl)
   }
 
-  def alphaNumericString: String = Gen.alphaNumStr.retryUntil(_.nonEmpty).sample.get
+  implicit val arbEclReference: Arbitrary[EclReference] = Arbitrary(Gen.alphaNumStr.map(EclReference(_)))
 
-  private def calculatePeriodKey(year: String): String = s"${year.takeRight(2)}XY"
+  def alphaNumericString: String = Gen.alphaNumStr.sample.get
 
-  val testInternalId: String               = alphaNumericString
-  val testEclRegistrationReference: String = alphaNumericString
+  val testInternalId: String = alphaNumericString
+
+  val testEclReference: EclReference = arbEclReference.arbitrary.sample.get
 }

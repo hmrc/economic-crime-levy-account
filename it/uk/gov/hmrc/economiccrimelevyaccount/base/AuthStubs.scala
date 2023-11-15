@@ -29,7 +29,7 @@ trait AuthStubs { self: WireMockStubs =>
              |  "internalId": "$testInternalId",
              |  "authorisedEnrolments": [{
              |    "key":"${EclEnrolment.ServiceName}",
-             |    "identifiers": [{ "key":"${EclEnrolment.IdentifierKey}", "value": "$testEclRegistrationReference" }],
+             |    "identifiers": [{ "key":"${EclEnrolment.IdentifierKey}", "value": "${testEclReference.value}" }],
              |    "state": "activated"
              |  }]
              |}

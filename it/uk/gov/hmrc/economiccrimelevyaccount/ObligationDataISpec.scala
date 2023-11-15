@@ -56,7 +56,7 @@ class ObligationDataISpec extends ISpecBase {
       contentAsJson(result) shouldBe Json.toJson(obligationData)
     }
 
-    "return 404 NOT_FOUND when the obligation data is not found" in {
+    "return 200 OK with null in the body when the obligation data is not found" in {
       stubAuthorised()
 
       stubObligationsNotFound()
@@ -65,8 +65,8 @@ class ObligationDataISpec extends ISpecBase {
         FakeRequest(routes.ObligationDataController.getObligationData)
       )
 
-      status(result)          shouldBe NOT_FOUND
-      contentAsString(result) shouldBe "No obligation data found"
+      status(result)        shouldBe OK
+      contentAsJson(result) shouldBe Json.toJson(None)
     }
   }
 

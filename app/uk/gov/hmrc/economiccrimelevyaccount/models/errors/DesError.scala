@@ -14,10 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.economiccrimelevyaccount.models.requests
+package uk.gov.hmrc.economiccrimelevyaccount.models.errors
 
-import play.api.mvc.{Request, WrappedRequest}
 import uk.gov.hmrc.economiccrimelevyaccount.models.EclReference
 
-case class AuthorisedRequest[A](request: Request[A], internalId: String, eclReference: EclReference)
-    extends WrappedRequest[A](request)
+trait DesError
+
+object DesError {
+  case class InternalUnexpectedError(message: String, cause: Option[Throwable]) extends DesError
+  case class BadGateway(reason: String, code: Int) extends DesError
+  case class NotFound(eclReference: EclReference) extends DesError
+}

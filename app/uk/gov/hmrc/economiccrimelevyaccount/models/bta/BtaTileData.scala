@@ -17,6 +17,8 @@
 package uk.gov.hmrc.economiccrimelevyaccount.models.bta
 
 import play.api.libs.json.{Format, Json, OFormat}
+import uk.gov.hmrc.economiccrimelevyaccount.models.EclReference
+import uk.gov.hmrc.economiccrimelevyaccount.models.des.ObligationDetails
 
 import java.time.LocalDate
 
@@ -34,8 +36,23 @@ object DueReturn {
   implicitly[Format[LocalDate]]
 }
 
-case class BtaTileData(eclRegistrationReference: String, dueReturn: Option[DueReturn])
+case class BtaTileData(eclReference: EclReference, dueReturn: Option[DueReturn])
 
 object BtaTileData {
   implicit val format: OFormat[BtaTileData] = Json.format[BtaTileData]
+
+  def apply(eclReference: EclReference, obligationDetails: ObligationDetails): BtaTileData =
+    BtaTileData(
+      eclReference,
+      Some(
+        DueReturn(
+          isOverdue = obligationDetails.isOverdue,
+          dueDate = obligationDetails.inboundCorrespondenceDueDate,
+          periodStartDate = obligationDetails.inboundCorrespondenceFromDate,
+          periodEndDate = obligationDetails.inboundCorrespondenceToDate,
+          fyStartYear = obligationDetails.inboundCorrespondenceFromDate.getYear.toString,
+          fyEndYear = obligationDetails.inboundCorrespondenceToDate.getYear.toString
+        )
+      )
+    )
 }

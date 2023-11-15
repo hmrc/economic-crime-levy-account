@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.economiccrimelevyaccount.models.requests
+package uk.gov.hmrc.economiccrimelevyaccount.models
 
-import play.api.mvc.{Request, WrappedRequest}
-import uk.gov.hmrc.economiccrimelevyaccount.models.EclReference
+import play.api.libs.json.Json
 
-case class AuthorisedRequest[A](request: Request[A], internalId: String, eclReference: EclReference)
-    extends WrappedRequest[A](request)
+case class EclReference(value: String) extends AnyVal
+
+object EclReference {
+  implicit val format = Json.valueFormat[EclReference]
+}

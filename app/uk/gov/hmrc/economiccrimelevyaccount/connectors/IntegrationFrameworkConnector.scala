@@ -16,52 +16,64 @@
 
 package uk.gov.hmrc.economiccrimelevyaccount.connectors
 
+import akka.actor.ActorSystem
+import com.typesafe.config.Config
+import io.lemonlabs.uri.{QueryString, Url}
 import play.api.Logging
 import play.api.http.HeaderNames
-import play.api.http.Status.{NOT_FOUND, OK}
 import uk.gov.hmrc.economiccrimelevyaccount.config.AppConfig
-import uk.gov.hmrc.economiccrimelevyaccount.models.{CustomHeaderNames, QueryParams}
+import uk.gov.hmrc.economiccrimelevyaccount.models.{CustomHeaderNames, EclReference, QueryParams}
 import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework._
-import uk.gov.hmrc.economiccrimelevyaccount.utils.CorrelationIdGenerator
-import uk.gov.hmrc.http.HttpClient
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.economiccrimelevyaccount.utils.CorrelationIdHelper
+import uk.gov.hmrc.economiccrimelevyaccount.utils.CorrelationIdHelper.HEADER_X_CORRELATION_ID
+import uk.gov.hmrc.http.{HeaderCarrier, Retries, StringContextOps}
+import uk.gov.hmrc.http.client.HttpClientV2
 
 import java.time.format.DateTimeFormatter
 import java.time.LocalDate
+import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class IntegrationFrameworkConnector @Inject() (
   appConfig: AppConfig,
-  httpClient: HttpClient,
-  correlationIdGenerator: CorrelationIdGenerator
+  httpClient: HttpClientV2,
+  override val configuration: Config,
+  override val actorSystem: ActorSystem
 )(implicit ec: ExecutionContext)
     extends BaseConnector
+    with Retries
     with Logging {
 
-  private val loggerContext = "IntegrationFrameworkConnector"
+  private def ifUrl(eclRegistrationReference: String) = Url(
+    path = s"${appConfig.integrationFrameworkUrl}/penalty/financial-data/ZECL/$eclRegistrationReference/ECL",
+    query = QueryString.fromTraversable(financialDetailsQueryParams)
+  ).toStringRaw
 
   def getFinancialDetails(
-    eclRegistrationReference: String
-  )(implicit hc: HeaderCarrier): Future[Option[FinancialDataResponse]] =
-    httpClient
-      .GET[HttpResponse](
-        s"${appConfig.integrationFrameworkUrl}/penalty/financial-data/ZECL/$eclRegistrationReference/ECL",
-        headers = integrationFrameworkHeaders,
-        queryParams = financialDetailsQueryParams
-      )
-      .flatMap { response =>
-        response.status match {
-          case OK        => response.as[FinancialDataResponse].map(Some(_))
-          case NOT_FOUND => Future.successful(None)
-          case _         =>
-            response.error
-        }
-      }
+    eclReference: EclReference
+  )(implicit hc: HeaderCarrier): Future[FinancialData] = {
+    val correlationId = hc.headers(scala.Seq(HEADER_X_CORRELATION_ID)) match {
+      case Nil          =>
+        UUID.randomUUID().toString
+      case Seq((_, id)) =>
+        id
+    }
+
+    retryFor[FinancialData]("Integration framework - financial data")(retryCondition) {
+      httpClient
+        .get(url"${ifUrl(eclReference.value)}")
+        .setHeader(integrationFrameworkHeaders(correlationId): _*)
+        .executeAndDeserialise[FinancialData]
+    }
+  }
 
   private def financialDetailsQueryParams: Seq[(String, String)] = Seq(
-    (QueryParams.DATE_FROM, LocalDate.of(2023, 1, 1).format(DateTimeFormatter.ISO_LOCAL_DATE)),
+    (
+      QueryParams.DATE_FROM,
+      LocalDate.of(2023, 1, 1).format(DateTimeFormatter.ISO_LOCAL_DATE)
+    ),
     (QueryParams.DATE_TO, LocalDate.now().plusYears(1).format(DateTimeFormatter.ISO_LOCAL_DATE)),
     (QueryParams.ACCRUING_INTEREST, "true"),
     (QueryParams.CLEARED_ITEMS, "true"),
@@ -74,9 +86,10 @@ class IntegrationFrameworkConnector @Inject() (
     (QueryParams.DATE_TYPE, "POSTING")
   )
 
-  private def integrationFrameworkHeaders: Seq[(String, String)] = Seq(
-    (HeaderNames.AUTHORIZATION, s"Bearer ${appConfig.integrationFrameworkBearerToken}"),
-    (CustomHeaderNames.Environment, appConfig.integrationFrameworkEnvironment),
-    (CustomHeaderNames.CorrelationId, correlationIdGenerator.generateCorrelationId)
-  )
+  private def integrationFrameworkHeaders(correlationId: String): Seq[(String, String)] =
+    Seq(
+      (HeaderNames.AUTHORIZATION, s"Bearer ${appConfig.integrationFrameworkBearerToken}"),
+      (CustomHeaderNames.Environment, appConfig.integrationFrameworkEnvironment),
+      (CustomHeaderNames.CorrelationId, correlationId)
+    )
 }

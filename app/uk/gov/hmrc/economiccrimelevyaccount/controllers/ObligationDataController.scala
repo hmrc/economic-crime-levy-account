@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.economiccrimelevyaccount.controllers
 
-import play.api.Logging
-import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import uk.gov.hmrc.economiccrimelevyaccount.services.ObligationDataService
+import uk.gov.hmrc.economiccrimelevyaccount.services.DesService
+import uk.gov.hmrc.economiccrimelevyaccount.utils.CorrelationIdHelper
 import uk.gov.hmrc.economiccrimelevyreturns.controllers.actions.AuthorisedAction
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.{Inject, Singleton}
@@ -30,27 +30,19 @@ import scala.concurrent.ExecutionContext
 class ObligationDataController @Inject() (
   cc: ControllerComponents,
   authorise: AuthorisedAction,
-  obligationDataService: ObligationDataService
+  desService: DesService
 )(implicit ec: ExecutionContext)
     extends BackendController(cc)
-    with Logging {
+    with BaseController
+    with ErrorHandler {
 
-  private val loggerContext                 = "ObligationDataController"
   def getObligationData: Action[AnyContent] = authorise.async { implicit request =>
-    obligationDataService
-      .getObligationData(request.eclRegistrationReference)
-      .map {
-        case Some(obligationData) =>
-          logger.info(
-            s"$loggerContext - Successful call to DES for obligation data for eclReference: ${request.eclRegistrationReference}"
-          )
-          Ok(Json.toJson(obligationData))
-        case None                 =>
-          logger.error(
-            s"$loggerContext - No obligation data found for eclReference ${request.eclRegistrationReference}"
-          )
-          NotFound("No obligation data found")
-      }
+    implicit val hc: HeaderCarrier = CorrelationIdHelper.headerCarrierWithCorrelationId(request)
+    (for {
+      obligationData <- desService
+                          .getObligationData(request.eclReference)
+                          .asResponseError
+    } yield obligationData).convertToResultWithJsonBody(OK)
   }
 
 }

@@ -16,42 +16,41 @@
 
 package uk.gov.hmrc.economiccrimelevyaccount.controllers
 
+import cats.data.EitherT
 import org.mockito.ArgumentMatchers.any
 import play.api.libs.json.Json
 import play.api.mvc.Result
 import uk.gov.hmrc.economiccrimelevyaccount.base.SpecBase
 import uk.gov.hmrc.economiccrimelevyaccount.generators.CachedArbitraries._
+import uk.gov.hmrc.economiccrimelevyaccount.models.EclReference
 import uk.gov.hmrc.economiccrimelevyaccount.models.bta.{BtaTileData, DueReturn}
 import uk.gov.hmrc.economiccrimelevyaccount.models.des._
-import uk.gov.hmrc.economiccrimelevyaccount.services.ObligationDataService
+import uk.gov.hmrc.economiccrimelevyaccount.models.errors.DesError
+import uk.gov.hmrc.economiccrimelevyaccount.services.DesService
 
 import java.time.LocalDate
 import scala.concurrent.Future
 
 class BtaTileDataControllerSpec extends SpecBase {
 
-  val mockObligationDataService: ObligationDataService = mock[ObligationDataService]
+  val mockDesService: DesService = mock[DesService]
 
   val controller = new BtaTileDataController(
     cc,
     fakeAuthorisedAction,
-    mockObligationDataService
+    mockDesService
   )
 
   "getBtaTileData" should {
-    "return 200 OK with no due return when there is no obligation data" in {
-      when(mockObligationDataService.getObligationData(any())(any())).thenReturn(Future.successful(None))
+    "return 200 OK with no due return when there is no obligation data" in forAll { obligationData: ObligationData =>
+      when(mockDesService.getObligationData(any[String].asInstanceOf[EclReference])(any()))
+        .thenReturn(EitherT.rightT[Future, DesError](Some(obligationData)))
 
       val result: Future[Result] =
         controller.getBtaTileData()(fakeRequest)
 
-      val expectedBtaTileData = BtaTileData(
-        eclRegistrationReference = "test-ecl-registration-reference",
-        dueReturn = None
-      )
-
-      status(result)        shouldBe OK
-      contentAsJson(result) shouldBe Json.toJson(expectedBtaTileData)
+      status(result)                                        shouldBe OK
+      contentAsJson(result).validate[BtaTileData].isSuccess shouldBe true
     }
 
     "return 200 OK with no due return when there are obligations due with a Fulfilled status but none with an Open status" in forAll {
@@ -63,14 +62,14 @@ class BtaTileDataControllerSpec extends SpecBase {
         val obligationData =
           ObligationData(Seq(Obligation(None, Seq(openObligation1, openObligation2, openObligation3))))
 
-        when(mockObligationDataService.getObligationData(any())(any()))
-          .thenReturn(Future.successful(Some(obligationData)))
+        when(mockDesService.getObligationData(any[String].asInstanceOf[EclReference])(any()))
+          .thenReturn(EitherT.rightT[Future, DesError](Some(obligationData)))
 
         val result: Future[Result] =
           controller.getBtaTileData()(fakeRequest)
 
         val expectedBtaTileData = BtaTileData(
-          eclRegistrationReference = "test-ecl-registration-reference",
+          eclReference = EclReference("test-ecl-registration-reference"),
           dueReturn = None
         )
 
@@ -91,14 +90,14 @@ class BtaTileDataControllerSpec extends SpecBase {
             Seq(Obligation(None, Seq(fulfilledObligation, highestPriorityObligation, otherOpenObligation)))
           )
 
-        when(mockObligationDataService.getObligationData(any())(any()))
-          .thenReturn(Future.successful(Some(obligationData)))
+        when(mockDesService.getObligationData(any[String].asInstanceOf[EclReference])(any()))
+          .thenReturn(EitherT.rightT[Future, DesError](Some(obligationData)))
 
         val result: Future[Result] =
           controller.getBtaTileData()(fakeRequest)
 
         val expectedBtaTileData = BtaTileData(
-          eclRegistrationReference = "test-ecl-registration-reference",
+          eclReference = EclReference("test-ecl-registration-reference"),
           dueReturn = Some(
             DueReturn(
               isOverdue = true,

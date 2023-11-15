@@ -16,27 +16,31 @@
 
 package uk.gov.hmrc.economiccrimelevyaccount.controllers
 
+import cats.data.EitherT
 import org.mockito.ArgumentMatchers.any
 import play.api.libs.json.Json
 import play.api.mvc.Result
 import uk.gov.hmrc.economiccrimelevyaccount.ValidFinancialDataResponse
 import uk.gov.hmrc.economiccrimelevyaccount.base.SpecBase
-import uk.gov.hmrc.economiccrimelevyaccount.connectors.IntegrationFrameworkConnector
-import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.{FinancialDataErrorResponse, FinancialDataResponse}
-import uk.gov.hmrc.economiccrimelevyaccount.generators.CachedArbitraries._
-import uk.gov.hmrc.http.UpstreamErrorResponse
+import uk.gov.hmrc.economiccrimelevyaccount.models.EclReference
+import uk.gov.hmrc.economiccrimelevyaccount.models.errors.IntegrationFrameworkError
+import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.FinancialData
+import uk.gov.hmrc.economiccrimelevyaccount.services.IntegrationFrameworkService
 
 import scala.concurrent.Future
 
 class FinancialDataControllerSpec extends SpecBase {
 
-  private val mockFinancialDataConnector = mock[IntegrationFrameworkConnector]
+  private val mockIntegrationFrameworkService = mock[IntegrationFrameworkService]
 
   val controller: FinancialDataController = new FinancialDataController(
     cc,
     fakeAuthorisedAction,
-    mockFinancialDataConnector
+    mockIntegrationFrameworkService
   )
+
+  override def beforeEach(): Unit =
+    reset(mockIntegrationFrameworkService)
 
   "getFinancialData" should {
     "return 200 OK with the JSON payload when FinancialDataResponse is returned from service" in forAll {
@@ -58,8 +62,8 @@ class FinancialDataControllerSpec extends SpecBase {
         val response             = validFinancialDataResponse.financialDataResponse
           .copy(totalisation = Some(validTotalisation), documentDetails = Some(Seq(validDocumentDetails)))
 
-        when(mockFinancialDataConnector.getFinancialDetails(any())(any()))
-          .thenReturn(Future.successful(Some(response)))
+        when(mockIntegrationFrameworkService.getFinancialData(any[String].asInstanceOf[EclReference])(any()))
+          .thenReturn(EitherT.rightT[Future, IntegrationFrameworkError](Some(response)))
 
         val result: Future[Result] =
           controller.getFinancialData()(fakeRequest)
@@ -72,8 +76,10 @@ class FinancialDataControllerSpec extends SpecBase {
 
   "getFinancialData" should {
     "return 502 BadGateway when an error is returned from integration framework" in {
-      when(mockFinancialDataConnector.getFinancialDetails(any())(any()))
-        .thenReturn(Future.failed(UpstreamErrorResponse("response body", INTERNAL_SERVER_ERROR)))
+      when(mockIntegrationFrameworkService.getFinancialData(any[String].asInstanceOf[EclReference])(any()))
+        .thenReturn(
+          EitherT.leftT[Future, Option[FinancialData]](IntegrationFrameworkError.BadGateway("response body", NOT_FOUND))
+        )
 
       val result: Future[Result] =
         controller.getFinancialData(fakeRequest)

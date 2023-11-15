@@ -16,21 +16,19 @@
 
 package uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework
 
-import play.api.http.Status._
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
-import uk.gov.hmrc.http.{HttpReads, HttpResponse, UpstreamErrorResponse}
 
-case class FinancialDataResponse(totalisation: Option[Totalisation], documentDetails: Option[Seq[DocumentDetails]])
+case class FinancialData(totalisation: Option[Totalisation], documentDetails: Option[Seq[DocumentDetails]])
 
-object FinancialDataResponse {
+object FinancialData {
 
-  implicit val reads: Reads[FinancialDataResponse] = (
+  implicit val reads: Reads[FinancialData] = (
     (JsPath \ "getFinancialData" \ "financialDetails" \ "totalisation").readNullable[Totalisation] and
       (JsPath \ "getFinancialData" \ "financialDetails" \ "documentDetails").readNullable[Seq[DocumentDetails]]
-  )(FinancialDataResponse.apply _)
+  )(FinancialData.apply _)
 
-  implicit val writes: OWrites[FinancialDataResponse] = Json.writes[FinancialDataResponse]
+  implicit val writes: OWrites[FinancialData] = Json.writes[FinancialData]
 }
 
 case class Totalisation(
@@ -58,7 +56,7 @@ object Totalisation {
 }
 
 case class DocumentDetails(
-  documentType: Option[String],
+  documentType: Option[DocumentType],
   chargeReferenceNumber: Option[String],
   postingDate: Option[String],
   issueDate: Option[String],
@@ -76,7 +74,7 @@ case class DocumentDetails(
 object DocumentDetails {
 
   implicit val reads: Reads[DocumentDetails] = (
-    (JsPath \ "documentType").readNullable[String] and
+    (JsPath \ "documentType").readNullable[DocumentType] and
       (JsPath \ "chargeReferenceNumber").readNullable[String] and
       (JsPath \ "postingDate").readNullable[String] and
       (JsPath \ "issueDate").readNullable[String] and

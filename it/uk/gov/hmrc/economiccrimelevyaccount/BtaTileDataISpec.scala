@@ -53,7 +53,7 @@ class BtaTileDataISpec extends ISpecBase {
       )
 
       val expectedBtaTileData = BtaTileData(
-        eclRegistrationReference = testEclRegistrationReference,
+        eclReference = testEclReference,
         dueReturn = Some(
           DueReturn(
             isOverdue = true,
@@ -70,22 +70,25 @@ class BtaTileDataISpec extends ISpecBase {
       contentAsJson(result) shouldBe Json.toJson(expectedBtaTileData)
     }
 
-    "return 200 OK with no due return when there is no obligation data" in {
+    "return 200 OK with BtaTileData containing eclReference and None in dueReturn field " in {
       stubAuthorised()
 
       stubObligationsNotFound()
+
+      val expectedBtaTileData = BtaTileData(
+        eclReference = testEclReference,
+        dueReturn = None
+      )
 
       val result = callRoute(
         FakeRequest(routes.BtaTileDataController.getBtaTileData)
       )
 
-      val expectedBtaTileData = BtaTileData(
-        eclRegistrationReference = testEclRegistrationReference,
-        dueReturn = None
+      status(result)        shouldBe OK
+      contentAsJson(result) shouldBe Json.toJson(
+        expectedBtaTileData
       )
 
-      status(result)        shouldBe OK
-      contentAsJson(result) shouldBe Json.toJson(expectedBtaTileData)
     }
   }
 

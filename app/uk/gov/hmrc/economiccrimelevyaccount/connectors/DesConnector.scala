@@ -16,13 +16,15 @@
 
 package uk.gov.hmrc.economiccrimelevyaccount.connectors
 
+import akka.actor.ActorSystem
+import com.typesafe.config.Config
+import play.api.Logging
 import play.api.http.HeaderNames
 import uk.gov.hmrc.economiccrimelevyaccount.config.AppConfig
-import uk.gov.hmrc.economiccrimelevyaccount.models.CustomHeaderNames
+import uk.gov.hmrc.economiccrimelevyaccount.models.{CustomHeaderNames, EclReference}
 import uk.gov.hmrc.economiccrimelevyaccount.models.des.ObligationData
-import uk.gov.hmrc.economiccrimelevyaccount.utils.CorrelationIdGenerator
-import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, Retries, StringContextOps}
 
 import java.time.{LocalDate, ZoneOffset}
 import javax.inject.{Inject, Singleton}
@@ -31,23 +33,29 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class DesConnector @Inject() (
   appConfig: AppConfig,
-  httpClient: HttpClient,
-  correlationIdGenerator: CorrelationIdGenerator
-)(implicit ec: ExecutionContext) {
+  httpClient: HttpClientV2,
+  override val configuration: Config,
+  override val actorSystem: ActorSystem
+)(implicit ec: ExecutionContext)
+    extends BaseConnector
+    with Retries
+    with Logging {
+
+  private val desHeaders: Seq[(String, String)] = Seq(
+    (HeaderNames.AUTHORIZATION, s"Bearer ${appConfig.desBearerToken}"),
+    (CustomHeaderNames.Environment, appConfig.desEnvironment)
+  )
+
+  private def desUrl(eclRegistrationReference: String) =
+    s"${appConfig.desUrl}/enterprise/obligation-data/zecl/$eclRegistrationReference/ECL?from=2022-04-01&to=${LocalDate.now(ZoneOffset.UTC).toString}"
 
   def getObligationData(
-    eclRegistrationReference: String
-  )(implicit hc: HeaderCarrier): Future[Option[ObligationData]] = {
-    val desHeaders: Seq[(String, String)] = Seq(
-      (HeaderNames.AUTHORIZATION, s"Bearer ${appConfig.desBearerToken}"),
-      (CustomHeaderNames.Environment, appConfig.desEnvironment),
-      (CustomHeaderNames.CorrelationId, correlationIdGenerator.generateCorrelationId)
-    )
-
-    httpClient.GET[Option[ObligationData]](
-      s"${appConfig.desUrl}/enterprise/obligation-data/zecl/$eclRegistrationReference/ECL?from=2022-04-01&to=${LocalDate.now(ZoneOffset.UTC).toString}",
-      headers = desHeaders
-    )
-  }
-
+    eclRegistrationReference: EclReference
+  )(implicit hc: HeaderCarrier): Future[ObligationData] =
+    retryFor[ObligationData]("DES - obligation data")(retryCondition) {
+      httpClient
+        .get(url"${desUrl(eclRegistrationReference.value)}")
+        .transform(_.addHttpHeaders(desHeaders: _*))
+        .executeAndDeserialise[ObligationData]
+    }
 }
