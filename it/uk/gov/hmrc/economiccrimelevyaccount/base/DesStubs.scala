@@ -5,7 +5,6 @@ import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import play.api.http.Status.{NOT_FOUND, OK}
 import play.api.libs.json.Json
 import uk.gov.hmrc.economiccrimelevyaccount.base.WireMockHelper.stub
-import uk.gov.hmrc.economiccrimelevyaccount.models.EclReference
 import uk.gov.hmrc.economiccrimelevyaccount.models.des.ObligationData
 
 import java.time.{LocalDate, ZoneOffset}

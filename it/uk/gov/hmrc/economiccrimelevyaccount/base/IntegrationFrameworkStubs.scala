@@ -4,11 +4,10 @@ import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, get, urlPathM
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import play.api.http.Status.OK
 import uk.gov.hmrc.economiccrimelevyaccount.base.WireMockHelper.stub
-import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.FinancialData
 
 trait IntegrationFrameworkStubs { self: WireMockStubs =>
 
-  var validFinancialDetailsResponse =
+  var validFinancialDetailsResponse: String =
     """
       |{
       |  "getFinancialData": {
@@ -96,7 +95,7 @@ trait IntegrationFrameworkStubs { self: WireMockStubs =>
       |}
       |""".stripMargin
 
-  def stubGetFinancialDetails(financialDetails: FinancialData): StubMapping =
+  def stubGetFinancialDetails(): StubMapping =
     stub(
       get(
         urlPathMatching("^/penalty/financial-data/ZECL/.*")
