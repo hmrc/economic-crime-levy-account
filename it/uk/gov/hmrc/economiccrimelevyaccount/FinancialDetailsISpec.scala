@@ -13,9 +13,7 @@ class FinancialDetailsISpec extends ISpecBase {
     "return 200 OK with the financial data JSON when financial is returned" in {
       stubAuthorised()
 
-      val financialDetails = random[FinancialData]
-
-      stubGetFinancialDetails(financialDetails)
+      stubGetFinancialDetails()
 
       val result = callRoute(
         FakeRequest(routes.FinancialDataController.getFinancialData)

@@ -8,7 +8,7 @@ import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.Financia
 
 trait IntegrationFrameworkStubs { self: WireMockStubs =>
 
-  var validFinancialDetailsResponse =
+  var validFinancialDetailsResponse: String =
     """
       |{
       |  "getFinancialData": {
@@ -96,7 +96,7 @@ trait IntegrationFrameworkStubs { self: WireMockStubs =>
       |}
       |""".stripMargin
 
-  def stubGetFinancialDetails(financialDetails: FinancialData): StubMapping =
+  def stubGetFinancialDetails(): StubMapping =
     stub(
       get(
         urlPathMatching("^/penalty/financial-data/ZECL/.*")
