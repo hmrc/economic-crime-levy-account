@@ -4,7 +4,6 @@ import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, get, urlPathM
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import play.api.http.Status.OK
 import uk.gov.hmrc.economiccrimelevyaccount.base.WireMockHelper.stub
-import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.FinancialData
 
 trait IntegrationFrameworkStubs { self: WireMockStubs =>
 

@@ -18,7 +18,7 @@ package uk.gov.hmrc.economiccrimelevyaccount.controllers
 
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.economiccrimelevyaccount.models.EclReference
-import uk.gov.hmrc.economiccrimelevyaccount.models.bta.{BtaTileData, DueReturn}
+import uk.gov.hmrc.economiccrimelevyaccount.models.bta.BtaTileData
 import uk.gov.hmrc.economiccrimelevyaccount.models.des.{ObligationData, Open}
 import uk.gov.hmrc.economiccrimelevyaccount.services.DesService
 import uk.gov.hmrc.economiccrimelevyaccount.utils.CorrelationIdHelper

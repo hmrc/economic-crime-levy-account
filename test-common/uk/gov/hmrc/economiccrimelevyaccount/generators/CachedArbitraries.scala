@@ -20,7 +20,7 @@ import com.danielasfregola.randomdatagenerator.RandomDataGenerator.derivedArbitr
 import org.scalacheck.Arbitrary
 import org.scalacheck.derive.MkArbitrary
 import uk.gov.hmrc.economiccrimelevyaccount.EclTestData
-import uk.gov.hmrc.economiccrimelevyaccount.models.des.{Obligation, ObligationData, ObligationDetails, ObligationStatus}
+import uk.gov.hmrc.economiccrimelevyaccount.models.des.{ObligationData, ObligationDetails, ObligationStatus}
 import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.{FinancialData, FinancialDataErrorResponse}
 
 object CachedArbitraries extends EclTestData with Generators {
