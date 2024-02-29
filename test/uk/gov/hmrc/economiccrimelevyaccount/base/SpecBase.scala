@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.economiccrimelevyaccount.base
 
-import akka.actor.ActorSystem
 import com.typesafe.config.Config
+import org.apache.pekko.actor.ActorSystem
 import org.mockito.MockitoSugar
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers

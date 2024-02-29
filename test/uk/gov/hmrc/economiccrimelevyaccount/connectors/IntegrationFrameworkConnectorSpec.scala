@@ -45,7 +45,7 @@ class IntegrationFrameworkConnectorSpec extends SpecBase {
         financialData: FinancialData
       ) =>
         when(mockHttpClient.get(any())(any())).thenReturn(mockRequestBuilder)
-        when(mockRequestBuilder.setHeader(any())).thenReturn(mockRequestBuilder)
+        when(mockRequestBuilder.setHeader(any(), any(), any())).thenReturn(mockRequestBuilder)
         when(mockRequestBuilder.withBody(any())(any(), any(), any())).thenReturn(mockRequestBuilder)
         when(mockRequestBuilder.execute[HttpResponse](any(), any()))
           .thenReturn(Future.successful(HttpResponse.apply(OK, Json.stringify(Json.toJson(financialData)))))
@@ -61,7 +61,7 @@ class IntegrationFrameworkConnectorSpec extends SpecBase {
 
         val errorMessage = "internal server error"
         when(mockHttpClient.get(any())(any())).thenReturn(mockRequestBuilder)
-        when(mockRequestBuilder.setHeader(any())).thenReturn(mockRequestBuilder)
+        when(mockRequestBuilder.setHeader(any(), any(), any())).thenReturn(mockRequestBuilder)
         when(mockRequestBuilder.withBody(any())(any(), any(), any())).thenReturn(mockRequestBuilder)
         when(mockRequestBuilder.execute[HttpResponse](any(), any()))
           .thenReturn(Future.successful(HttpResponse.apply(INTERNAL_SERVER_ERROR, errorMessage)))
@@ -69,7 +69,8 @@ class IntegrationFrameworkConnectorSpec extends SpecBase {
         Try(await(connector.getFinancialDetails(eclReference))) match {
           case Failure(UpstreamErrorResponse(msg, _, _, _)) =>
             msg shouldEqual errorMessage
-          case _                                            => fail("expected UpstreamErrorResponse when an error is received from IF")
+          case _                                            =>
+            fail("expected UpstreamErrorResponse when an error is received from IF")
         }
 
         verify(mockRequestBuilder, times(2))

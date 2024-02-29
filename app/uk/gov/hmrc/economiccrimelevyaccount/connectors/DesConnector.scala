@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.economiccrimelevyaccount.connectors
 
-import akka.actor.ActorSystem
 import com.typesafe.config.Config
+import org.apache.pekko.actor.ActorSystem
 import play.api.Logging
 import play.api.http.HeaderNames
 import uk.gov.hmrc.economiccrimelevyaccount.config.AppConfig
