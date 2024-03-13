@@ -42,7 +42,6 @@ class IntegrationFrameworkService @Inject() (
       (for {
         financialData <- ifConnector.getFinancialDetails(eclReference)
         filteredResult = filterOutUnknownDocumentTypes(financialData)
-        _              = logFinancialDataDetails(eclReference, financialData)
       } yield Right(Some(filteredResult))).recover {
         case UpstreamErrorResponse(_, NOT_FOUND, _, _) =>
           Right(None)
@@ -58,14 +57,6 @@ class IntegrationFrameworkService @Inject() (
   private val getDocumentTypesOption: FinancialData => Option[Seq[Option[DocumentType]]] = { financialData =>
     financialData.documentDetails.map(documentDetailList => documentDetailList.map(_.documentType))
   }
-
-  private def logFinancialDataDetails(eclReference: EclReference, financialData: FinancialData): Unit =
-    logger.info(s"""
-         | Financial data details
-         | ECL Reference: ${eclReference.value}
-         | Charge types:  ${getDocumentTypesOption(financialData).getOrElse("N/A")}
-    )}
-         |""".stripMargin)
 
   private def filterOutUnknownDocumentTypes(financialData: FinancialData): FinancialData = {
     val documentsWithKnownTypes = financialData.documentDetails.map(documentDetailsList =>
