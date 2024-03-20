@@ -18,10 +18,11 @@ package uk.gov.hmrc.economiccrimelevyaccount.connectors
 
 import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.any
+import play.api.http.HeaderNames
 import play.api.libs.json.Json
 import uk.gov.hmrc.economiccrimelevyaccount.base.SpecBase
 import uk.gov.hmrc.economiccrimelevyaccount.generators.CachedArbitraries._
-import uk.gov.hmrc.economiccrimelevyaccount.models.EclReference
+import uk.gov.hmrc.economiccrimelevyaccount.models.{CustomHeaderNames, EclReference}
 import uk.gov.hmrc.economiccrimelevyaccount.models.des.ObligationData
 import uk.gov.hmrc.http.{HttpResponse, StringContextOps, UpstreamErrorResponse}
 import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
@@ -47,7 +48,16 @@ class DesConnectorSpec extends SpecBase {
           s"${appConfig.desUrl}/enterprise/obligation-data/zecl/${eclReference.value}/ECL?from=2022-04-01&to=${LocalDate.now(ZoneOffset.UTC).toString}"
 
         when(mockHttpClient.get(ArgumentMatchers.eq(url"$expectedUrl"))(any())).thenReturn(mockRequestBuilder)
-        when(mockRequestBuilder.transform(any())).thenReturn(mockRequestBuilder)
+        when(
+          mockRequestBuilder.setHeader(
+            ArgumentMatchers.eq((HeaderNames.AUTHORIZATION, s"Bearer ${appConfig.desBearerToken}"))
+          )
+        ).thenReturn(mockRequestBuilder)
+        when(
+          mockRequestBuilder.setHeader(
+            ArgumentMatchers.eq((CustomHeaderNames.Environment, appConfig.desEnvironment))
+          )
+        ).thenReturn(mockRequestBuilder)
         when(mockRequestBuilder.withBody(any())(any(), any(), any())).thenReturn(mockRequestBuilder)
         when(mockRequestBuilder.execute[HttpResponse](any(), any()))
           .thenReturn(Future.successful(HttpResponse.apply(OK, Json.stringify(Json.toJson(obligationData)))))
@@ -65,7 +75,16 @@ class DesConnectorSpec extends SpecBase {
 
         val errorMessage = "internal server error"
         when(mockHttpClient.get(any())(any())).thenReturn(mockRequestBuilder)
-        when(mockRequestBuilder.transform(any())).thenReturn(mockRequestBuilder)
+        when(
+          mockRequestBuilder.setHeader(
+            ArgumentMatchers.eq((HeaderNames.AUTHORIZATION, s"Bearer ${appConfig.desBearerToken}"))
+          )
+        ).thenReturn(mockRequestBuilder)
+        when(
+          mockRequestBuilder.setHeader(
+            ArgumentMatchers.eq((CustomHeaderNames.Environment, appConfig.desEnvironment))
+          )
+        ).thenReturn(mockRequestBuilder)
         when(mockRequestBuilder.withBody(any())(any(), any(), any())).thenReturn(mockRequestBuilder)
         when(mockRequestBuilder.execute[HttpResponse](any(), any()))
           .thenReturn(Future.successful(HttpResponse.apply(INTERNAL_SERVER_ERROR, errorMessage)))
