@@ -23,7 +23,7 @@ import uk.gov.hmrc.economiccrimelevyaccount.connectors.IntegrationFrameworkConne
 import uk.gov.hmrc.economiccrimelevyaccount.models.EclReference
 import uk.gov.hmrc.economiccrimelevyaccount.models.errors.IntegrationFrameworkError
 import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.DocumentType.Other
-import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.{DocumentType, FinancialData}
+import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.FinancialData
 import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
 
 import javax.inject.Inject
@@ -54,11 +54,7 @@ class IntegrationFrameworkService @Inject() (
       }
     }
 
-  private val getDocumentTypesOption: FinancialData => Option[Seq[Option[DocumentType]]] = { financialData =>
-    financialData.documentDetails.map(documentDetailList => documentDetailList.map(_.documentType))
-  }
-
-  private def filterOutUnknownDocumentTypes(financialData: FinancialData): FinancialData = {
+  def filterOutUnknownDocumentTypes(financialData: FinancialData): FinancialData = {
     val documentsWithKnownTypes = financialData.documentDetails.map(documentDetailsList =>
       documentDetailsList.filterNot(_.documentType.exists(_.isInstanceOf[Other]))
     )
