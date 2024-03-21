@@ -2,7 +2,7 @@ package uk.gov.hmrc.economiccrimelevyaccount.base
 
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
-import play.api.http.Status.OK
+import play.api.http.Status.{OK, UNAUTHORIZED}
 import uk.gov.hmrc.economiccrimelevyaccount.base.WireMockHelper.stub
 import uk.gov.hmrc.economiccrimelevyaccount.models.eacd.EclEnrolment
 
@@ -34,6 +34,25 @@ trait AuthStubs { self: WireMockStubs =>
              |  }]
              |}
          """.stripMargin)
+    )
+
+  def stubUnauthorised(): StubMapping =
+    stub(
+      post(urlEqualTo("/auth/authorise"))
+        .withRequestBody(
+          equalToJson(
+            s"""
+               |{
+               |  "authorise": [],
+               |  "retrieve": [ "internalId", "authorisedEnrolments" ]
+               |}
+         """.stripMargin,
+            true,
+            true
+          )
+        ),
+      aResponse()
+        .withStatus(UNAUTHORIZED)
     )
 
 }

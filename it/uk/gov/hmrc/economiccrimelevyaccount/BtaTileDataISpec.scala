@@ -24,12 +24,14 @@ import uk.gov.hmrc.economiccrimelevyaccount.controllers.routes
 import uk.gov.hmrc.economiccrimelevyaccount.generators.CachedArbitraries._
 import uk.gov.hmrc.economiccrimelevyaccount.models.bta.{BtaTileData, DueReturn}
 import uk.gov.hmrc.economiccrimelevyaccount.models.des._
+import uk.gov.hmrc.economiccrimelevyaccount.models.errors.ResponseError
 
 import java.time.LocalDate
 
 class BtaTileDataISpec extends ISpecBase {
 
   s"GET ${routes.BtaTileDataController.getBtaTileData.url}" should {
+
     "return 200 OK with a due return when there is an open obligation" in {
       stubAuthorised()
 
@@ -70,6 +72,34 @@ class BtaTileDataISpec extends ISpecBase {
       contentAsJson(result) shouldBe Json.toJson(expectedBtaTileData)
     }
 
+    "return 200 OK when there is a fulfilled obligation" in {
+      stubAuthorised()
+
+      val openObligation =
+        random[ObligationDetails].copy(
+          status = Fulfilled
+        )
+
+      val obligationData =
+        ObligationData(
+          Seq(Obligation(None, Seq(openObligation)))
+        )
+
+      stubGetObligations(obligationData)
+
+      val result = callRoute(
+        FakeRequest(routes.BtaTileDataController.getBtaTileData)
+      )
+
+      val expectedBtaTileData = BtaTileData(
+        eclReference = testEclReference,
+        dueReturn = None
+      )
+
+      status(result)        shouldBe OK
+      contentAsJson(result) shouldBe Json.toJson(expectedBtaTileData)
+    }
+
     "return 200 OK with BtaTileData containing eclReference and None in dueReturn field " in {
       stubAuthorised()
 
@@ -88,7 +118,23 @@ class BtaTileDataISpec extends ISpecBase {
       contentAsJson(result) shouldBe Json.toJson(
         expectedBtaTileData
       )
+    }
 
+    "return 502 BAD_GATEWAY when DES does not find obligations under the given ecl reference" in {
+      stubAuthorised()
+
+      val statusCode   = BAD_REQUEST
+      val errorMessage = "bad request"
+      stubObligationsUpstreamError(statusCode, errorMessage)
+
+      val result = callRoute(
+        FakeRequest(routes.BtaTileDataController.getBtaTileData)
+      )
+
+      status(result)        shouldBe BAD_GATEWAY
+      contentAsJson(result) shouldBe Json.toJson(
+        ResponseError.badGateway(errorMessage, statusCode)
+      )
     }
   }
 

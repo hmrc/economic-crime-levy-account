@@ -105,4 +105,14 @@ trait IntegrationFrameworkStubs { self: WireMockStubs =>
         .withBody(validFinancialDetailsResponse)
     )
 
+  def stubGetFinancialDetailsUpstreamError(statusCode: Int, message: String): StubMapping =
+    stub(
+      get(
+        urlPathMatching("^/penalty/financial-data/ZECL/.*")
+      ),
+      aResponse()
+        .withStatus(statusCode)
+        .withBody(message)
+    )
+
 }

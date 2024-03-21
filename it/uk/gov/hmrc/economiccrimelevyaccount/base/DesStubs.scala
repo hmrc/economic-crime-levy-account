@@ -35,4 +35,28 @@ trait DesStubs { self: WireMockStubs =>
         .withBody("No obligation data found")
     )
 
+  def stubObligationsUpstreamError(statusCode: Int, body: String): StubMapping =
+    stub(
+      get(
+        urlEqualTo(
+          s"/enterprise/obligation-data/zecl/${testEclReference.value}/ECL?from=2022-04-01&to=${LocalDate.now(ZoneOffset.UTC).toString}"
+        )
+      ),
+      aResponse()
+        .withStatus(statusCode)
+        .withBody(body)
+    )
+
+  def stubGetObligationsUnexpectedResponse(): StubMapping =
+    stub(
+      get(
+        urlEqualTo(
+          s"/enterprise/obligation-data/zecl/${testEclReference.value}/ECL?from=2022-04-01&to=${LocalDate.now(ZoneOffset.UTC).toString}"
+        )
+      ),
+      aResponse()
+        .withStatus(OK)
+        .withBody(Json.toJson("").toString())
+    )
+
 }
