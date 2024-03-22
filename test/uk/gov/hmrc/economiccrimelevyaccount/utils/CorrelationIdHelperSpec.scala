@@ -18,7 +18,7 @@ package uk.gov.hmrc.economiccrimelevyaccount.utils
 
 import play.api.test.FakeRequest
 import uk.gov.hmrc.economiccrimelevyaccount.base.SpecBase
-import uk.gov.hmrc.economiccrimelevyaccount.utils.CorrelationIdHelper.HEADER_X_CORRELATION_ID
+import uk.gov.hmrc.economiccrimelevyaccount.models.CustomHeaderNames
 
 import java.util.UUID
 
@@ -36,12 +36,12 @@ class CorrelationIdHelperSpec extends SpecBase {
     }
 
     "not add the HEADER_X_CORRELATION_ID header to the HeaderCarrier extra headers if present" in {
-      val fakeRequest = FakeRequest.apply().withHeaders((HEADER_X_CORRELATION_ID, "existingHeader"))
+      val fakeRequest = FakeRequest.apply().withHeaders((CustomHeaderNames.xCorrelationId, "existingHeader"))
 
       val result = CorrelationIdHelper.headerCarrierWithCorrelationId(fakeRequest)
 
-      result.extraHeaders                                        shouldBe empty
-      result.headers(scala.Seq(HEADER_X_CORRELATION_ID)).head._2 shouldBe "existingHeader"
+      result.extraHeaders                                                 shouldBe empty
+      result.headers(scala.Seq(CustomHeaderNames.xCorrelationId)).head._2 shouldBe "existingHeader"
     }
   }
 }
