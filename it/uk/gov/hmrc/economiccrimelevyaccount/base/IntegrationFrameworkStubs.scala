@@ -2,7 +2,7 @@ package uk.gov.hmrc.economiccrimelevyaccount.base
 
 import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, get, urlPathMatching}
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
-import play.api.http.Status.OK
+import play.api.http.Status.{CONFLICT, OK, UNPROCESSABLE_ENTITY}
 import uk.gov.hmrc.economiccrimelevyaccount.base.WireMockHelper.stub
 
 trait IntegrationFrameworkStubs { self: WireMockStubs =>
@@ -95,7 +95,7 @@ trait IntegrationFrameworkStubs { self: WireMockStubs =>
       |}
       |""".stripMargin
 
-  def stubGetFinancialDetails(): StubMapping =
+  def stubGetFinancialDetailsSuccess(): StubMapping =
     stub(
       get(
         urlPathMatching("^/penalty/financial-data/ZECL/.*")
@@ -103,6 +103,30 @@ trait IntegrationFrameworkStubs { self: WireMockStubs =>
       aResponse()
         .withStatus(OK)
         .withBody(validFinancialDetailsResponse)
+    )
+
+  def stubGetFinancialDetails409(): StubMapping =
+    stub(
+      get(
+        urlPathMatching("^/penalty/financial-data/ZECL/.*")
+      ),
+      aResponse()
+        .withStatus(CONFLICT)
+        .withBody(
+          "{\"failures\":[{\"code\":\"DUPLICATE_SUBMISSION\",\"reason\":\"The remote endpoint has indicated duplicate submission.\"}]}"
+        )
+    )
+
+  def stubGetFinancialDetails422(): StubMapping =
+    stub(
+      get(
+        urlPathMatching("^/penalty/financial-data/ZECL/.*")
+      ),
+      aResponse()
+        .withStatus(UNPROCESSABLE_ENTITY)
+        .withBody(
+          "{\"failures\":[{\"code\":\"INVALID_ID\",\"reason\":\"The remote endpoint has indicated that reference id is invalid.\"}]}"
+        )
     )
 
 }

@@ -19,12 +19,11 @@ package uk.gov.hmrc.economiccrimelevyaccount.connectors
 import com.typesafe.config.Config
 import org.apache.pekko.actor.ActorSystem
 import play.api.Logging
-import play.api.http.HeaderNames
 import uk.gov.hmrc.economiccrimelevyaccount.config.AppConfig
 import uk.gov.hmrc.economiccrimelevyaccount.models.{CustomHeaderNames, EclReference}
 import uk.gov.hmrc.economiccrimelevyaccount.models.des.ObligationData
 import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{HeaderCarrier, Retries, StringContextOps}
+import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, Retries, StringContextOps}
 
 import java.time.{LocalDate, ZoneOffset}
 import javax.inject.{Inject, Singleton}
@@ -42,8 +41,8 @@ class DesConnector @Inject() (
     with Logging {
 
   private val desHeaders: Seq[(String, String)] = Seq(
-    (HeaderNames.AUTHORIZATION, s"Bearer ${appConfig.desBearerToken}"),
-    (CustomHeaderNames.Environment, appConfig.desEnvironment)
+    (HeaderNames.authorisation, s"Bearer ${appConfig.desBearerToken}"),
+    (CustomHeaderNames.environment, appConfig.desEnvironment)
   )
 
   private def desUrl(eclRegistrationReference: String) =
