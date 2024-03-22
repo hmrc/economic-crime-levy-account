@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.economiccrimelevyaccount.models
 
-import play.api.libs.json.{JsError, JsNumber, JsString, JsSuccess, JsValue, Json}
+import play.api.libs.json.{JsError, JsNumber, JsString, Json}
 import uk.gov.hmrc.economiccrimelevyaccount.base.SpecBase
 import uk.gov.hmrc.economiccrimelevyaccount.models.des.{Fulfilled, ObligationStatus, Open}
 

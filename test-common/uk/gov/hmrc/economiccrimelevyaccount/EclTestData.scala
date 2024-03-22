@@ -21,124 +21,102 @@ import org.scalacheck.{Arbitrary, Gen}
 import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier, Enrolments}
 import uk.gov.hmrc.economiccrimelevyaccount.models.EclReference
 import uk.gov.hmrc.economiccrimelevyaccount.models.eacd.EclEnrolment
-import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.DocumentType.NewCharge
-import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.{DocumentDetails, FinancialData, LineItemDetails, PenaltyTotals, Totalisation}
-
-import java.time.{Instant, LocalDate}
-
-case class EnrolmentsWithEcl(enrolments: Enrolments)
-
-case class EnrolmentsWithoutEcl(enrolments: Enrolments)
-
-case class ValidFinancialDataResponse(financialDataResponse: FinancialData)
+import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.{DocumentDetails, DocumentType, FinancialData}
+import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.{LineItemDetails, PenaltyTotals, Totalisation}
 
 trait EclTestData {
 
-  implicit val arbInstant: Arbitrary[Instant] = Arbitrary {
-    Instant.now()
-  }
-
-  implicit val arbLocalDate: Arbitrary[LocalDate] = Arbitrary {
-    LocalDate.now()
-  }
-
-  implicit val arbEnrolmentsWithEcl: Arbitrary[EnrolmentsWithEcl] = Arbitrary {
+  def arbEnrolments(withEcl: Boolean): Arbitrary[Enrolments] = Arbitrary {
     for {
-      enrolments               <- Arbitrary.arbitrary[Enrolments]
+      enrolments               <- Gen.containerOf[Set, Enrolment](Arbitrary.arbitrary[Enrolment])
       enrolment                <- Arbitrary.arbitrary[Enrolment]
       eclRegistrationReference <- Arbitrary.arbitrary[String]
       eclEnrolmentIdentifier    = EnrolmentIdentifier(EclEnrolment.IdentifierKey, eclRegistrationReference)
       eclEnrolment              =
         enrolment.copy(key = EclEnrolment.ServiceName, identifiers = enrolment.identifiers :+ eclEnrolmentIdentifier)
-    } yield EnrolmentsWithEcl(enrolments.copy(enrolments.enrolments + eclEnrolment))
+    } yield if (withEcl) Enrolments(enrolments + eclEnrolment) else Enrolments(enrolments)
   }
 
-  private def calculatePeriodKey(year: String): String = s"${year.takeRight(2)}XY"
-
-  implicit val arbValidFinancialDataResponse: Arbitrary[ValidFinancialDataResponse] = Arbitrary {
+  implicit val arbBigDecimal: Arbitrary[BigDecimal] = Arbitrary {
     for {
-      totalisation    <- Arbitrary.arbitrary[Totalisation]
-      penaltyTotals   <- Arbitrary.arbitrary[Seq[PenaltyTotals]]
-      postingDateArb  <- Arbitrary.arbitrary[LocalDate]
-      issueDateArb    <- Arbitrary.arbitrary[LocalDate]
-      totalAmount     <- Arbitrary.arbitrary[Int]
-      clearedAmount   <- Arbitrary.arbitrary[Int]
-      documentDetails <- Arbitrary.arbitrary[DocumentDetails]
-      lineItemDetails <- Arbitrary.arbitrary[LineItemDetails]
-      itemNetDueDate  <- Arbitrary.arbitrary[LocalDate]
-      randomNumber    <- Arbitrary.arbitrary[Int]
-    } yield {
-
-      val randomBigDecimal = Some(BigDecimal(randomNumber.toString))
-
-      ValidFinancialDataResponse(
-        FinancialData(
-          totalisation = Some(
-            totalisation.copy(
-              totalAccountBalance = randomBigDecimal,
-              totalAccountOverdue = randomBigDecimal,
-              totalOverdue = randomBigDecimal,
-              totalNotYetDue = randomBigDecimal,
-              totalBalance = randomBigDecimal,
-              totalCredit = randomBigDecimal,
-              totalCleared = randomBigDecimal
-            )
-          ),
-          documentDetails = Some(
-            Seq(
-              documentDetails.copy(
-                documentType = Some(NewCharge),
-                chargeReferenceNumber = Some("XMECL0000000001"),
-                postingDate = Some(postingDateArb.toString),
-                issueDate = Some(issueDateArb.toString),
-                documentTotalAmount = Some(BigDecimal(randomNumber.toString)),
-                documentClearedAmount = Some(BigDecimal(clearedAmount.toString)),
-                documentOutstandingAmount = Some(BigDecimal(totalAmount.toString) - BigDecimal(clearedAmount.toString)),
-                lineItemDetails = Some(
-                  Seq(
-                    lineItemDetails.copy(
-                      chargeDescription = Some("XMECL0000000001"),
-                      periodFromDate = Some(postingDateArb.toString),
-                      periodToDate = Some(postingDateArb.toString),
-                      periodKey = Some(calculatePeriodKey(postingDateArb.toString.takeRight(4))),
-                      netDueDate = Some(itemNetDueDate.toString),
-                      amount = Some(BigDecimal(clearedAmount.toString))
-                    )
-                  )
-                ),
-                interestPostedAmount = randomBigDecimal,
-                interestAccruingAmount = randomBigDecimal,
-                penaltyTotals = Some(
-                  penaltyTotals.map(p =>
-                    p.copy(
-                      penaltyAmount = randomBigDecimal
-                    )
-                  )
-                )
-              )
-            )
-          )
-        )
-      )
-    }
+      value <- Arbitrary.arbitrary[Int]
+    } yield BigDecimal(value)
   }
 
-  implicit val arbEnrolmentsWithoutEcl: Arbitrary[EnrolmentsWithoutEcl] = Arbitrary {
-    Arbitrary
-      .arbitrary[Enrolments]
-      .retryUntil(
-        !_.enrolments.exists(e =>
-          e.key == EclEnrolment.ServiceName && e.identifiers.exists(_.key == EclEnrolment.IdentifierKey)
-        )
+  implicit val arbTotalisation: Arbitrary[Totalisation] = Arbitrary {
+    for {
+      totalAccountBalance <- Arbitrary.arbitrary[BigDecimal]
+      totalAccountOverdue <- Arbitrary.arbitrary[BigDecimal]
+      totalOverdue        <- Arbitrary.arbitrary[BigDecimal]
+      totalNotYetDue      <- Arbitrary.arbitrary[BigDecimal]
+      totalBalance        <- Arbitrary.arbitrary[BigDecimal]
+      totalCredit         <- Arbitrary.arbitrary[BigDecimal]
+      totalCleared        <- Arbitrary.arbitrary[BigDecimal]
+    } yield Totalisation(
+      Some(totalAccountBalance),
+      Some(totalAccountOverdue),
+      Some(totalOverdue),
+      Some(totalNotYetDue),
+      Some(totalBalance),
+      Some(totalCredit),
+      Some(totalCleared)
+    )
+  }
+
+  implicit val arbDocumentTypes: Arbitrary[DocumentType with Serializable] = Arbitrary {
+    Gen.oneOf(
+      Seq(
+        DocumentType.InterestCharge,
+        DocumentType.NewCharge,
+        DocumentType.Payment,
+        DocumentType.AmendedCharge
       )
-      .map(EnrolmentsWithoutEcl)
+    )
+  }
+
+  implicit val arbDocumentDetails: Arbitrary[DocumentDetails] = Arbitrary {
+    for {
+      documentType              <- arbDocumentTypes.arbitrary.map(Some(_))
+      chargeReferenceNumber     <- Arbitrary.arbitrary[String].map(Some(_))
+      postingDate               <- Arbitrary.arbitrary[String].map(Some(_))
+      issueDate                 <- Arbitrary.arbitrary[String].map(Some(_))
+      documentTotalAmount       <- Arbitrary.arbitrary[BigDecimal].map(Some(_))
+      documentClearedAmount     <- Arbitrary.arbitrary[BigDecimal].map(Some(_))
+      documentOutstandingAmount <- Arbitrary.arbitrary[BigDecimal].map(Some(_))
+      lineItemDetails           <- Arbitrary.arbitrary[Seq[LineItemDetails]].map(Some(_))
+      interestPostedAmount      <- Arbitrary.arbitrary[BigDecimal].map(Some(_))
+      interestAccruingAmount    <- Arbitrary.arbitrary[BigDecimal].map(Some(_))
+      interestPostedChargeRef   <- Arbitrary.arbitrary[String].map(Some(_))
+      penaltyTotals             <- Arbitrary.arbitrary[Seq[PenaltyTotals]].map(Some(_))
+      contractObjectNumber      <- Arbitrary.arbitrary[String].map(Some(_))
+      contractObjectType        <- Arbitrary.arbitrary[String].map(Some(_))
+    } yield DocumentDetails(
+      documentType,
+      chargeReferenceNumber,
+      postingDate,
+      issueDate,
+      documentTotalAmount,
+      documentClearedAmount,
+      documentOutstandingAmount,
+      lineItemDetails,
+      interestPostedAmount,
+      interestAccruingAmount,
+      interestPostedChargeRef,
+      penaltyTotals,
+      contractObjectNumber,
+      contractObjectType
+    )
+  }
+
+  implicit val arbValidFinancialDataResponse: Arbitrary[FinancialData] = Arbitrary {
+    for {
+      totalisation    <- Arbitrary.arbitrary[Totalisation].map(Some(_))
+      documentDetails <- Gen.nonEmptyContainerOf[Seq, DocumentDetails](Arbitrary.arbitrary[DocumentDetails])
+    } yield FinancialData(
+      totalisation,
+      Some(documentDetails)
+    )
   }
 
   implicit val arbEclReference: Arbitrary[EclReference] = Arbitrary(Gen.alphaNumStr.map(EclReference(_)))
-
-  def alphaNumericString: String = Gen.alphaNumStr.sample.get
-
-  val testInternalId: String = alphaNumericString
-
-  val testEclReference: EclReference = arbEclReference.arbitrary.sample.get
 }

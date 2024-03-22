@@ -18,6 +18,7 @@ package uk.gov.hmrc.economiccrimelevyaccount.controllers.actions
 
 import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.any
+import org.scalacheck.Arbitrary
 import play.api.mvc.{BodyParsers, Request, Result}
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
@@ -25,7 +26,6 @@ import uk.gov.hmrc.auth.core.retrieve.{Retrieval, ~}
 import uk.gov.hmrc.auth.core.syntax.retrieved.authSyntaxForRetrieved
 import uk.gov.hmrc.economiccrimelevyaccount.base.SpecBase
 import uk.gov.hmrc.economiccrimelevyaccount.models.eacd.EclEnrolment
-import uk.gov.hmrc.economiccrimelevyaccount.{EnrolmentsWithEcl, EnrolmentsWithoutEcl}
 import uk.gov.hmrc.economiccrimelevyreturns.controllers.actions.BaseAuthorisedAction
 
 import scala.concurrent.Future
@@ -46,15 +46,17 @@ class AuthorisedActionSpec extends SpecBase {
     Retrievals.internalId and Retrievals.authorisedEnrolments
 
   "invokeBlock" should {
-    "execute the block and return the result if authorised" in forAll {
-      (internalId: String, enrolmentsWithEcl: EnrolmentsWithEcl) =>
-        when(mockAuthConnector.authorise(any(), ArgumentMatchers.eq(expectedRetrievals))(any(), any()))
-          .thenReturn(Future(Some(internalId) and enrolmentsWithEcl.enrolments))
+    "execute the block and return the result if authorised" in forAll(
+      Arbitrary.arbitrary[String],
+      arbEnrolments(withEcl = true).arbitrary
+    ) { (internalId: String, enrolments: Enrolments) =>
+      when(mockAuthConnector.authorise(any(), ArgumentMatchers.eq(expectedRetrievals))(any(), any()))
+        .thenReturn(Future(Some(internalId) and enrolments))
 
-        val result: Future[Result] = authorisedAction.invokeBlock(fakeRequest, testAction)
+      val result: Future[Result] = authorisedAction.invokeBlock(fakeRequest, testAction)
 
-        status(result)          shouldBe OK
-        contentAsString(result) shouldBe "Test"
+      status(result)          shouldBe OK
+      contentAsString(result) shouldBe "Test"
     }
 
     "return 401 unauthorized if there is an authorisation exception" in {
@@ -90,16 +92,18 @@ class AuthorisedActionSpec extends SpecBase {
       result.getMessage shouldBe "Unable to retrieve internalId"
     }
 
-    "throw an IllegalStateException if there is no ECL enrolment in the set of authorised enrolments" in forAll {
-      (internalId: String, enrolmentsWithoutEcl: EnrolmentsWithoutEcl) =>
-        when(mockAuthConnector.authorise(any(), ArgumentMatchers.eq(expectedRetrievals))(any(), any()))
-          .thenReturn(Future(Some(internalId) and enrolmentsWithoutEcl.enrolments))
+    "throw an IllegalStateException if there is no ECL enrolment in the set of authorised enrolments" in forAll(
+      Arbitrary.arbitrary[String],
+      arbEnrolments(withEcl = false).arbitrary
+    ) { (internalId: String, enrolments: Enrolments) =>
+      when(mockAuthConnector.authorise(any(), ArgumentMatchers.eq(expectedRetrievals))(any(), any()))
+        .thenReturn(Future(Some(internalId) and enrolments))
 
-        val result = intercept[IllegalStateException] {
-          await(authorisedAction.invokeBlock(fakeRequest, testAction))
-        }
+      val result = intercept[IllegalStateException] {
+        await(authorisedAction.invokeBlock(fakeRequest, testAction))
+      }
 
-        result.getMessage shouldBe s"Unable to retrieve enrolment with key ${EclEnrolment.ServiceName} and identifier ${EclEnrolment.IdentifierKey}"
+      result.getMessage shouldBe s"Unable to retrieve enrolment with key ${EclEnrolment.ServiceName} and identifier ${EclEnrolment.IdentifierKey}"
     }
   }
 

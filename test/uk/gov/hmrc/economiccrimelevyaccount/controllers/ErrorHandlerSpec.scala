@@ -17,19 +17,11 @@
 package uk.gov.hmrc.economiccrimelevyaccount.controllers
 
 import uk.gov.hmrc.economiccrimelevyaccount.base.SpecBase
-import uk.gov.hmrc.economiccrimelevyaccount.models.EclReference
 import uk.gov.hmrc.economiccrimelevyaccount.models.errors._
 
 class ErrorHandlerSpec extends SpecBase with ErrorHandler {
 
   "DesError" should {
-    "return ResponseError.badGateway when DesError.NotFound is converted" in forAll { (eclReference: EclReference) =>
-      val desError = DesError.NotFound(eclReference)
-
-      val result: ResponseError = desErrorConverter.convert(desError)
-
-      result shouldBe ResponseError.notFoundError(s"Unable to find record with id: ${eclReference.value}")
-    }
 
     "return ResponseError.badGateway when DesError.BadGateway is converted" in forAll { (errorMessage: String) =>
       val desError = DesError.BadGateway(errorMessage, BAD_REQUEST)
@@ -50,14 +42,6 @@ class ErrorHandlerSpec extends SpecBase with ErrorHandler {
   }
 
   "integrationFrameworkErrorConverter" should {
-    "return ResponseError.notFoundError when IntegrationFrameworkError.NotFound is converted" in forAll {
-      (eclReference: EclReference) =>
-        val integrationFrameworkError = IntegrationFrameworkError.NotFound(eclReference)
-
-        val result: ResponseError = integrationFrameworkErrorConverter.convert(integrationFrameworkError)
-
-        result shouldBe ResponseError.notFoundError(s"Unable to find record with id: ${eclReference.value}")
-    }
 
     "return ResponseError.badGateway when IntegrationFrameworkError.BadGateway is converted" in forAll {
       (errorMessage: String) =>

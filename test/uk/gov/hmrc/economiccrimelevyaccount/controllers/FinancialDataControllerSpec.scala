@@ -20,10 +20,10 @@ import cats.data.EitherT
 import org.mockito.ArgumentMatchers.any
 import play.api.libs.json.Json
 import play.api.mvc.Result
-import uk.gov.hmrc.economiccrimelevyaccount.ValidFinancialDataResponse
 import uk.gov.hmrc.economiccrimelevyaccount.base.SpecBase
 import uk.gov.hmrc.economiccrimelevyaccount.models.EclReference
 import uk.gov.hmrc.economiccrimelevyaccount.models.errors.IntegrationFrameworkError
+import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.DocumentType.Other
 import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.FinancialData
 import uk.gov.hmrc.economiccrimelevyaccount.services.IntegrationFrameworkService
 
@@ -44,33 +44,22 @@ class FinancialDataControllerSpec extends SpecBase {
 
   "getFinancialData" should {
     "return 200 OK with the JSON payload when FinancialDataResponse is returned from service" in forAll {
-      validFinancialDataResponse: ValidFinancialDataResponse =>
-        val validDocumentDetails = validFinancialDataResponse.financialDataResponse.documentDetails.get.head.copy(
-          documentClearedAmount = Some(BigDecimal("0")),
-          documentOutstandingAmount = Some(BigDecimal("1000")),
-          documentTotalAmount = Some(BigDecimal("1000"))
-        )
-        val validTotalisation    = validFinancialDataResponse.financialDataResponse.totalisation.get.copy(
-          totalOverdue = Some(BigDecimal("1000")),
-          totalNotYetDue = Some(BigDecimal("0")),
-          totalBalance = Some(BigDecimal("1000")),
-          totalCredit = Some(BigDecimal("0")),
-          totalCleared = Some(BigDecimal("0")),
-          totalAccountOverdue = Some(BigDecimal("1000")),
-          totalAccountBalance = Some(BigDecimal("1000"))
-        )
-        val response             = validFinancialDataResponse.financialDataResponse
-          .copy(totalisation = Some(validTotalisation), documentDetails = Some(Seq(validDocumentDetails)))
-
+      financialDataResponse: FinancialData =>
         when(mockIntegrationFrameworkService.getFinancialData(any[String].asInstanceOf[EclReference])(any()))
-          .thenReturn(EitherT.rightT[Future, IntegrationFrameworkError](Some(response)))
+          .thenReturn(EitherT.rightT[Future, IntegrationFrameworkError](Some(financialDataResponse)))
 
         val result: Future[Result] =
           controller.getFinancialData()(fakeRequest)
 
+        val documentsWithKnownTypes = financialDataResponse.documentDetails.map(documentDetailsList =>
+          documentDetailsList.filterNot(_.documentType.exists(_.isInstanceOf[Other]))
+        )
+
+        val expectedResponse = FinancialData(financialDataResponse.totalisation, documentsWithKnownTypes)
+
         status(result) shouldBe OK
 
-        contentAsJson(result) shouldBe Json.toJson(response)
+        contentAsJson(result) shouldBe Json.toJson(expectedResponse)
     }
   }
 

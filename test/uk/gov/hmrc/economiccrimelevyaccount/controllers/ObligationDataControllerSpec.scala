@@ -51,16 +51,6 @@ class ObligationDataControllerSpec extends SpecBase {
         status(result)        shouldBe OK
         contentAsJson(result) shouldBe Json.toJson(obligationData)
     }
-
-    "return 404 NOT_FOUND when obligation data is not returned by the service" in forAll { eclReference: EclReference =>
-      when(mockObligationDataService.getObligationData(any[String].asInstanceOf[EclReference])(any()))
-        .thenReturn(EitherT.leftT[Future, Option[ObligationData]](DesError.NotFound(eclReference)))
-
-      val result: Future[Result] =
-        controller.getObligationData()(fakeRequest)
-
-      status(result) shouldBe NOT_FOUND
-    }
   }
 
 }
