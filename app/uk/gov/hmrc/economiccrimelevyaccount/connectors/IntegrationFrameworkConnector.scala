@@ -16,17 +16,13 @@
 
 package uk.gov.hmrc.economiccrimelevyaccount.connectors
 
-import com.typesafe.config.Config
 import io.lemonlabs.uri.{QueryString, Url}
-import org.apache.pekko.actor.ActorSystem
 import play.api.Logging
-import play.api.http.HeaderNames
 import uk.gov.hmrc.economiccrimelevyaccount.config.AppConfig
 import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework._
 import uk.gov.hmrc.economiccrimelevyaccount.models.{CustomHeaderNames, EclReference, QueryParams}
-import uk.gov.hmrc.economiccrimelevyaccount.utils.CorrelationIdHelper.HEADER_X_CORRELATION_ID
 import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{HeaderCarrier, Retries, StringContextOps}
+import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, StringContextOps}
 
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -37,12 +33,9 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class IntegrationFrameworkConnector @Inject() (
   appConfig: AppConfig,
-  httpClient: HttpClientV2,
-  override val configuration: Config,
-  override val actorSystem: ActorSystem
+  httpClient: HttpClientV2
 )(implicit ec: ExecutionContext)
     extends BaseConnector
-    with Retries
     with Logging {
 
   private def ifUrl(eclRegistrationReference: String) = Url(
@@ -53,21 +46,19 @@ class IntegrationFrameworkConnector @Inject() (
   def getFinancialDetails(
     eclReference: EclReference
   )(implicit hc: HeaderCarrier): Future[FinancialData] = {
-    val correlationId = hc.headers(scala.Seq(HEADER_X_CORRELATION_ID)) match {
+    val correlationId = hc.headers(scala.Seq(CustomHeaderNames.xCorrelationId)) match {
       case Nil          =>
         UUID.randomUUID().toString
       case Seq((_, id)) =>
         id
     }
 
-    retryFor[FinancialData]("Integration framework - financial data")(retryCondition) {
-      httpClient
-        .get(url"${ifUrl(eclReference.value)}")
-        .setHeader((HeaderNames.AUTHORIZATION, s"Bearer ${appConfig.integrationFrameworkBearerToken}"))
-        .setHeader((CustomHeaderNames.Environment, appConfig.integrationFrameworkEnvironment))
-        .setHeader((CustomHeaderNames.CorrelationId, correlationId))
-        .executeAndDeserialise[FinancialData]
-    }
+    httpClient
+      .get(url"${ifUrl(eclReference.value)}")
+      .setHeader((HeaderNames.authorisation, s"Bearer ${appConfig.integrationFrameworkBearerToken}"))
+      .setHeader((CustomHeaderNames.environment, appConfig.integrationFrameworkEnvironment))
+      .setHeader((CustomHeaderNames.correlationId, correlationId))
+      .executeAndDeserialise[FinancialData]
   }
 
   private def financialDetailsQueryParams: Seq[(String, String)] = Seq(

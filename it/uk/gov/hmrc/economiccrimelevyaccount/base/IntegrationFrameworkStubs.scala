@@ -95,7 +95,7 @@ trait IntegrationFrameworkStubs { self: WireMockStubs =>
       |}
       |""".stripMargin
 
-  def stubGetFinancialDetails(): StubMapping =
+  def stubGetFinancialDetailsSuccess(): StubMapping =
     stub(
       get(
         urlPathMatching("^/penalty/financial-data/ZECL/.*")
@@ -105,14 +105,13 @@ trait IntegrationFrameworkStubs { self: WireMockStubs =>
         .withBody(validFinancialDetailsResponse)
     )
 
-  def stubGetFinancialDetailsUpstreamError(statusCode: Int, message: String): StubMapping =
-    stub(
-      get(
-        urlPathMatching("^/penalty/financial-data/ZECL/.*")
-      ),
-      aResponse()
-        .withStatus(statusCode)
-        .withBody(message)
-    )
+  def stubGetFinancialDetailsUpstreamError(statusCode: Int, message: String): StubMapping = stub(
+    get(
+      urlPathMatching("^/penalty/financial-data/ZECL/.*")
+    ),
+    aResponse()
+      .withStatus(statusCode)
+      .withBody(message)
+  )
 
 }

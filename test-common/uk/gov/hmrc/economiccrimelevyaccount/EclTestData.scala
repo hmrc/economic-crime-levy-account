@@ -26,6 +26,8 @@ import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.{LineIte
 
 trait EclTestData {
 
+  val uuidRegex: String = "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+
   def arbEnrolments(withEcl: Boolean): Arbitrary[Enrolments] = Arbitrary {
     for {
       enrolments               <- Gen.containerOf[Set, Enrolment](Arbitrary.arbitrary[Enrolment])
@@ -119,4 +121,8 @@ trait EclTestData {
   }
 
   implicit val arbEclReference: Arbitrary[EclReference] = Arbitrary(Gen.alphaNumStr.map(EclReference(_)))
+
+  val testInternalId: String = Gen.alphaNumStr.sample.get
+
+  val testEclReference: EclReference = arbEclReference.arbitrary.sample.get
 }

@@ -55,7 +55,7 @@ class DesConnectorSpec extends SpecBase {
         ).thenReturn(mockRequestBuilder)
         when(
           mockRequestBuilder.setHeader(
-            ArgumentMatchers.eq((CustomHeaderNames.Environment, appConfig.desEnvironment))
+            ArgumentMatchers.eq((CustomHeaderNames.environment, appConfig.desEnvironment))
           )
         ).thenReturn(mockRequestBuilder)
         when(mockRequestBuilder.withBody(any())(any(), any(), any())).thenReturn(mockRequestBuilder)
@@ -82,7 +82,7 @@ class DesConnectorSpec extends SpecBase {
         ).thenReturn(mockRequestBuilder)
         when(
           mockRequestBuilder.setHeader(
-            ArgumentMatchers.eq((CustomHeaderNames.Environment, appConfig.desEnvironment))
+            ArgumentMatchers.eq((CustomHeaderNames.environment, appConfig.desEnvironment))
           )
         ).thenReturn(mockRequestBuilder)
         when(mockRequestBuilder.withBody(any())(any(), any(), any())).thenReturn(mockRequestBuilder)

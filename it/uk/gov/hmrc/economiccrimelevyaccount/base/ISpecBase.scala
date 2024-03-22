@@ -19,6 +19,7 @@ import play.api.mvc.{Result, Results}
 import play.api.test._
 import play.api.{Application, Mode}
 import uk.gov.hmrc.economiccrimelevyaccount.base.WireMockHelper.setWireMockPort
+import uk.gov.hmrc.economiccrimelevyaccount.config.AppConfig
 
 import java.time.temporal.ChronoUnit
 import java.time.{Clock, Instant, ZoneId}
@@ -53,6 +54,7 @@ abstract class ISpecBase
 
   implicit lazy val system: ActorSystem        = ActorSystem()
   implicit lazy val materializer: Materializer = Materializer(system)
+  lazy val appConfig: AppConfig                = app.injector.instanceOf[AppConfig]
   implicit def ec: ExecutionContext            = global
 
   val now: Instant             = Instant.now.truncatedTo(ChronoUnit.MILLIS)
