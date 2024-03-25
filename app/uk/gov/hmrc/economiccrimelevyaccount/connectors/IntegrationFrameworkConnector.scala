@@ -47,10 +47,10 @@ class IntegrationFrameworkConnector @Inject() (
     eclReference: EclReference
   )(implicit hc: HeaderCarrier): Future[FinancialData] = {
     val correlationId = hc.headers(scala.Seq(CustomHeaderNames.xCorrelationId)) match {
-      case Nil          =>
-        UUID.randomUUID().toString
       case Seq((_, id)) =>
         id
+      case _            =>
+        UUID.randomUUID().toString
     }
 
     httpClient
@@ -63,18 +63,18 @@ class IntegrationFrameworkConnector @Inject() (
 
   private def financialDetailsQueryParams: Seq[(String, String)] = Seq(
     (
-      QueryParams.DATE_FROM,
-      LocalDate.of(2023, 1, 1).format(DateTimeFormatter.ISO_LOCAL_DATE)
+      QueryParams.dateFrom,
+      appConfig.integrationFrameworkDateFrom.format(DateTimeFormatter.ISO_LOCAL_DATE)
     ),
-    (QueryParams.DATE_TO, LocalDate.now().plusYears(1).format(DateTimeFormatter.ISO_LOCAL_DATE)),
-    (QueryParams.ACCRUING_INTEREST, "true"),
-    (QueryParams.CLEARED_ITEMS, "true"),
-    (QueryParams.LOCK_INFORMATION, "true"),
-    (QueryParams.PAYMENT, "true"),
-    (QueryParams.PENALTY_DETAILS, "true"),
-    (QueryParams.POSTED_INTEREST, "true"),
-    (QueryParams.REGIME_TOTALISATION, "true"),
-    (QueryParams.STATISTICAL_ITEMS, "true"),
-    (QueryParams.DATE_TYPE, "POSTING")
+    (QueryParams.dateTo, LocalDate.now().plusYears(1).format(DateTimeFormatter.ISO_LOCAL_DATE)),
+    (QueryParams.accruingInterest, "true"),
+    (QueryParams.clearedItems, "true"),
+    (QueryParams.lockInformation, "true"),
+    (QueryParams.payment, "true"),
+    (QueryParams.penaltyDetails, "true"),
+    (QueryParams.postedInterest, "true"),
+    (QueryParams.regimeTotalisation, "true"),
+    (QueryParams.statisticalItesm, "true"),
+    (QueryParams.dateType, "POSTING")
   )
 }

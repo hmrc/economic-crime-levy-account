@@ -49,7 +49,7 @@ class DesService @Inject() (
               if UpstreamErrorResponse.Upstream5xxResponse
                 .unapply(error)
                 .isDefined || UpstreamErrorResponse.Upstream4xxResponse.unapply(error).isDefined =>
-            Left(DesError.BadGateway(reason = message, code = code))
+            Left(DesError.BadGateway(reason = s"Get Obligation Data Failed - $message", code = code))
           case NonFatal(thr)                             => Left(DesError.InternalUnexpectedError(thr.getMessage, Some(thr)))
         }
     }

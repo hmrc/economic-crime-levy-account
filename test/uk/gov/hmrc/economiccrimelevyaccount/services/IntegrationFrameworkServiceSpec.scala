@@ -64,15 +64,15 @@ class IntegrationFrameworkServiceSpec extends SpecBase {
 
     "return a bad gateway when IF responds with an upstream error other than NOT_FOUND" in forAll {
       (eclReference: EclReference) =>
-        val reason = "forbidden"
+        val reason = "Forbidden"
         val code   = FORBIDDEN
         when(mockIntegrationFrameworkConnector.getFinancialDetails(any[String].asInstanceOf[EclReference])(any()))
-          .thenReturn(Future.failed(UpstreamErrorResponse("forbidden", code)))
+          .thenReturn(Future.failed(UpstreamErrorResponse(reason, code)))
 
         val result =
           await(service.getFinancialData(eclReference).value)
 
-        result shouldBe Left(IntegrationFrameworkError.BadGateway(reason, code))
+        result shouldBe Left(IntegrationFrameworkError.BadGateway(s"Get Financial Data Failed - $reason", code))
     }
 
     "return an InternalUnexpectedError if call to partnershipIdentificationFrontendConnector throws an exception" in forAll {

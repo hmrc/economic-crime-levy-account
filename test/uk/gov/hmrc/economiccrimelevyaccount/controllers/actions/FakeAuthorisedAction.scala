@@ -19,7 +19,6 @@ package uk.gov.hmrc.economiccrimelevyaccount.controllers.actions
 import play.api.mvc._
 import uk.gov.hmrc.economiccrimelevyaccount.models.EclReference
 import uk.gov.hmrc.economiccrimelevyaccount.models.requests.AuthorisedRequest
-import uk.gov.hmrc.economiccrimelevyreturns.controllers.actions.AuthorisedAction
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}

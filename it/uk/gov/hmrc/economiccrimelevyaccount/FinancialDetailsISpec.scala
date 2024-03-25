@@ -1,22 +1,17 @@
 package uk.gov.hmrc.economiccrimelevyaccount
 
+import com.github.tomakehurst.wiremock.client.WireMock._
+import org.scalatest.concurrent.Eventually.eventually
+import org.scalatest.prop.Tables._
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import uk.gov.hmrc.economiccrimelevyaccount.base.ISpecBase
 import uk.gov.hmrc.economiccrimelevyaccount.controllers.routes
-import uk.gov.hmrc.economiccrimelevyaccount.models.errors.ResponseError
-import com.github.tomakehurst.wiremock.client.WireMock._
-import org.scalatest.concurrent.Eventually.eventually
-import play.api.http.Status.{CONFLICT, UNPROCESSABLE_ENTITY}
-import play.api.test.FakeRequest
-import uk.gov.hmrc.economiccrimelevyaccount.base.ISpecBase
-import uk.gov.hmrc.economiccrimelevyaccount.controllers.routes
 import uk.gov.hmrc.economiccrimelevyaccount.models.CustomHeaderNames
+import uk.gov.hmrc.economiccrimelevyaccount.models.errors.ResponseError
 import uk.gov.hmrc.http.HeaderNames
 
 class FinancialDetailsISpec extends ISpecBase {
-
-  private val getFinancialDetailsRegex = "/penalty/financial-data/ZECL/.*"
 
   s"GET ${routes.FinancialDataController.getFinancialData.url}" should {
     "return 200 OK with the financial data JSON when financial is returned" in {
@@ -43,47 +38,30 @@ class FinancialDetailsISpec extends ISpecBase {
       }
     }
 
-    "return 502 BAD_GATEWAY with the financial data JSON when 409 CONFLICT is returned from financial details" in {
-      resetAllRequests()
-      stubAuthorised()
-
-      stubGetFinancialDetailsUpstreamError(
+    "return 502 BAD_GATEWAY when IF response with an upstream error" in forAll(
+      Table(
+        "statusCode",
+        BAD_REQUEST,
         CONFLICT,
-        "{\"failures\":[{\"code\":\"DUPLICATE_SUBMISSION\",\"reason\":\"The remote endpoint has indicated duplicate submission.\"}]}"
+        INTERNAL_SERVER_ERROR,
+        SERVICE_UNAVAILABLE,
+        UNPROCESSABLE_ENTITY
       )
-
-      val result = callRoute(
-        FakeRequest(routes.FinancialDataController.getFinancialData)
-      )
-
-      status(result) shouldBe BAD_GATEWAY
-
-      eventually {
-        verify(
-          1,
-          getRequestedFor(urlMatching(getFinancialDetailsRegex))
-            .withHeader(HeaderNames.authorisation, equalTo(s"Bearer ${appConfig.integrationFrameworkBearerToken}"))
-            .withHeader(CustomHeaderNames.environment, equalTo(appConfig.integrationFrameworkEnvironment))
-            .withHeader(CustomHeaderNames.correlationId, matching(uuidRegex))
-            .withHeader(CustomHeaderNames.xCorrelationId, matching(uuidRegex))
-        )
-      }
-    }
-
-    "return 502 BAD_GATEWAY with the financial data JSON when 422 UNPROCESSABLE_ENTITY is returned from financial details" in {
+    ) { (statusCode: Int) =>
       resetAllRequests()
       stubAuthorised()
 
-      stubGetFinancialDetailsUpstreamError(
-        UNPROCESSABLE_ENTITY,
-        "{\"failures\":[{\"code\":\"INVALID_ID\",\"reason\":\"The remote endpoint has indicated that reference id is invalid.\"}]}"
-      )
+      val errorMessage = "Bad Request"
+      stubGetFinancialDetailsUpstreamError(statusCode, errorMessage)
 
       val result = callRoute(
         FakeRequest(routes.FinancialDataController.getFinancialData)
       )
 
-      status(result) shouldBe BAD_GATEWAY
+      status(result)        shouldBe BAD_GATEWAY
+      contentAsJson(result) shouldBe Json.toJson(
+        ResponseError.badGateway(s"Get Financial Data Failed - $errorMessage", statusCode)
+      )
 
       eventually {
         verify(
@@ -98,6 +76,7 @@ class FinancialDetailsISpec extends ISpecBase {
     }
 
     "return 401 UNAUTHORIZED when auth calls responds with unauthorized" in {
+      resetAllRequests()
       stubUnauthorised()
 
       val result = callRoute(
@@ -105,23 +84,17 @@ class FinancialDetailsISpec extends ISpecBase {
       )
 
       status(result) shouldBe UNAUTHORIZED
-    }
 
-    "return 502 BAD_GATEWAY when DES does not find obligations under the given ecl reference" in {
-      stubAuthorised()
-
-      val statusCode   = BAD_REQUEST
-      val errorMessage = "bad request"
-      stubGetFinancialDetailsUpstreamError(statusCode, errorMessage)
-
-      val result = callRoute(
-        FakeRequest(routes.FinancialDataController.getFinancialData)
-      )
-
-      status(result)        shouldBe BAD_GATEWAY
-      contentAsJson(result) shouldBe Json.toJson(
-        ResponseError.badGateway(errorMessage, statusCode)
-      )
+      eventually {
+        verify(
+          0,
+          getRequestedFor(urlMatching(getFinancialDetailsRegex))
+            .withHeader(HeaderNames.authorisation, equalTo(s"Bearer ${appConfig.integrationFrameworkBearerToken}"))
+            .withHeader(CustomHeaderNames.environment, equalTo(appConfig.integrationFrameworkEnvironment))
+            .withHeader(CustomHeaderNames.correlationId, matching(uuidRegex))
+            .withHeader(CustomHeaderNames.xCorrelationId, matching(uuidRegex))
+        )
+      }
     }
   }
 }

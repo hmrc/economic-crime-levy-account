@@ -17,12 +17,12 @@
 package uk.gov.hmrc.economiccrimelevyaccount.controllers
 
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import uk.gov.hmrc.economiccrimelevyaccount.controllers.actions.AuthorisedAction
 import uk.gov.hmrc.economiccrimelevyaccount.models.EclReference
 import uk.gov.hmrc.economiccrimelevyaccount.models.bta.BtaTileData
-import uk.gov.hmrc.economiccrimelevyaccount.models.des.{ObligationData, Open}
+import uk.gov.hmrc.economiccrimelevyaccount.models.des.{ObligationData, ObligationDetails, Open}
 import uk.gov.hmrc.economiccrimelevyaccount.services.DesService
 import uk.gov.hmrc.economiccrimelevyaccount.utils.CorrelationIdHelper
-import uk.gov.hmrc.economiccrimelevyreturns.controllers.actions.AuthorisedAction
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
@@ -51,7 +51,7 @@ class BtaTileDataController @Inject() (
     eclReference: EclReference,
     obligationDataOption: Option[ObligationData]
   ): BtaTileData = {
-    def highestPriorityDueReturn(obligationData: ObligationData) = obligationData.obligations
+    def highestPriorityDueReturn(obligationData: ObligationData): Option[ObligationDetails] = obligationData.obligations
       .flatMap(
         _.obligationDetails
           .filter(_.status == Open)

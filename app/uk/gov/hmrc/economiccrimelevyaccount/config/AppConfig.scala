@@ -17,11 +17,15 @@
 package uk.gov.hmrc.economiccrimelevyaccount.config
 
 import javax.inject.{Inject, Singleton}
-import play.api.Configuration
+import play.api.{ConfigLoader, Configuration}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+
+import java.time.LocalDate
 
 @Singleton
 class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig) {
+
+  implicit val dateLoader: ConfigLoader[LocalDate] = ConfigLoader(_.getString).map(LocalDate.parse(_))
 
   val appName: String = config.get[String]("appName")
 
@@ -38,4 +42,7 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
 
   val integrationFrameworkEnvironment: String =
     config.get[String]("microservice.services.integration-framework.environment")
+
+  val integrationFrameworkDateFrom: LocalDate =
+    config.get[LocalDate]("microservice.services.integration-framework.dateFrom")
 }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.economiccrimelevyreturns.controllers.actions
+package uk.gov.hmrc.economiccrimelevyaccount.controllers.actions
 
 import com.google.inject.Inject
 import play.api.http.Status.UNAUTHORIZED
@@ -46,15 +46,15 @@ class BaseAuthorisedAction @Inject() (
     with AuthorisedFunctions {
 
   override def invokeBlock[A](request: Request[A], block: AuthorisedRequest[A] => Future[Result]): Future[Result] =
-    authorised(Enrolment(EclEnrolment.ServiceName)).retrieve(internalId and authorisedEnrolments) {
+    authorised(Enrolment(EclEnrolment.serviceName)).retrieve(internalId and authorisedEnrolments) {
       case optInternalId ~ enrolments =>
         val internalId   = optInternalId.getOrElseFail("Unable to retrieve internalId")
         val eclReference =
           enrolments
-            .getEnrolment(EclEnrolment.ServiceName)
-            .flatMap(_.getIdentifier(EclEnrolment.IdentifierKey))
+            .getEnrolment(EclEnrolment.serviceName)
+            .flatMap(_.getIdentifier(EclEnrolment.identifierKey))
             .getOrElseFail(
-              s"Unable to retrieve enrolment with key ${EclEnrolment.ServiceName} and identifier ${EclEnrolment.IdentifierKey}"
+              s"Unable to retrieve enrolment with key ${EclEnrolment.serviceName} and identifier ${EclEnrolment.identifierKey}"
             )
             .value
         block(AuthorisedRequest(request, internalId, EclReference(eclReference)))

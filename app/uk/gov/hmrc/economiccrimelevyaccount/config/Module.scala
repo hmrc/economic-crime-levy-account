@@ -17,7 +17,7 @@
 package uk.gov.hmrc.economiccrimelevyaccount.config
 
 import com.google.inject.AbstractModule
-import uk.gov.hmrc.economiccrimelevyreturns.controllers.actions.{AuthorisedAction, BaseAuthorisedAction}
+import uk.gov.hmrc.economiccrimelevyaccount.controllers.actions.{AuthorisedAction, BaseAuthorisedAction}
 
 import java.time.{Clock, ZoneOffset}
 
