@@ -61,8 +61,6 @@ trait ErrorHandler extends Logging {
   implicit val desErrorConverter: Converter[DesError] =
     new Converter[DesError] {
       override def convert(error: DesError): ResponseError = error match {
-        case DesError.NotFound(eclReference)                  =>
-          ResponseError.notFoundError(s"Unable to find record with id: ${eclReference.value}")
         case DesError.BadGateway(message, code)               =>
           ResponseError.badGateway(message = message, code = code)
         case DesError.InternalUnexpectedError(message, cause) =>
@@ -73,8 +71,6 @@ trait ErrorHandler extends Logging {
   implicit val integrationFrameworkErrorConverter: Converter[IntegrationFrameworkError] =
     new Converter[IntegrationFrameworkError] {
       override def convert(error: IntegrationFrameworkError): ResponseError = error match {
-        case IntegrationFrameworkError.NotFound(eclReference)                  =>
-          ResponseError.notFoundError(s"Unable to find record with id: ${eclReference.value}")
         case IntegrationFrameworkError.BadGateway(message, code)               =>
           ResponseError.badGateway(message = message, code = code)
         case IntegrationFrameworkError.InternalUnexpectedError(message, cause) =>

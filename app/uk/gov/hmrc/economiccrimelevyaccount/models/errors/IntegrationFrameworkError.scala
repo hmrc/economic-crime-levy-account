@@ -16,12 +16,9 @@
 
 package uk.gov.hmrc.economiccrimelevyaccount.models.errors
 
-import uk.gov.hmrc.economiccrimelevyaccount.models.EclReference
-
 trait IntegrationFrameworkError
 
 object IntegrationFrameworkError {
   case class InternalUnexpectedError(message: String, cause: Option[Throwable]) extends IntegrationFrameworkError
   case class BadGateway(reason: String, code: Int) extends IntegrationFrameworkError
-  case class NotFound(eclReference: EclReference) extends IntegrationFrameworkError
 }

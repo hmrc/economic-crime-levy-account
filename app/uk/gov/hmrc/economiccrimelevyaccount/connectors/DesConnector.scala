@@ -40,11 +40,6 @@ class DesConnector @Inject() (
     with Retries
     with Logging {
 
-  private val desHeaders: Seq[(String, String)] = Seq(
-    (HeaderNames.authorisation, s"Bearer ${appConfig.desBearerToken}"),
-    (CustomHeaderNames.environment, appConfig.desEnvironment)
-  )
-
   private def desUrl(eclRegistrationReference: String) =
     s"${appConfig.desUrl}/enterprise/obligation-data/zecl/$eclRegistrationReference/ECL?from=2022-04-01&to=${LocalDate.now(ZoneOffset.UTC).toString}"
 
@@ -54,7 +49,8 @@ class DesConnector @Inject() (
     retryFor[ObligationData]("DES - obligation data")(retryCondition) {
       httpClient
         .get(url"${desUrl(eclRegistrationReference.value)}")
-        .transform(_.addHttpHeaders(desHeaders: _*))
+        .setHeader((HeaderNames.authorisation, s"Bearer ${appConfig.desBearerToken}"))
+        .setHeader((CustomHeaderNames.environment, appConfig.desEnvironment))
         .executeAndDeserialise[ObligationData]
     }
 }

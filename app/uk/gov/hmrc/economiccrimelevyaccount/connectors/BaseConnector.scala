@@ -31,12 +31,12 @@ trait BaseConnector {
 
   implicit class HttpResponseHelpers(response: HttpResponse) {
 
-    def error[A]: Future[A] =
+    def error[T]: Future[T] =
       Future.failed(UpstreamErrorResponse(response.body, response.status))
 
-    def as[A](implicit reads: Reads[A]): Future[A] =
+    def as[T](implicit reads: Reads[T]): Future[T] =
       response.json
-        .validate[A]
+        .validate[T]
         .map(result => Future.successful(result))
         .recoverTotal(error => Future.failed(JsResult.Exception(error)))
   }

@@ -16,12 +16,9 @@
 
 package uk.gov.hmrc.economiccrimelevyaccount.models.errors
 
-import uk.gov.hmrc.economiccrimelevyaccount.models.EclReference
-
 trait DesError
 
 object DesError {
   case class InternalUnexpectedError(message: String, cause: Option[Throwable]) extends DesError
   case class BadGateway(reason: String, code: Int) extends DesError
-  case class NotFound(eclReference: EclReference) extends DesError
 }

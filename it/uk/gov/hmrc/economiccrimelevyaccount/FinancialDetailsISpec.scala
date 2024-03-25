@@ -1,7 +1,13 @@
 package uk.gov.hmrc.economiccrimelevyaccount
 
+import play.api.libs.json.Json
+import play.api.test.FakeRequest
+import uk.gov.hmrc.economiccrimelevyaccount.base.ISpecBase
+import uk.gov.hmrc.economiccrimelevyaccount.controllers.routes
+import uk.gov.hmrc.economiccrimelevyaccount.models.errors.ResponseError
 import com.github.tomakehurst.wiremock.client.WireMock._
 import org.scalatest.concurrent.Eventually.eventually
+import play.api.http.Status.{CONFLICT, UNPROCESSABLE_ENTITY}
 import play.api.test.FakeRequest
 import uk.gov.hmrc.economiccrimelevyaccount.base.ISpecBase
 import uk.gov.hmrc.economiccrimelevyaccount.controllers.routes
@@ -41,7 +47,10 @@ class FinancialDetailsISpec extends ISpecBase {
       resetAllRequests()
       stubAuthorised()
 
-      stubGetFinancialDetails409()
+      stubGetFinancialDetailsUpstreamError(
+        CONFLICT,
+        "{\"failures\":[{\"code\":\"DUPLICATE_SUBMISSION\",\"reason\":\"The remote endpoint has indicated duplicate submission.\"}]}"
+      )
 
       val result = callRoute(
         FakeRequest(routes.FinancialDataController.getFinancialData)
@@ -65,7 +74,10 @@ class FinancialDetailsISpec extends ISpecBase {
       resetAllRequests()
       stubAuthorised()
 
-      stubGetFinancialDetails422()
+      stubGetFinancialDetailsUpstreamError(
+        UNPROCESSABLE_ENTITY,
+        "{\"failures\":[{\"code\":\"INVALID_ID\",\"reason\":\"The remote endpoint has indicated that reference id is invalid.\"}]}"
+      )
 
       val result = callRoute(
         FakeRequest(routes.FinancialDataController.getFinancialData)
@@ -83,6 +95,33 @@ class FinancialDetailsISpec extends ISpecBase {
             .withHeader(CustomHeaderNames.xCorrelationId, matching(uuidRegex))
         )
       }
+    }
+
+    "return 401 UNAUTHORIZED when auth calls responds with unauthorized" in {
+      stubUnauthorised()
+
+      val result = callRoute(
+        FakeRequest(routes.FinancialDataController.getFinancialData)
+      )
+
+      status(result) shouldBe UNAUTHORIZED
+    }
+
+    "return 502 BAD_GATEWAY when DES does not find obligations under the given ecl reference" in {
+      stubAuthorised()
+
+      val statusCode   = BAD_REQUEST
+      val errorMessage = "bad request"
+      stubGetFinancialDetailsUpstreamError(statusCode, errorMessage)
+
+      val result = callRoute(
+        FakeRequest(routes.FinancialDataController.getFinancialData)
+      )
+
+      status(result)        shouldBe BAD_GATEWAY
+      contentAsJson(result) shouldBe Json.toJson(
+        ResponseError.badGateway(errorMessage, statusCode)
+      )
     }
   }
 }

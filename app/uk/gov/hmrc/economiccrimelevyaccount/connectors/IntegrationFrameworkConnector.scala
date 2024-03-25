@@ -55,7 +55,9 @@ class IntegrationFrameworkConnector @Inject() (
 
     httpClient
       .get(url"${ifUrl(eclReference.value)}")
-      .setHeader(integrationFrameworkHeaders(correlationId): _*)
+      .setHeader((HeaderNames.authorisation, s"Bearer ${appConfig.integrationFrameworkBearerToken}"))
+      .setHeader((CustomHeaderNames.environment, appConfig.integrationFrameworkEnvironment))
+      .setHeader((CustomHeaderNames.correlationId, correlationId))
       .executeAndDeserialise[FinancialData]
   }
 
@@ -75,11 +77,4 @@ class IntegrationFrameworkConnector @Inject() (
     (QueryParams.STATISTICAL_ITEMS, "true"),
     (QueryParams.DATE_TYPE, "POSTING")
   )
-
-  private def integrationFrameworkHeaders(correlationId: String): Seq[(String, String)] =
-    Seq(
-      (HeaderNames.authorisation, s"Bearer ${appConfig.integrationFrameworkBearerToken}"),
-      (CustomHeaderNames.environment, appConfig.integrationFrameworkEnvironment),
-      (CustomHeaderNames.correlationId, correlationId)
-    )
 }

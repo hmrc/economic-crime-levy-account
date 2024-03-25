@@ -22,6 +22,8 @@ import uk.gov.hmrc.economiccrimelevyaccount.connectors.DesConnector
 import uk.gov.hmrc.economiccrimelevyaccount.generators.CachedArbitraries._
 import uk.gov.hmrc.economiccrimelevyaccount.models.EclReference
 import uk.gov.hmrc.economiccrimelevyaccount.models.des.{Obligation, ObligationData, ObligationDetails}
+import uk.gov.hmrc.economiccrimelevyaccount.models.errors.DesError
+import uk.gov.hmrc.http.UpstreamErrorResponse
 
 import java.time.{Clock, Instant, LocalDate, ZoneId}
 import scala.concurrent.Future
@@ -76,6 +78,41 @@ class DesServiceSpec extends SpecBase {
           await(service.getObligationData(eclReference).value)
 
         result shouldBe Right(Some(expectedObligations))
+    }
+
+    "return an empty option if DES responds with NOT_FOUND" in forAll { (eclReference: EclReference) =>
+      when(mockDesConnector.getObligationData(any[String].asInstanceOf[EclReference])(any()))
+        .thenReturn(Future.failed(UpstreamErrorResponse("not found", NOT_FOUND)))
+
+      val result =
+        await(service.getObligationData(eclReference).value)
+
+      result shouldBe Right(None)
+    }
+
+    "return a bad gateway when DES responds with an upstream error other than NOT_FOUND" in forAll {
+      (eclReference: EclReference) =>
+        val reason = "forbidden"
+        val code   = FORBIDDEN
+        when(mockDesConnector.getObligationData(any[String].asInstanceOf[EclReference])(any()))
+          .thenReturn(Future.failed(UpstreamErrorResponse("forbidden", code)))
+
+        val result =
+          await(service.getObligationData(eclReference).value)
+
+        result shouldBe Left(DesError.BadGateway(reason, code))
+    }
+
+    "return an InternalUnexpectedError if call to partnershipIdentificationFrontendConnector throws an exception" in forAll {
+      (eclReference: EclReference) =>
+        val exception = new NullPointerException("Null Pointer Exception")
+        when(mockDesConnector.getObligationData(any[String].asInstanceOf[EclReference])(any()))
+          .thenReturn(Future.failed(exception))
+
+        val result =
+          await(service.getObligationData(eclReference).value)
+
+        result shouldBe Left(DesError.InternalUnexpectedError(exception.getMessage, Some(exception)))
     }
   }
 

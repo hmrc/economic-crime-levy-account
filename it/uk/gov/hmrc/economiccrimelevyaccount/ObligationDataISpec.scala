@@ -23,6 +23,7 @@ import uk.gov.hmrc.economiccrimelevyaccount.base.ISpecBase
 import uk.gov.hmrc.economiccrimelevyaccount.controllers.routes
 import uk.gov.hmrc.economiccrimelevyaccount.generators.CachedArbitraries._
 import uk.gov.hmrc.economiccrimelevyaccount.models.des.{Obligation, ObligationData, ObligationDetails}
+import uk.gov.hmrc.economiccrimelevyaccount.models.errors.ResponseError
 
 import java.time.LocalDate
 
@@ -67,6 +68,35 @@ class ObligationDataISpec extends ISpecBase {
 
       status(result)        shouldBe OK
       contentAsJson(result) shouldBe Json.toJson(None)
+    }
+
+    "return 502 BAD_GATEWAY when DES responds with an upstream error" in {
+      stubAuthorised()
+
+      val statusCode   = BAD_REQUEST
+      val errorMessage = "bad request"
+      stubObligationsUpstreamError(statusCode, errorMessage)
+
+      val result = callRoute(
+        FakeRequest(routes.ObligationDataController.getObligationData)
+      )
+
+      status(result)        shouldBe BAD_GATEWAY
+      contentAsJson(result) shouldBe Json.toJson(
+        ResponseError.badGateway(errorMessage, statusCode)
+      )
+    }
+
+    "return 500 INTERNAL_SERVER_ERROR when an unexpected exception is thrown" in {
+      stubAuthorised()
+
+      stubGetObligationsUnexpectedResponse()
+
+      val result = callRoute(
+        FakeRequest(routes.ObligationDataController.getObligationData)
+      )
+
+      status(result) shouldBe INTERNAL_SERVER_ERROR
     }
   }
 
