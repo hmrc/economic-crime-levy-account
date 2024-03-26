@@ -59,11 +59,14 @@ abstract class ISpecBase
 
   val now: Instant             = Instant.now.truncatedTo(ChronoUnit.MILLIS)
   private val stubClock: Clock = Clock.fixed(now, ZoneId.systemDefault)
+  val getFinancialDetailsRegex = "/penalty/financial-data/ZECL/.*"
+  val getObligationDataRegex   = "/enterprise/obligation-data/zecl/.*"
 
   val additionalAppConfig: Map[String, Any] = Map(
-    "metrics.enabled"    -> false,
-    "auditing.enabled"   -> false,
-    "application.router" -> "testOnlyDoNotUseInAppConf.Routes"
+    "metrics.enabled"              -> false,
+    "auditing.enabled"             -> false,
+    "application.router"           -> "testOnlyDoNotUseInAppConf.Routes",
+    "http-verbs.retries.intervals" -> List("1ms", "1ms", "1ms")
   ) ++ setWireMockPort(
     "auth",
     "integration-framework",

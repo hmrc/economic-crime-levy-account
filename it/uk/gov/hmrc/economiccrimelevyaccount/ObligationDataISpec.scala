@@ -17,13 +17,18 @@
 package uk.gov.hmrc.economiccrimelevyaccount
 
 import com.danielasfregola.randomdatagenerator.RandomDataGenerator.random
+import com.github.tomakehurst.wiremock.client.WireMock.{equalTo, getRequestedFor, matching, resetAllRequests, urlMatching, verify}
+import org.scalatest.concurrent.Eventually.eventually
+import org.scalatest.prop.Tables._
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import uk.gov.hmrc.economiccrimelevyaccount.base.ISpecBase
 import uk.gov.hmrc.economiccrimelevyaccount.controllers.routes
 import uk.gov.hmrc.economiccrimelevyaccount.generators.CachedArbitraries._
+import uk.gov.hmrc.economiccrimelevyaccount.models.CustomHeaderNames
 import uk.gov.hmrc.economiccrimelevyaccount.models.des.{Obligation, ObligationData, ObligationDetails}
 import uk.gov.hmrc.economiccrimelevyaccount.models.errors.ResponseError
+import uk.gov.hmrc.http.HeaderNames
 
 import java.time.LocalDate
 
@@ -55,6 +60,17 @@ class ObligationDataISpec extends ISpecBase {
 
       status(result)        shouldBe OK
       contentAsJson(result) shouldBe Json.toJson(obligationData)
+
+      eventually {
+        verify(
+          1,
+          getRequestedFor(urlMatching(getObligationDataRegex))
+            .withHeader(HeaderNames.authorisation, equalTo(s"Bearer ${appConfig.desBearerToken}"))
+            .withHeader(CustomHeaderNames.environment, equalTo(appConfig.integrationFrameworkEnvironment))
+            .withHeader(CustomHeaderNames.xCorrelationId, matching(uuidRegex))
+        )
+        resetAllRequests()
+      }
     }
 
     "return 200 OK with null in the body when the obligation data is not found" in {
@@ -68,13 +84,30 @@ class ObligationDataISpec extends ISpecBase {
 
       status(result)        shouldBe OK
       contentAsJson(result) shouldBe Json.toJson(None)
+
+      eventually {
+        verify(
+          1,
+          getRequestedFor(urlMatching(getObligationDataRegex))
+            .withHeader(HeaderNames.authorisation, equalTo(s"Bearer ${appConfig.desBearerToken}"))
+            .withHeader(CustomHeaderNames.environment, equalTo(appConfig.integrationFrameworkEnvironment))
+            .withHeader(CustomHeaderNames.xCorrelationId, matching(uuidRegex))
+        )
+        resetAllRequests()
+      }
     }
 
-    "return 502 BAD_GATEWAY when DES responds with an upstream error" in {
+    "return 502 BAD_GATEWAY when DES responds with an upstream error" in forAll(
+      Table(
+        "statusCode",
+        BAD_REQUEST,
+        INTERNAL_SERVER_ERROR,
+        SERVICE_UNAVAILABLE
+      )
+    ) { (statusCode: Int) =>
       stubAuthorised()
 
-      val statusCode   = BAD_REQUEST
-      val errorMessage = "bad request"
+      val errorMessage = "Bad Request"
       stubObligationsUpstreamError(statusCode, errorMessage)
 
       val result = callRoute(
@@ -83,8 +116,18 @@ class ObligationDataISpec extends ISpecBase {
 
       status(result)        shouldBe BAD_GATEWAY
       contentAsJson(result) shouldBe Json.toJson(
-        ResponseError.badGateway(errorMessage, statusCode)
+        ResponseError.badGateway(s"Get Obligation Data Failed - $errorMessage", statusCode)
       )
+
+      eventually {
+        verify(
+          getRequestedFor(urlMatching(getObligationDataRegex))
+            .withHeader(HeaderNames.authorisation, equalTo(s"Bearer ${appConfig.desBearerToken}"))
+            .withHeader(CustomHeaderNames.environment, equalTo(appConfig.integrationFrameworkEnvironment))
+            .withHeader(CustomHeaderNames.xCorrelationId, matching(uuidRegex))
+        )
+        resetAllRequests()
+      }
     }
 
     "return 500 INTERNAL_SERVER_ERROR when an unexpected exception is thrown" in {
@@ -97,6 +140,16 @@ class ObligationDataISpec extends ISpecBase {
       )
 
       status(result) shouldBe INTERNAL_SERVER_ERROR
+
+      eventually {
+        verify(
+          getRequestedFor(urlMatching(getObligationDataRegex))
+            .withHeader(HeaderNames.authorisation, equalTo(s"Bearer ${appConfig.desBearerToken}"))
+            .withHeader(CustomHeaderNames.environment, equalTo(appConfig.integrationFrameworkEnvironment))
+            .withHeader(CustomHeaderNames.xCorrelationId, matching(uuidRegex))
+        )
+        resetAllRequests()
+      }
     }
   }
 

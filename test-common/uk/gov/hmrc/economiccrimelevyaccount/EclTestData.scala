@@ -33,9 +33,9 @@ trait EclTestData {
       enrolments               <- Gen.containerOf[Set, Enrolment](Arbitrary.arbitrary[Enrolment])
       enrolment                <- Arbitrary.arbitrary[Enrolment]
       eclRegistrationReference <- Arbitrary.arbitrary[String]
-      eclEnrolmentIdentifier    = EnrolmentIdentifier(EclEnrolment.IdentifierKey, eclRegistrationReference)
+      eclEnrolmentIdentifier    = EnrolmentIdentifier(EclEnrolment.identifierKey, eclRegistrationReference)
       eclEnrolment              =
-        enrolment.copy(key = EclEnrolment.ServiceName, identifiers = enrolment.identifiers :+ eclEnrolmentIdentifier)
+        enrolment.copy(key = EclEnrolment.serviceName, identifiers = enrolment.identifiers :+ eclEnrolmentIdentifier)
     } yield if (withEcl) Enrolments(enrolments + eclEnrolment) else Enrolments(enrolments)
   }
 

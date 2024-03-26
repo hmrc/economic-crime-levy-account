@@ -26,7 +26,6 @@ import uk.gov.hmrc.auth.core.retrieve.{Retrieval, ~}
 import uk.gov.hmrc.auth.core.syntax.retrieved.authSyntaxForRetrieved
 import uk.gov.hmrc.economiccrimelevyaccount.base.SpecBase
 import uk.gov.hmrc.economiccrimelevyaccount.models.eacd.EclEnrolment
-import uk.gov.hmrc.economiccrimelevyreturns.controllers.actions.BaseAuthorisedAction
 
 import scala.concurrent.Future
 
@@ -103,7 +102,7 @@ class AuthorisedActionSpec extends SpecBase {
         await(authorisedAction.invokeBlock(fakeRequest, testAction))
       }
 
-      result.getMessage shouldBe s"Unable to retrieve enrolment with key ${EclEnrolment.ServiceName} and identifier ${EclEnrolment.IdentifierKey}"
+      result.getMessage shouldBe s"Unable to retrieve enrolment with key ${EclEnrolment.serviceName} and identifier ${EclEnrolment.identifierKey}"
     }
   }
 

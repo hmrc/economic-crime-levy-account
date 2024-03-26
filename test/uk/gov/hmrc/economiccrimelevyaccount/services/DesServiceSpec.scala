@@ -92,15 +92,15 @@ class DesServiceSpec extends SpecBase {
 
     "return a bad gateway when DES responds with an upstream error other than NOT_FOUND" in forAll {
       (eclReference: EclReference) =>
-        val reason = "forbidden"
+        val reason = "Forbidden"
         val code   = FORBIDDEN
         when(mockDesConnector.getObligationData(any[String].asInstanceOf[EclReference])(any()))
-          .thenReturn(Future.failed(UpstreamErrorResponse("forbidden", code)))
+          .thenReturn(Future.failed(UpstreamErrorResponse(reason, code)))
 
         val result =
           await(service.getObligationData(eclReference).value)
 
-        result shouldBe Left(DesError.BadGateway(reason, code))
+        result shouldBe Left(DesError.BadGateway(s"Get Obligation Data Failed - $reason", code))
     }
 
     "return an InternalUnexpectedError if call to partnershipIdentificationFrontendConnector throws an exception" in forAll {

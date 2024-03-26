@@ -49,7 +49,7 @@ class IntegrationFrameworkService @Inject() (
             if UpstreamErrorResponse.Upstream5xxResponse
               .unapply(error)
               .isDefined || UpstreamErrorResponse.Upstream4xxResponse.unapply(error).isDefined =>
-          Left(IntegrationFrameworkError.BadGateway(reason = message, code = code))
+          Left(IntegrationFrameworkError.BadGateway(reason = s"Get Financial Data Failed - $message", code = code))
         case NonFatal(thr)                             => Left(IntegrationFrameworkError.InternalUnexpectedError(thr.getMessage, Some(thr)))
       }
     }
