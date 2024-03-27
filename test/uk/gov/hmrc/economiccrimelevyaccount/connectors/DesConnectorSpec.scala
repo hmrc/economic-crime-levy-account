@@ -58,6 +58,11 @@ class DesConnectorSpec extends SpecBase {
             ArgumentMatchers.eq((CustomHeaderNames.environment, appConfig.desEnvironment))
           )
         ).thenReturn(mockRequestBuilder)
+        when(
+          mockRequestBuilder.setHeader(
+            ArgumentMatchers.eq((CustomHeaderNames.correlationId, any()))
+          )
+        ).thenReturn(mockRequestBuilder)
         when(mockRequestBuilder.withBody(any())(any(), any(), any())).thenReturn(mockRequestBuilder)
         when(mockRequestBuilder.execute[HttpResponse](any(), any()))
           .thenReturn(Future.successful(HttpResponse.apply(OK, Json.stringify(Json.toJson(obligationData)))))
@@ -83,6 +88,11 @@ class DesConnectorSpec extends SpecBase {
         when(
           mockRequestBuilder.setHeader(
             ArgumentMatchers.eq((CustomHeaderNames.environment, appConfig.desEnvironment))
+          )
+        ).thenReturn(mockRequestBuilder)
+        when(
+          mockRequestBuilder.setHeader(
+            ArgumentMatchers.eq((CustomHeaderNames.correlationId, any()))
           )
         ).thenReturn(mockRequestBuilder)
         when(mockRequestBuilder.withBody(any())(any(), any(), any())).thenReturn(mockRequestBuilder)
