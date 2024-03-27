@@ -68,6 +68,7 @@ class ObligationDataISpec extends ISpecBase {
             .withHeader(HeaderNames.authorisation, equalTo(s"Bearer ${appConfig.desBearerToken}"))
             .withHeader(CustomHeaderNames.environment, equalTo(appConfig.integrationFrameworkEnvironment))
             .withHeader(CustomHeaderNames.xCorrelationId, matching(uuidRegex))
+            .withHeader(CustomHeaderNames.correlationId, matching(uuidRegex))
         )
         resetAllRequests()
       }
@@ -92,6 +93,7 @@ class ObligationDataISpec extends ISpecBase {
             .withHeader(HeaderNames.authorisation, equalTo(s"Bearer ${appConfig.desBearerToken}"))
             .withHeader(CustomHeaderNames.environment, equalTo(appConfig.integrationFrameworkEnvironment))
             .withHeader(CustomHeaderNames.xCorrelationId, matching(uuidRegex))
+            .withHeader(CustomHeaderNames.correlationId, matching(uuidRegex))
         )
         resetAllRequests()
       }
@@ -125,6 +127,7 @@ class ObligationDataISpec extends ISpecBase {
             .withHeader(HeaderNames.authorisation, equalTo(s"Bearer ${appConfig.desBearerToken}"))
             .withHeader(CustomHeaderNames.environment, equalTo(appConfig.integrationFrameworkEnvironment))
             .withHeader(CustomHeaderNames.xCorrelationId, matching(uuidRegex))
+            .withHeader(CustomHeaderNames.correlationId, matching(uuidRegex))
         )
         resetAllRequests()
       }
@@ -147,6 +150,7 @@ class ObligationDataISpec extends ISpecBase {
             .withHeader(HeaderNames.authorisation, equalTo(s"Bearer ${appConfig.desBearerToken}"))
             .withHeader(CustomHeaderNames.environment, equalTo(appConfig.integrationFrameworkEnvironment))
             .withHeader(CustomHeaderNames.xCorrelationId, matching(uuidRegex))
+            .withHeader(CustomHeaderNames.correlationId, matching(uuidRegex))
         )
         resetAllRequests()
       }

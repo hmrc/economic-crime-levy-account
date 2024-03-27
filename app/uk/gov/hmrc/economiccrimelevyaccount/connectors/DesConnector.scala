@@ -26,6 +26,7 @@ import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, Retries, StringContextOps}
 
 import java.time.{LocalDate, ZoneOffset}
+import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -45,12 +46,21 @@ class DesConnector @Inject() (
 
   def getObligationData(
     eclRegistrationReference: EclReference
-  )(implicit hc: HeaderCarrier): Future[ObligationData] =
+  )(implicit hc: HeaderCarrier): Future[ObligationData] = {
+    val correlationId = hc.headers(scala.Seq(CustomHeaderNames.xCorrelationId)) match {
+      case Seq((_, id)) =>
+        id
+      case _            =>
+        UUID.randomUUID().toString
+    }
+
     retryFor[ObligationData]("DES - obligation data")(retryCondition) {
       httpClient
         .get(url"${desUrl(eclRegistrationReference.value)}")
         .setHeader((HeaderNames.authorisation, s"Bearer ${appConfig.desBearerToken}"))
         .setHeader((CustomHeaderNames.environment, appConfig.desEnvironment))
+        .setHeader((CustomHeaderNames.correlationId, correlationId))
         .executeAndDeserialise[ObligationData]
     }
+  }
 }
