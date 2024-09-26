@@ -63,8 +63,8 @@ class IntegrationFrameworkConnector @Inject() (
 
   private def financialDetailsQueryParams: Seq[(String, String)] = Seq(
     (
-      QueryParams.dateFrom,
-      appConfig.integrationFrameworkDateFrom.format(DateTimeFormatter.ISO_LOCAL_DATE)
+      QueryParams.dateFrom, //The date range has to be lower then 1000days, otherwise ETMP will reject request with 422
+      LocalDate.now().minusYears(1).format(DateTimeFormatter.ISO_LOCAL_DATE)
     ),
     (QueryParams.dateTo, LocalDate.now().plusYears(1).format(DateTimeFormatter.ISO_LOCAL_DATE)),
     (QueryParams.accruingInterest, "true"),
