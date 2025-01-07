@@ -59,6 +59,7 @@ class IntegrationFrameworkConnector @Inject() (
       .setHeader((CustomHeaderNames.environment, appConfig.integrationFrameworkEnvironment))
       .setHeader((CustomHeaderNames.correlationId, correlationId))
       .executeAndDeserialise[FinancialData]
+
   }
 
   private def financialDetailsQueryParams: Seq[(String, String)] = Seq(
@@ -66,7 +67,7 @@ class IntegrationFrameworkConnector @Inject() (
       QueryParams.dateFrom,
       appConfig.integrationFrameworkDateFrom.format(DateTimeFormatter.ISO_LOCAL_DATE)
     ),
-    (QueryParams.dateTo, LocalDate.now().plusYears(1).format(DateTimeFormatter.ISO_LOCAL_DATE)),
+    (QueryParams.dateTo, LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)),
     (QueryParams.accruingInterest, "true"),
     (QueryParams.clearedItems, "true"),
     (QueryParams.lockInformation, "true"),
