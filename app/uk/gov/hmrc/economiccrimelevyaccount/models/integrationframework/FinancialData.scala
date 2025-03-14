@@ -90,7 +90,7 @@ object DocumentDetails {
       (JsPath \ "contractObjectType").readNullable[String]
   )(DocumentDetails.apply _)
 
-  implicit var writes: OWrites[DocumentDetails] = Json.writes[DocumentDetails]
+  implicit val writes: OWrites[DocumentDetails] = Json.writes[DocumentDetails]
 }
 
 case class LineItemDetails(
