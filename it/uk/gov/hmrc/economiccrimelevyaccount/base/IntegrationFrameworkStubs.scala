@@ -7,7 +7,7 @@ import uk.gov.hmrc.economiccrimelevyaccount.base.WireMockHelper.stub
 
 trait IntegrationFrameworkStubs { self: WireMockStubs =>
 
-  var validFinancialDetailsResponse: String =
+  val validFinancialDetailsResponse: String =
     """
       |{
       |  "getFinancialData": {
