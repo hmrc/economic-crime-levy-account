@@ -102,7 +102,9 @@ case class LineItemDetails(
   amount: Option[BigDecimal],
   clearingDate: Option[String],
   clearingReason: Option[String],
-  clearingDocument: Option[String]
+  clearingDocument: Option[String],
+  mainTransaction: Option[String],
+  subTransaction: Option[String]
 )
 
 object LineItemDetails {
