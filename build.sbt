@@ -26,8 +26,7 @@ lazy val root = (project in file("."))
     libraryDependencies ++= AppDependencies(),
     retrieveManaged := true,
     (update / evictionWarningOptions).withRank(KeyRanks.Invisible) :=
-      EvictionWarningOptions.default.withWarnScalaVersionEviction(false),
-    resolvers ++= Seq(Resolver.jcenterRepo)
+      EvictionWarningOptions.default.withWarnScalaVersionEviction(false)
   )
 
 lazy val buildSettings = Def.settings(
@@ -74,8 +73,6 @@ val scoverageSettings: Seq[Setting[_]] = Seq(
 val scalaCompilerOptions: Def.Setting[Task[Seq[String]]] = scalacOptions ++= Seq(
   "-feature",
   "-deprecation",
-  "-rootdir",
-  baseDirectory.value.getCanonicalPath,
   "-Wconf:cat=feature:ws,cat=optimizer:ws,src=target/.*:s",
   "-Xlint:-byname-implicit"
 )
