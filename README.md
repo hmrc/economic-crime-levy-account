@@ -24,7 +24,7 @@ sm2 --start ECONOMIC_CRIME_LEVY_ALL
 To stop the microservice from running on service manager (e.g. to run your own version locally), you can run:
 
 ```
-sm2 -stop ECONOMIC_CRIME_LEVY_ACCOUNT 
+sm2 --stop ECONOMIC_CRIME_LEVY_ACCOUNT 
 ```
 
 
