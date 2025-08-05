@@ -16,14 +16,13 @@
 
 package uk.gov.hmrc.economiccrimelevyaccount.connectors
 
-import io.lemonlabs.uri.{QueryString, Url}
 import play.api.Logging
 import play.api.libs.json.Json
 import uk.gov.hmrc.economiccrimelevyaccount.config.AppConfig
 import uk.gov.hmrc.economiccrimelevyaccount.connectors.httpParsers.FinancialDetailsHttpHIPParser.{FinancialTransactionsFailureResponse, FinancialTransactionsHIPResponse}
-import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework._
+import uk.gov.hmrc.economiccrimelevyaccount.models.hip.{DataEnrichment, DateRange, HipRequest, SelectionCriteria, TargetedSearch, TaxpayerInformation}
 import uk.gov.hmrc.economiccrimelevyaccount.models.{CustomHeaderNames, EclReference, QueryParams}
-import uk.gov.hmrc.http.HttpExceptions._
+import play.api.http.Status.INTERNAL_SERVER_ERROR
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, HttpResponse, StringContextOps}
 
@@ -35,45 +34,72 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class HipConnector @Inject()(
+class HipConnector @Inject() (
   appConfig: AppConfig,
   httpClient: HttpClientV2
 )(implicit ec: ExecutionContext)
     extends BaseConnector
     with Logging {
 
-
   def getFinancialDetails(
     eclReference: EclReference
   )(implicit hc: HeaderCarrier): Future[FinancialTransactionsHIPResponse] = {
 
     val correlationId = UUID.randomUUID().toString
-    val hipHeaders = buildHIPHeaders(correlationId)
+    val hipHeaders    = buildHIPHeaders(correlationId)
 
-    val url = s"${appConfig.hipUrl}/etmp/RESTAdapter/cross-regime/taxpayer/financial-data/query"
-    //LNIC - Need Bhanu's models val requestBody : FinancialRequestHIP = FinancialRequestHIPHelper.HIPRequestBody("ZECL", queryParameters)
-    val jsonBody = Json.toJson("")
+    val url                    = s"${appConfig.hipUrl}/etmp/RESTAdapter/cross-regime/taxpayer/financial-data/query"
+    val hipRequest: HipRequest = hipRequestBody(eclReference)
+    val jsonBody               = Json.toJson(hipRequest)
 
     httpClient
       .post(url"$url")
       .setHeader(hipHeaders: _*)
       .withBody(jsonBody)
       .execute[FinancialTransactionsHIPResponse]
-      .recover{
-        case ex: Exception =>
-          logger.warn(s"[HIPConnector][getFinancialDetails] HIP HTTP exception received: ${ex.getMessage}")
-          Left(FinancialTransactionsFailureResponse(INTERNAL_SERVER_ERROR))
+      .recover { case ex: Exception =>
+        logger.warn(s"[HIPConnector][getFinancialDetails] HIP HTTP exception received: ${ex.getMessage}")
+        Left(FinancialTransactionsFailureResponse(INTERNAL_SERVER_ERROR))
       }
   }
 
   private def buildHIPHeaders(correlationId: String): Seq[(String, String)] = Seq(
-      "Authorization" -> s"Basic ${appConfig.hipToken}",
-      appConfig.hipServiceOriginatorIdKeyV1 -> appConfig.hipServiceOriginatorIdV1,
-      "correlationid" -> correlationId,
-      "X-Originating-System" -> "MDTP",
-      "X-Receipt-Date"       -> DateTimeFormatter.ISO_INSTANT.format(Instant.now().truncatedTo(ChronoUnit.SECONDS)),
-      "X-Transmitting-System" -> "HIP"
+    "Authorization"                       -> s"Basic ${appConfig.hipToken}",
+    appConfig.hipServiceOriginatorIdKeyV1 -> appConfig.hipServiceOriginatorIdV1,
+    "correlationid"                       -> correlationId,
+    "X-Originating-System"                -> "MDTP",
+    "X-Receipt-Date"                      -> DateTimeFormatter.ISO_INSTANT.format(Instant.now().truncatedTo(ChronoUnit.SECONDS)),
+    "X-Transmitting-System"               -> "HIP"
   )
 
-
+  private def hipRequestBody(eclReference: EclReference): HipRequest =
+    HipRequest(
+      taxRegime = "ECL",
+      taxpayerInformation = TaxpayerInformation(
+        idType = "ZECL",
+        idNumber = eclReference.value
+      ),
+      targetedSearch = None,
+      selectionCriteria = Some(
+        SelectionCriteria(
+          dateRange = DateRange(
+            dateType = "POSTING",
+            dateFrom = appConfig.integrationFrameworkDateFrom.format(DateTimeFormatter.ISO_LOCAL_DATE),
+            dateTo = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
+          ),
+          includeClearedItems = true,
+          includeStatisticalItems = true,
+          includePaymentOnAccount = true
+        )
+      ),
+      dataEnrichment = Some(
+        DataEnrichment(
+          addRegimeTotalisation = true,
+          addLockInformation = true,
+          addPenaltyDetails = true,
+          addPostedInterestDetails = true,
+          addAccruingInterestDetails = true
+        )
+      )
+    )
 }

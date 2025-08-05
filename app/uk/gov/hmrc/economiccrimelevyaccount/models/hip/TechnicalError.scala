@@ -19,10 +19,7 @@ package uk.gov.hmrc.economiccrimelevyaccount.models.hip
 import play.api.libs.json.{Format, Json}
 import uk.gov.hmrc.economiccrimelevyaccount.connectors.httpParsers.FinancialDetailsHttpHIPParser.FinancialTransactionsFailure
 
-case class TechnicalError(
-                           code: String,
-                           message: String,
-                           logId: String) extends FinancialTransactionsFailure
+case class TechnicalError(code: String, message: String, logId: String) extends FinancialTransactionsFailure
 
 object TechnicalError {
   implicit val format: Format[TechnicalError] = Json.format[TechnicalError]

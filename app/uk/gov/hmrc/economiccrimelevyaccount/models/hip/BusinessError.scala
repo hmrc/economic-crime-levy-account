@@ -19,10 +19,7 @@ package uk.gov.hmrc.economiccrimelevyaccount.models.hip
 import play.api.libs.json.{Format, Json}
 import uk.gov.hmrc.economiccrimelevyaccount.connectors.httpParsers.FinancialDetailsHttpHIPParser.FinancialTransactionsFailure
 
-case class BusinessError(
-                          processingDate: String,
-                          code: String,
-                          text: String) extends FinancialTransactionsFailure
+case class BusinessError(processingDate: String, code: String, text: String) extends FinancialTransactionsFailure
 
 object BusinessError {
   implicit val format: Format[BusinessError] = Json.format[BusinessError]

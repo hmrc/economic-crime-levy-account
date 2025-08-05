@@ -22,7 +22,6 @@ import play.api.libs.json.{JsError, JsSuccess, JsValue}
 import uk.gov.hmrc.economiccrimelevyaccount.models.hip._
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 
-
 object FinancialDetailsHttpHIPParser extends Logging {
   trait FinancialTransactionsFailure
 
@@ -32,10 +31,10 @@ object FinancialDetailsHttpHIPParser extends Logging {
 
   case object FinancialTransactionsNoContent extends FinancialTransactionsFailure
 
-  type FinancialTransactionsHIPResponse = Either[FinancialTransactionsFailure, FinancialTransactionsHIP]
+  type FinancialTransactionsHIPResponse = Either[FinancialTransactionsFailure, FinancialDataHIP]
 
   implicit object FinancialTransactionsHIPReads extends HttpReads[FinancialTransactionsHIPResponse] {
-    override def read(method: String, url: String, response: HttpResponse): FinancialTransactionsHIPResponse = {
+    override def read(method: String, url: String, response: HttpResponse): FinancialTransactionsHIPResponse =
       response.status match {
         case CREATED =>
           handleSuccessResponse(response.json)
@@ -43,23 +42,29 @@ object FinancialDetailsHttpHIPParser extends Logging {
         case UNPROCESSABLE_ENTITY =>
           extractErrorResponseBodyFrom422(response.json)
 
-        case status@(BAD_REQUEST | FORBIDDEN | NOT_FOUND | CONFLICT | UNPROCESSABLE_ENTITY | INTERNAL_SERVER_ERROR | SERVICE_UNAVAILABLE) =>
-          logger.error(s"[FinancialTransactionsHIPReads][read] Received $status when trying to call HIP FinancialTransactions - with body: ${response.body}")
+        case status @ (BAD_REQUEST | FORBIDDEN | NOT_FOUND | CONFLICT | UNPROCESSABLE_ENTITY | INTERNAL_SERVER_ERROR |
+            SERVICE_UNAVAILABLE) =>
+          logger.error(
+            s"[FinancialTransactionsHIPReads][read] Received $status when trying to call HIP FinancialTransactions - with body: ${response.body}"
+          )
           handleErrorResponse(response)
 
         case status =>
-          logger.error(s"[FinancialTransactionsHIPReads][read] Received unexpected response from HIP FinancialTransactions, status code: $status and body: ${response.body}")
+          logger.error(
+            s"[FinancialTransactionsHIPReads][read] Received unexpected response from HIP FinancialTransactions, status code: $status and body: ${response.body}"
+          )
           Left(FinancialTransactionsFailureResponse(status))
       }
-    }
 
     private def handleSuccessResponse(json: JsValue): FinancialTransactionsHIPResponse = {
       logger.info(s"[FinancialTransactionsHIPReads][read] Success 201 response returned from API#5327")
-      json.validate[FinancialTransactionsHIP] match {
+      json.validate[FinancialDataHIP] match {
         case JsSuccess(valid, _) =>
-          logger.info(s"[FinancialTransactionsHIPReads][read] FinancialTransactions successfully validated from success response")
+          logger.info(
+            s"[FinancialTransactionsHIPReads][read] FinancialTransactions successfully validated from success response"
+          )
           Right(valid)
-        case JsError(errors) =>
+        case JsError(errors)     =>
           logger.error(s"[FinancialTransactionsHIPReads][read] Json validation of 201 body failed with errors: $errors")
           Left(FinancialTransactionsMalformed)
       }
@@ -73,23 +78,25 @@ object FinancialDetailsHttpHIPParser extends Logging {
         case JsSuccess(error, _) if noDataFound(error) =>
           logger.error(s"[FinancialTransactionsHIPReads][read] - Error: ID number did not match any data")
           Left(FinancialTransactionsNoContent)
-        case JsSuccess(error, _) =>
+        case JsSuccess(error, _)                       =>
           logger.error(s"[FinancialTransactionsHIPReads][read] - 422 Error with code: ${error.code} - ${error.text}")
           Left(FinancialTransactionsFailureResponse(UNPROCESSABLE_ENTITY))
-        case _ =>
-          logger.error(s"[FinancialTransactionsHIPReads][read] - Unable to parse 422 error body to expected format. Error: $json")
+        case _                                         =>
+          logger.error(
+            s"[FinancialTransactionsHIPReads][read] - Unable to parse 422 error body to expected format. Error: $json"
+          )
           Left(FinancialTransactionsFailureResponse(UNPROCESSABLE_ENTITY))
       }
     }
 
     private def handleErrorResponse(response: HttpResponse): Left[FinancialTransactionsFailure, Nothing] = {
-      val status = response.status
-      val error = (response.json \ "response" \ "error").validate[TechnicalError]
-      val errors = (response.json \ "response" \ "failures").validate[Seq[HipWrappedError]]
+      val status   = response.status
+      val error    = (response.json \ "response" \ "error").validate[TechnicalError]
+      val errors   = (response.json \ "response" \ "failures").validate[Seq[HipWrappedError]]
       val errorMsg = (error, errors) match {
-        case (JsSuccess(error, _), _) => s"${error.code} - ${error.message}"
+        case (JsSuccess(error, _), _)  => s"${error.code} - ${error.message}"
         case (_, JsSuccess(errors, _)) => errors.map(err => s"${err.`type`} - ${err.reason}").mkString(",\n")
-        case _ => response.json.toString()
+        case _                         => response.json.toString()
       }
       logger.error(s"[FinancialTransactionsHIPReads][read] $status error: $errorMsg")
       Left(FinancialTransactionsFailureResponse(status))
