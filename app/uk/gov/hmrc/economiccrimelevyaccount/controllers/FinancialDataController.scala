@@ -17,6 +17,7 @@
 package uk.gov.hmrc.economiccrimelevyaccount.controllers
 
 import play.api.mvc._
+import uk.gov.hmrc.economiccrimelevyaccount.config.AppConfig
 import uk.gov.hmrc.economiccrimelevyaccount.services.IntegrationFrameworkService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.economiccrimelevyaccount.controllers.BaseController
@@ -31,7 +32,9 @@ import scala.concurrent.ExecutionContext
 class FinancialDataController @Inject() (
   cc: ControllerComponents,
   authorise: AuthorisedAction,
-  integrationFrameworkService: IntegrationFrameworkService
+  integrationFrameworkService: IntegrationFrameworkService,
+  appConfig: AppConfig
+
 )(implicit ec: ExecutionContext)
     extends BackendController(cc)
     with BaseController
@@ -39,10 +42,16 @@ class FinancialDataController @Inject() (
 
   def getFinancialData: Action[AnyContent] = authorise.async { implicit request =>
     implicit val hc: HeaderCarrier = CorrelationIdHelper.headerCarrierWithCorrelationId(request)
-    (for {
-      financialData <- integrationFrameworkService
-                         .getFinancialData(request.eclReference)
-                         .asResponseError
+    (
+      for {
+      financialData <-  if(appConfig.enable1811HipCall)
+                          integrationFrameworkService
+                           .getFinancialData(request.eclReference)
+                           .asResponseError
+                        else
+                          integrationFrameworkService
+                            .getFinancialData(request.eclReference)
+                            .asResponseError
     } yield financialData).convertToResultWithJsonBody(OK)
   }
 

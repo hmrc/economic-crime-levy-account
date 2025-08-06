@@ -42,8 +42,7 @@ object FinancialDetailsHttpHIPParser extends Logging {
         case UNPROCESSABLE_ENTITY =>
           extractErrorResponseBodyFrom422(response.json)
 
-        case status @ (BAD_REQUEST | FORBIDDEN | NOT_FOUND | CONFLICT | UNPROCESSABLE_ENTITY | INTERNAL_SERVER_ERROR |
-            SERVICE_UNAVAILABLE) =>
+        case status @ (BAD_REQUEST | UNAUTHORIZED | FORBIDDEN | NOT_FOUND |  INTERNAL_SERVER_ERROR | SERVICE_UNAVAILABLE) =>
           logger.error(
             s"[FinancialTransactionsHIPReads][read] Received $status when trying to call HIP FinancialTransactions - with body: ${response.body}"
           )

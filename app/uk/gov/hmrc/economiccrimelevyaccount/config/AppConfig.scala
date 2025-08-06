@@ -54,4 +54,6 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
   val hipServiceOriginatorIdKeyV1: String = servicesConfig.getString("microservice.services.hip.originator-id-key")
   val hipServiceOriginatorIdV1: String    = servicesConfig.getString("microservice.services.hip.originator-id-value")
 
+  val enable1811HipCall: Boolean = config.get[Boolean]("feature-switch.enable1811HipCall")
+
 }
