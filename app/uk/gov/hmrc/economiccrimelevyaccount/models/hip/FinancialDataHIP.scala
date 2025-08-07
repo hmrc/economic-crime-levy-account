@@ -43,8 +43,8 @@ case class FinancialData(totalisation: Option[Totalisation], documentDetails: Op
 object FinancialData {
 
   implicit val reads: Reads[FinancialData] = (
-    (JsPath \ "success" \ "financialDetails" \ "totalisation").readNullable[Totalisation] and
-      (JsPath \ "success" \ "financialDetails" \ "documentDetails").readNullable[Seq[DocumentDetails]]
+    (JsPath \ "success" \ "financialData" \ "totalisation").readNullable[Totalisation] and
+      (JsPath \ "success" \ "financialData" \ "documentDetails").readNullable[Seq[DocumentDetails]]
   )(FinancialData.apply _)
 
   implicit val writes: OWrites[FinancialData] = Json.writes[FinancialData]

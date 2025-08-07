@@ -16,10 +16,9 @@
 
 package uk.gov.hmrc.economiccrimelevyaccount.models.hip
 
-import play.api.libs.json.{Format, Json}
-
-case class HipWrappedError(`type`: String, reason: String)
+trait HipWrappedError
 
 object HipWrappedError {
-  implicit val format: Format[HipWrappedError] = Json.format[HipWrappedError]
+  case class InternalUnexpectedError(message: String, cause: Option[Throwable]) extends HipWrappedError
+  case class BadGateway(reason: String, code: Int) extends HipWrappedError
 }

@@ -19,12 +19,10 @@ package uk.gov.hmrc.economiccrimelevyaccount.connectors
 import play.api.Logging
 import play.api.libs.json.Json
 import uk.gov.hmrc.economiccrimelevyaccount.config.AppConfig
-import uk.gov.hmrc.economiccrimelevyaccount.connectors.httpParsers.FinancialDetailsHttpHIPParser.{FinancialTransactionsFailureResponse, FinancialTransactionsHIPResponse}
-import uk.gov.hmrc.economiccrimelevyaccount.models.hip.{DataEnrichment, DateRange, HipRequest, SelectionCriteria, TargetedSearch, TaxpayerInformation}
-import uk.gov.hmrc.economiccrimelevyaccount.models.{CustomHeaderNames, EclReference, QueryParams}
-import play.api.http.Status.INTERNAL_SERVER_ERROR
+import uk.gov.hmrc.economiccrimelevyaccount.models.hip.{DataEnrichment, DateRange, FinancialDataHIP, HipRequest, SelectionCriteria, TaxpayerInformation}
+import uk.gov.hmrc.economiccrimelevyaccount.models.EclReference
 import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, HttpResponse, StringContextOps}
+import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 
 import java.time.{Instant, LocalDate}
 import java.time.format.DateTimeFormatter
@@ -43,7 +41,7 @@ class HipConnector @Inject() (
 
   def getFinancialDetails(
     eclReference: EclReference
-  )(implicit hc: HeaderCarrier): Future[FinancialTransactionsHIPResponse] = {
+  )(implicit hc: HeaderCarrier): Future[FinancialDataHIP] = {
 
     val correlationId = UUID.randomUUID().toString
     val hipHeaders    = buildHIPHeaders(correlationId)
@@ -56,11 +54,7 @@ class HipConnector @Inject() (
       .post(url"$url")
       .setHeader(hipHeaders: _*)
       .withBody(jsonBody)
-      .execute[FinancialTransactionsHIPResponse]
-      .recover { case ex: Exception =>
-        logger.warn(s"[HIPConnector][getFinancialDetails] HIP HTTP exception received: ${ex.getMessage}")
-        Left(FinancialTransactionsFailureResponse(INTERNAL_SERVER_ERROR))
-      }
+      .executeAndDeserialise[FinancialDataHIP]
   }
 
   private def buildHIPHeaders(correlationId: String): Seq[(String, String)] = Seq(

@@ -90,16 +90,26 @@ object FinancialDetailsHttpHIPParser extends Logging {
     }
 
     private def handleErrorResponse(response: HttpResponse): Left[FinancialTransactionsFailure, Nothing] = {
-      val status   = response.status
-      val error    = (response.json \ "response" \ "error").validate[TechnicalError]
-      val errors   = (response.json \ "response" \ "failures").validate[Seq[HipWrappedError]]
-      val errorMsg = (error, errors) match {
-        case (JsSuccess(error, _), _)  => s"${error.code} - ${error.message}"
-        case (_, JsSuccess(errors, _)) => errors.map(err => s"${err.`type`} - ${err.reason}").mkString(",\n")
-        case _                         => response.json.toString()
-      }
+      /*
+      Dummy method to
+       */
+      val status   = 400
+      val errorMsg = "Dummy message"
       logger.error(s"[FinancialTransactionsHIPReads][read] $status error: $errorMsg")
       Left(FinancialTransactionsFailureResponse(status))
     }
+
+    /* private def handleErrorResponse(response: HttpResponse): Left[FinancialTransactionsFailure, Nothing] = {
+       val status   = response.status
+       val error    = (response.json \ "response" \ "error").validate[TechnicalError]
+       val errors   = (response.json \ "response" \ "failures").validate[Seq[HipWrappedError]]
+       val errorMsg = (error, errors) match {
+         case (JsSuccess(error, _), _)  => s"${error.code} - ${error.message}"
+         case (_, JsSuccess(errors, _)) => errors.map(err => s"${err.`type`} - ${err.reason}").mkString(",\n")
+         case _                         => response.json.toString()
+       }
+       logger.error(s"[FinancialTransactionsHIPReads][read] $status error: $errorMsg")
+       Left(FinancialTransactionsFailureResponse(status))
+     } */
   }
 }
