@@ -34,7 +34,6 @@ class FinancialDataController @Inject() (
   authorise: AuthorisedAction,
   integrationFrameworkService: IntegrationFrameworkService,
   appConfig: AppConfig
-
 )(implicit ec: ExecutionContext)
     extends BackendController(cc)
     with BaseController
@@ -42,16 +41,15 @@ class FinancialDataController @Inject() (
 
   def getFinancialData: Action[AnyContent] = authorise.async { implicit request =>
     implicit val hc: HeaderCarrier = CorrelationIdHelper.headerCarrierWithCorrelationId(request)
-    (
-      for {
-      financialData <-  if(appConfig.enable1811HipCall)
-                          integrationFrameworkService
+    (for {
+      financialData <- if (appConfig.enable1811HipCall)
+                         integrationFrameworkService
                            .getFinancialData(request.eclReference)
                            .asResponseError
-                        else
-                          integrationFrameworkService
-                            .getFinancialData(request.eclReference)
-                            .asResponseError
+                       else
+                         integrationFrameworkService
+                           .getFinancialData(request.eclReference)
+                           .asResponseError
     } yield financialData).convertToResultWithJsonBody(OK)
   }
 
