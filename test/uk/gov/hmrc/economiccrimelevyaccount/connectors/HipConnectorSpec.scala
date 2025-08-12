@@ -16,26 +16,25 @@
 
 package uk.gov.hmrc.economiccrimelevyaccount.connectors
 import org.scalatestplus.play.PlaySpec
-
 import org.scalatestplus.mockito.MockitoSugar
 import org.mockito.Mockito._
 import org.mockito.ArgumentMatchers._
-import play.api.http.Status.OK
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK}
 import play.api.libs.json.Json
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.economiccrimelevyaccount.config.AppConfig
 import uk.gov.hmrc.economiccrimelevyaccount.models.EclReference
-import uk.gov.hmrc.economiccrimelevyaccount.models.hip.{DocumentDetails, FinancialDataHIP, HipRequest, LineItemDetails, PenaltyTotals, Totalisation}
-import uk.gov.hmrc.economiccrimelevyaccount.models.hip.DocumentType
+import uk.gov.hmrc.economiccrimelevyaccount.models.hip.{DocumentDetails, DocumentType, FinancialDataHIP, LineItemDetails, PenaltyTotals, Totalisation}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, UpstreamErrorResponse}
 import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
+import scala.util.{Failure, Try}
 
 import java.time.{Instant, LocalDate}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class HipConnectorSpec extends PlaySpec with MockitoSugar {
-
   "HipConnector" must {
     "return financial details when the http client returns financial details" in {
       val mockAppConfig                      = mock[AppConfig]
@@ -51,7 +50,6 @@ class HipConnectorSpec extends PlaySpec with MockitoSugar {
       when(mockAppConfig.hipDateFrom).thenReturn(LocalDate.of(2023, 1, 1))
       val mockFinancialDataHIP               = createMockFinancialDataHIP()
       when(mockHttpClient.post(any())(any())).thenReturn(mockRequestBuilder)
-
       when(mockRequestBuilder.setHeader(any())).thenReturn(mockRequestBuilder)
       when(mockRequestBuilder.withBody(any())(any(), any(), any())).thenReturn(mockRequestBuilder)
       when(mockRequestBuilder.execute[HttpResponse](any(), any())).thenReturn(
@@ -59,39 +57,39 @@ class HipConnectorSpec extends PlaySpec with MockitoSugar {
           HttpResponse.apply(OK, Json.stringify(Json.toJson(mockFinancialDataHIP)))
         )
       )
-      implicit val hc: HeaderCarrier = HeaderCarrier()
-      val eclReference               = EclReference("ECL1234")
-      val result                     = await(hipConnector.getFinancialDetails(eclReference))
-
-      //result shouldBe mockFinancialDataHIP
-
+      implicit val hc: HeaderCarrier         = HeaderCarrier()
+      val eclReference                       = EclReference("ECL1234")
+      await(hipConnector.getFinancialDetails(eclReference)).isInstanceOf[FinancialDataHIP] shouldBe true
     }
 
-    /*
-    "when a 500x error is returned from HIP API" in  {
-      val mockAppConfig  = mock[AppConfig]
-      val mockHttpClient = mock[HttpClientV2]
-      val errorMessage   = "internal server error"
-      (eclReference: EclReference, financialDataHIP: FinancialDataHIP) =>
-        beforeEach()
-        when(mockAppConfig.hipUrl).thenReturn(
-          "http://localhost:9999/etmp/RESTAdapter/cross-regime/taxpayer/financial-data/query"
-        )
-        when(mockAppConfig.hipToken).thenReturn("mockToken")
-        when(mockAppConfig.hipServiceOriginatorIdKeyV1).thenReturn("mock-originator-id-key")
-        when(mockAppConfig.hipServiceOriginatorIdV1).thenReturn("mock-originator-id")
-        when(mockHttpClient.post(any())(any())).thenReturn(mockRequestBuilder)
-        when(mockRequestBuilder.setHeader(any())).thenReturn(mockRequestBuilder)
-        when(mockRequestBuilder.withBody(any())(any(), any(), any())).thenReturn(mockRequestBuilder)
-        when(mockRequestBuilder.execute[HttpResponse](any(), any()))
-          .thenReturn(Future.successful(HttpResponse.apply(INTERNAL_SERVER_ERROR, errorMessage)))
-        Try(await(connector.getFinancialDetails(eclReference))) match {
-          case Failure(UpstreamErrorResponse(msg, _, _, _)) =>
-            msg shouldEqual errorMessage
-          case _                                            =>
-            fail("expected UpstreamErrorResponse when an error is received from HIP")
-        }
-    }*/
+    "when a 500x error is returned from HIP API" in {
+      val mockAppConfig                      = mock[AppConfig]
+      val mockHttpClient                     = mock[HttpClientV2]
+      val mockRequestBuilder: RequestBuilder = mock[RequestBuilder]
+      val errorMessage                       = "internal server error"
+      val eclReference                       = EclReference("ECL1234")
+      val hipConnector                       = new HipConnector(mockAppConfig, mockHttpClient)
+      when(mockAppConfig.hipUrl).thenReturn(
+        "http://localhost:9099/etmp/RESTAdapter/cross-regime/taxpayer/financial-data/query"
+      )
+      when(mockAppConfig.hipToken).thenReturn("mockToken")
+      when(mockAppConfig.hipServiceOriginatorIdKeyV1).thenReturn("mock-originator-id-key")
+      when(mockAppConfig.hipServiceOriginatorIdV1).thenReturn("mock-originator-id")
+      when(mockAppConfig.hipDateFrom).thenReturn(LocalDate.of(2023, 1, 1))
+      val mockFinancialDataHIP               = createMockFinancialDataHIP()
+      when(mockHttpClient.post(any())(any())).thenReturn(mockRequestBuilder)
+      when(mockRequestBuilder.setHeader(any())).thenReturn(mockRequestBuilder)
+      when(mockRequestBuilder.withBody(any())(any(), any(), any())).thenReturn(mockRequestBuilder)
+      when(mockRequestBuilder.execute[HttpResponse](any(), any()))
+        .thenReturn(Future.successful(HttpResponse.apply(INTERNAL_SERVER_ERROR, errorMessage)))
+      implicit val hc: HeaderCarrier         = HeaderCarrier()
+      Try(await(hipConnector.getFinancialDetails(eclReference))) match {
+        case Failure(UpstreamErrorResponse(msg, _, _, _)) =>
+          msg shouldEqual errorMessage
+        case _                                            =>
+          fail("expected UpstreamErrorResponse when an error is received from HIP")
+      }
+    }
   }
   private def createMockFinancialDataHIP(): FinancialDataHIP = {
     val totalisation = Totalisation(

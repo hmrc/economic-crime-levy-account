@@ -45,7 +45,17 @@ class HIPServiceSpec extends SpecBase {
         result shouldBe Right(Some(financialDataWithKnownDocumentTypes))
     }
 
-    "return a bad gateway when IF responds with an upstream error other than NOT_FOUND" in forAll {
+    "return an empty option if HIP responds with NOT_FOUND" in forAll { (eclReference: EclReference) =>
+      when(mockHIPConnector.getFinancialDetails(any[String].asInstanceOf[EclReference])(any()))
+        .thenReturn(Future.failed(UpstreamErrorResponse("not found", NOT_FOUND)))
+
+      val result =
+        await(hipService.getFinancialDataHIP(eclReference).value)
+
+      result shouldBe Right(None)
+    }
+
+    "return a bad gateway when HIP responds with an upstream error other than NOT_FOUND" in forAll {
       (eclReference: EclReference) =>
         val reason = "Forbidden"
         val code   = FORBIDDEN
@@ -54,6 +64,7 @@ class HIPServiceSpec extends SpecBase {
 
         val result =
           await(hipService.getFinancialDataHIP(eclReference).value)
+
         result shouldBe Left(HipWrappedError.BadGateway(s"Get Financial Data Failed - $reason", code))
     }
 
