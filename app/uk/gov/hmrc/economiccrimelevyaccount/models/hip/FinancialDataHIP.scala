@@ -18,36 +18,16 @@ package uk.gov.hmrc.economiccrimelevyaccount.models.hip
 
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
-import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.DocumentType
+import uk.gov.hmrc.economiccrimelevyaccount.models.hip.DocumentType
 
-case class FinancialDataHIP(success: Option[Success])
+case class FinancialDataHIP(totalisation: Option[Totalisation], documentDetails: Option[Seq[DocumentDetails]])
+
 object FinancialDataHIP {
-  implicit val reads: Reads[FinancialDataHIP] = (
-    (JsPath \ "success").readNullable[Success]
-  ).map(FinancialDataHIP.apply)
-
-  implicit val writes: OWrites[FinancialDataHIP] = Json.writes[FinancialDataHIP]
-}
-
-case class Success(processingDate: Option[String], financialData: Option[FinancialData])
-object Success {
-  implicit val reads: Reads[Success] = (
-    (JsPath \ "processingDate").readNullable[String] and
-      (JsPath \ "financialData").readNullable[FinancialData]
-  )(Success.apply _)
-
-  implicit val writes: OWrites[Success] = Json.writes[Success]
-}
-case class FinancialData(totalisation: Option[Totalisation], documentDetails: Option[Seq[DocumentDetails]])
-
-object FinancialData {
-
-  implicit val reads: Reads[FinancialData] = (
+  implicit val reads: Reads[FinancialDataHIP]    = (
     (JsPath \ "success" \ "financialData" \ "totalisation").readNullable[Totalisation] and
       (JsPath \ "success" \ "financialData" \ "documentDetails").readNullable[Seq[DocumentDetails]]
-  )(FinancialData.apply _)
-
-  implicit val writes: OWrites[FinancialData] = Json.writes[FinancialData]
+  )(FinancialDataHIP.apply _)
+  implicit val writes: OWrites[FinancialDataHIP] = Json.writes[FinancialDataHIP]
 }
 
 case class Totalisation(

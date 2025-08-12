@@ -51,17 +51,9 @@ class HIPService @Inject() (hipConnector: HipConnector)(implicit ec: ExecutionCo
     }
 
   def filterOutUnknownDocumentTypes(financialDataHIP: FinancialDataHIP): FinancialDataHIP = {
-    val filteredDocumentDetails = {
-      financialDataHIP.success.flatMap(_.financialData.flatMap(_.documentDetails.map { documentDetailsList =>
-        documentDetailsList.filterNot(_.documentType.exists(_.isInstanceOf[Other]))
-      }))
-    }
-    logger.debug("in filterOutUnknownDocumentTypes method and value of filteredDocumentDetails--->" + filteredDocumentDetails)
-    val updatedFinancialData = financialDataHIP.success.flatMap(_.financialData.map { financialData =>
-      financialData.copy(documentDetails = filteredDocumentDetails)
-    })
-    logger.debug("in filterOutUnknownDocumentTypes method and value of updatedFinancialData--->" + updatedFinancialData)
-    financialDataHIP.copy(success = financialDataHIP.success.map(_.copy(financialData = updatedFinancialData)))
+    val documentsWithKnownTypes = financialDataHIP.documentDetails.map(documentDetailsList =>
+      documentDetailsList.filterNot(_.documentType.exists(_.isInstanceOf[Other]))
+    )
+    FinancialDataHIP(financialDataHIP.totalisation, documentsWithKnownTypes)
   }
-
 }

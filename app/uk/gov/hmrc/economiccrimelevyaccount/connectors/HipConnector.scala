@@ -78,7 +78,7 @@ class HipConnector @Inject() (
         SelectionCriteria(
           dateRange = DateRange(
             dateType = "POSTING",
-            dateFrom = appConfig.integrationFrameworkDateFrom.format(DateTimeFormatter.ISO_LOCAL_DATE),
+            dateFrom = appConfig.hipDateFrom.format(DateTimeFormatter.ISO_LOCAL_DATE),
             dateTo = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
           ),
           includeClearedItems = true,
