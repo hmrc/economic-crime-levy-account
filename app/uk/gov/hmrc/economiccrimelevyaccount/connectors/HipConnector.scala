@@ -20,9 +20,9 @@ import play.api.Logging
 import play.api.libs.json.Json
 import uk.gov.hmrc.economiccrimelevyaccount.config.AppConfig
 import uk.gov.hmrc.economiccrimelevyaccount.models.hip.{DataEnrichment, DateRange, FinancialDataHIP, HipRequest, SelectionCriteria, TaxpayerInformation}
-import uk.gov.hmrc.economiccrimelevyaccount.models.EclReference
+import uk.gov.hmrc.economiccrimelevyaccount.models.{CustomHeaderNames, EclReference}
 import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
+import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, StringContextOps}
 
 import java.time.{Instant, LocalDate}
 import java.time.format.DateTimeFormatter
@@ -58,12 +58,14 @@ class HipConnector @Inject() (
   }
 
   private def buildHIPHeaders(correlationId: String): Seq[(String, String)] = Seq(
-    "Authorization"                       -> s"Basic ${appConfig.hipToken}",
+    HeaderNames.authorisation             -> s"Basic ${appConfig.hipToken}",
     appConfig.hipServiceOriginatorIdKeyV1 -> appConfig.hipServiceOriginatorIdV1,
-    "correlationid"                       -> correlationId,
-    "X-Originating-System"                -> "MDTP",
-    "X-Receipt-Date"                      -> DateTimeFormatter.ISO_INSTANT.format(Instant.now().truncatedTo(ChronoUnit.SECONDS)),
-    "X-Transmitting-System"               -> "HIP"
+    CustomHeaderNames.hipCorrelationId    -> correlationId,
+    CustomHeaderNames.xOriginatingSystem  -> "MDTP",
+    CustomHeaderNames.xReceiptDate        -> DateTimeFormatter.ISO_INSTANT.format(
+      Instant.now().truncatedTo(ChronoUnit.SECONDS)
+    ),
+    CustomHeaderNames.xTransmittingSystem -> "HIP"
   )
 
   private def hipRequestBody(eclReference: EclReference): HipRequest =

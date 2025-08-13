@@ -17,7 +17,11 @@
 package uk.gov.hmrc.economiccrimelevyaccount.models
 
 object CustomHeaderNames {
-  val correlationId  = "CorrelationId"
-  val environment    = "Environment"
-  val xCorrelationId = "X-Correlation-Id"
+  val correlationId       = "CorrelationId"
+  val environment         = "Environment"
+  val xCorrelationId      = "X-Correlation-Id"
+  val hipCorrelationId    = "correlationid"
+  val xOriginatingSystem  = "X-Originating-System"
+  val xReceiptDate        = "X-Receipt-Date"
+  val xTransmittingSystem = "X-Transmitting-System"
 }

@@ -47,7 +47,7 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
   val integrationFrameworkDateFrom: LocalDate =
     config.get[LocalDate]("microservice.services.integration-framework.dateFrom")
   val hipDateFrom: LocalDate                  =
-    config.get[LocalDate]("microservice.services.integration-framework.dateFrom")
+    config.get[LocalDate]("microservice.services.hip.dateFrom")
 
   val hipUrl: String                      = config.get[String]("microservice.services.hip.url")
   val clientIdV1: String                  = config.get[String]("microservice.services.hip.client-id")
