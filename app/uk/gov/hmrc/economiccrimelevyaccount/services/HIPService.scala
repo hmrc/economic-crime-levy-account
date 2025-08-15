@@ -21,7 +21,7 @@ import play.api.Logging
 import play.api.http.Status.NOT_FOUND
 import uk.gov.hmrc.economiccrimelevyaccount.connectors.HipConnector
 import uk.gov.hmrc.economiccrimelevyaccount.models.EclReference
-import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.DocumentType.Other
+import uk.gov.hmrc.economiccrimelevyaccount.models.hip.DocumentType.Other
 import uk.gov.hmrc.economiccrimelevyaccount.models.hip.{FinancialDataHIP, HipWrappedError}
 import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
 
