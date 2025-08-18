@@ -38,6 +38,9 @@ class HIPService @Inject() (hipConnector: HipConnector)(implicit ec: ExecutionCo
       (for {
         financialDataHIP <- hipConnector.getFinancialDetails(eclReference)
         filteredResult    = filterOutUnknownDocumentTypes(financialDataHIP)
+        _                 = logger.info(
+                              s"Successfully retrieved and filtered financial data for ECL-HIP reference--> ${eclReference.value}"
+                            )
       } yield Right(Some(filteredResult))).recover {
         case UpstreamErrorResponse(_, NOT_FOUND, _, _) =>
           Right(None)
@@ -45,8 +48,16 @@ class HIPService @Inject() (hipConnector: HipConnector)(implicit ec: ExecutionCo
             if UpstreamErrorResponse.Upstream5xxResponse
               .unapply(error)
               .isDefined || UpstreamErrorResponse.Upstream4xxResponse.unapply(error).isDefined =>
+          logger.error(
+            s"Failed to retrieve financial data for ECL-HIP reference: ${eclReference.value}. Reason: $message, Code: $code"
+          )
           Left(HipWrappedError.BadGateway(reason = s"Get Financial Data Failed - $message", code = code))
-        case NonFatal(thr)                             => Left(HipWrappedError.InternalUnexpectedError(thr.getMessage, Some(thr)))
+        case NonFatal(thr)                             =>
+          logger.error(
+            s"An unexpected error occurred while retrieving financial data for ECL-HIP reference: ${eclReference.value}",
+            thr
+          )
+          Left(HipWrappedError.InternalUnexpectedError(thr.getMessage, Some(thr)))
       }
     }
 

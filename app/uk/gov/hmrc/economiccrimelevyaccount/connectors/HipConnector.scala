@@ -55,6 +55,10 @@ class HipConnector @Inject() (
       .setHeader(hipHeaders: _*)
       .withBody(jsonBody)
       .executeAndDeserialise[FinancialDataHIP]
+      .map { financialDataHIP =>
+        logger.info(s"Successfully retrieved financial data for ECL-HIP reference--> ${eclReference.value}")
+        financialDataHIP
+      }
   }
 
   private def buildHIPHeaders(correlationId: String): Seq[(String, String)] = Seq(
