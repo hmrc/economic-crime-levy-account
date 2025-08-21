@@ -18,6 +18,7 @@ package uk.gov.hmrc.economiccrimelevyaccount.controllers
 
 import uk.gov.hmrc.economiccrimelevyaccount.base.SpecBase
 import uk.gov.hmrc.economiccrimelevyaccount.models.errors._
+import uk.gov.hmrc.economiccrimelevyaccount.models.hip.HipWrappedError
 
 class ErrorHandlerSpec extends SpecBase with ErrorHandler {
 
@@ -57,6 +58,27 @@ class ErrorHandlerSpec extends SpecBase with ErrorHandler {
         val integrationFrameworkError = IntegrationFrameworkError.InternalUnexpectedError(errorMessage, None)
 
         val result: ResponseError = integrationFrameworkErrorConverter.convert(integrationFrameworkError)
+
+        result shouldBe ResponseError.internalServiceError(errorMessage, cause = None)
+    }
+  }
+
+  "hipFrameworkErrorConverter" should {
+
+    "return ResponseError.badGateway when HipFrameworkError.BadGateway is converted" in forAll {
+      (errorMessage: String) =>
+        val hipWrappedError = HipWrappedError.BadGateway(errorMessage, BAD_GATEWAY)
+
+        val result: ResponseError = hipFrameworkErrorConverter.convert(hipWrappedError)
+
+        result shouldBe ResponseError.badGateway(errorMessage, BAD_GATEWAY)
+    }
+
+    "return ResponseError.internalServiceError when HipFrameworkError.InternalUnexpectedError is converted" in forAll {
+      (errorMessage: String) =>
+        val hipWrappedError = HipWrappedError.InternalUnexpectedError(errorMessage, None)
+
+        val result: ResponseError = hipFrameworkErrorConverter.convert(hipWrappedError)
 
         result shouldBe ResponseError.internalServiceError(errorMessage, cause = None)
     }

@@ -60,7 +60,8 @@ val excludedScoveragePackages: Seq[String] = Seq(
   "prod.*",
   ".*Routes.*",
   ".*testonly.*",
-  "testOnlyDoNotUseInAppConf.*"
+  "testOnlyDoNotUseInAppConf.*",
+  "uk.gov.hmrc.economiccrimelevyaccount.connectors.httpParsers.*"
 )
 
 val scoverageSettings: Seq[Setting[_]] = Seq(

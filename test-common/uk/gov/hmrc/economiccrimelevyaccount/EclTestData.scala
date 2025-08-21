@@ -21,6 +21,7 @@ import org.scalacheck.{Arbitrary, Gen}
 import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier, Enrolments}
 import uk.gov.hmrc.economiccrimelevyaccount.models.EclReference
 import uk.gov.hmrc.economiccrimelevyaccount.models.eacd.EclEnrolment
+import uk.gov.hmrc.economiccrimelevyaccount.models.hip.FinancialDataHIP
 import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.{DocumentDetails, DocumentType, FinancialData}
 import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.{LineItemDetails, PenaltyTotals, Totalisation}
 
@@ -115,6 +116,18 @@ trait EclTestData {
       totalisation    <- Arbitrary.arbitrary[Totalisation].map(Some(_))
       documentDetails <- Gen.nonEmptyContainerOf[Seq, DocumentDetails](Arbitrary.arbitrary[DocumentDetails])
     } yield FinancialData(
+      totalisation,
+      Some(documentDetails)
+    )
+  }
+
+  implicit val arbValidFinancialDataHIPResponse: Arbitrary[FinancialDataHIP] = Arbitrary {
+    for {
+      totalisation    <- Arbitrary.arbitrary[uk.gov.hmrc.economiccrimelevyaccount.models.hip.Totalisation].map(Some(_))
+      documentDetails <- Gen.nonEmptyContainerOf[Seq, uk.gov.hmrc.economiccrimelevyaccount.models.hip.DocumentDetails](
+                           Arbitrary.arbitrary[uk.gov.hmrc.economiccrimelevyaccount.models.hip.DocumentDetails]
+                         )
+    } yield FinancialDataHIP(
       totalisation,
       Some(documentDetails)
     )
