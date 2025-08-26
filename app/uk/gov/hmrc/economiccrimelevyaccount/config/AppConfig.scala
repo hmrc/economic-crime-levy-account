@@ -49,7 +49,7 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
   val hipDateFrom: LocalDate                  =
     config.get[LocalDate]("microservice.services.hip.dateFrom")
 
-  val hipUrl: String                      = servicesConfig.baseUrl("microservice.services.hip.url")
+  val hipUrl: String                      = servicesConfig.baseUrl("hip")
   val clientIdV1: String                  = config.get[String]("microservice.services.hip.client-id")
   val secretV1: String                    = config.get[String]("microservice.services.hip.client-secret")
   val hipToken: String                    = Base64.getEncoder.encodeToString(s"$clientIdV1:$secretV1".getBytes("UTF-8"))
