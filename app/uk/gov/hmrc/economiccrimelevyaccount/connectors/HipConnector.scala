@@ -62,7 +62,7 @@ class HipConnector @Inject() (
   }
 
   private def buildHIPHeaders(correlationId: String): Seq[(String, String)] = Seq(
-    HeaderNames.authorisation             -> s"Basic ${appConfig.clientIdV1}",
+    HeaderNames.authorisation             -> s"Basic ${appConfig.hipToken}",
     appConfig.hipServiceOriginatorIdKeyV1 -> appConfig.hipServiceOriginatorIdV1,
     CustomHeaderNames.hipCorrelationId    -> correlationId,
     CustomHeaderNames.xOriginatingSystem  -> "MDTP",
