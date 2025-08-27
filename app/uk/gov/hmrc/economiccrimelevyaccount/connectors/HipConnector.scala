@@ -60,7 +60,7 @@ class HipConnector @Inject() (
       .map { financialDataHIP =>
         logger.info(s"Successfully retrieved financial data for ECL-HIP reference--> ${eclReference.value}")
         //need to delete before going live
-        logger.info(s"Response financial data for ECL-HIP API--> $financialDataHIP")
+        logger.info(s"Response financial data for ECL-HIP API--> ${Json.toJson(financialDataHIP)}")
         financialDataHIP
       }
   }
