@@ -49,8 +49,6 @@ class HipConnector @Inject() (
     val url                    = s"${appConfig.hipUrl}/etmp/RESTAdapter/cross-regime/taxpayer/financial-data/query"
     val hipRequest: HipRequest = hipRequestBody(eclReference)
     val jsonBody               = Json.toJson(hipRequest)
-    //need to delete before going live
-    logger.info(s"Request Body for financial data ECL-HIP --> $jsonBody")
 
     httpClient
       .post(url"$url")
@@ -59,8 +57,6 @@ class HipConnector @Inject() (
       .executeAndDeserialise[FinancialDataHIP]
       .map { financialDataHIP =>
         logger.info(s"Successfully retrieved financial data for ECL-HIP reference--> ${eclReference.value}")
-        //need to delete before going live
-        logger.info(s"Response financial data for ECL-HIP API--> ${Json.toJson(financialDataHIP)}")
         financialDataHIP
       }
   }

@@ -40,7 +40,7 @@ class HIPService @Inject() (hipConnector: HipConnector)(implicit ec: ExecutionCo
         filteredResult    = filterOutUnknownDocumentTypes(financialDataHIP)
         _                 =
           logger.info(
-            s"Successfully retrieved and filtered financial data for ECL-HIP reference--> ${eclReference.value} and $filteredResult"
+            s"Successfully retrieved and filtered financial data for ECL-HIP reference--> ${eclReference.value}"
           )
       } yield Right(Some(filteredResult))).recover {
         case UpstreamErrorResponse(_, NOT_FOUND, _, _) =>
