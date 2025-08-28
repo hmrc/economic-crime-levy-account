@@ -18,6 +18,7 @@ package uk.gov.hmrc.economiccrimelevyaccount.connectors
 
 import io.lemonlabs.uri.{QueryString, Url}
 import play.api.Logging
+import play.api.libs.json.Json
 import uk.gov.hmrc.economiccrimelevyaccount.config.AppConfig
 import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework._
 import uk.gov.hmrc.economiccrimelevyaccount.models.{CustomHeaderNames, EclReference, QueryParams}
@@ -59,6 +60,11 @@ class IntegrationFrameworkConnector @Inject() (
       .setHeader((CustomHeaderNames.environment, appConfig.integrationFrameworkEnvironment))
       .setHeader((CustomHeaderNames.correlationId, correlationId))
       .executeAndDeserialise[FinancialData]
+      .map { financialData =>
+        logger.info((s"Response financial data for ECL-IF API--> ${eclReference.value}"))
+        logger.info((s"Response financial data for ECL-IF API--> ${Json.toJson(financialData)}"))
+        financialData
+      }
 
   }
 
