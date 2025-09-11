@@ -19,7 +19,7 @@ import org.mockito.ArgumentMatchers.any
 import uk.gov.hmrc.economiccrimelevyaccount.base.SpecBase
 import uk.gov.hmrc.economiccrimelevyaccount.connectors.HipConnector
 import uk.gov.hmrc.economiccrimelevyaccount.models.EclReference
-import uk.gov.hmrc.economiccrimelevyaccount.models.hip.{FinancialDataHIP, HipWrappedError}
+import uk.gov.hmrc.economiccrimelevyaccount.models.hip.{FinancialData, HipWrappedError}
 import uk.gov.hmrc.http.UpstreamErrorResponse
 
 import scala.concurrent.Future
@@ -35,7 +35,7 @@ class HIPServiceSpec extends SpecBase {
 
   "getFinancialData" should {
     "returns financial data in a defined option when the data is successfully returned from HIP connector and filters out unknown document types" in forAll {
-      (financialDataHIP: FinancialDataHIP, eclReference: EclReference) =>
+      (financialDataHIP: FinancialData, eclReference: EclReference) =>
         when(mockHIPConnector.getFinancialDetails(any[String].asInstanceOf[EclReference])(any()))
           .thenReturn(Future.successful(financialDataHIP))
 

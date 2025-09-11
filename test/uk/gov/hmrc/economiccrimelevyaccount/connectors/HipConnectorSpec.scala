@@ -25,12 +25,12 @@ import play.api.libs.json.Json
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.economiccrimelevyaccount.config.AppConfig
 import uk.gov.hmrc.economiccrimelevyaccount.models.EclReference
-import uk.gov.hmrc.economiccrimelevyaccount.models.hip.{DocumentDetails, DocumentType, FinancialDataHIP, LineItemDetails, PenaltyTotals, Totalisation}
+import uk.gov.hmrc.economiccrimelevyaccount.models.hip.{DocumentDetails, DocumentType, FinancialData, LineItemDetails, PenaltyTotals, Totalisation}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, UpstreamErrorResponse}
 import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
 import scala.util.{Failure, Try}
 
-import java.time.{Instant, LocalDate}
+import java.time.LocalDate
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -48,18 +48,18 @@ class HipConnectorSpec extends PlaySpec with MockitoSugar {
       when(mockAppConfig.hipServiceOriginatorIdKeyV1).thenReturn("mock-originator-id-key")
       when(mockAppConfig.hipServiceOriginatorIdV1).thenReturn("mock-originator-id")
       when(mockAppConfig.hipDateFrom).thenReturn(LocalDate.of(2023, 1, 1))
-      val mockFinancialDataHIP               = createMockFinancialDataHIP()
+      val mockFinancialData                  = createMockFinancialDataHIP()
       when(mockHttpClient.post(any())(any())).thenReturn(mockRequestBuilder)
       when(mockRequestBuilder.setHeader(any())).thenReturn(mockRequestBuilder)
       when(mockRequestBuilder.withBody(any())(any(), any(), any())).thenReturn(mockRequestBuilder)
       when(mockRequestBuilder.execute[HttpResponse](any(), any())).thenReturn(
         Future.successful(
-          HttpResponse.apply(OK, Json.stringify(Json.toJson(mockFinancialDataHIP)))
+          HttpResponse.apply(OK, Json.stringify(Json.toJson(mockFinancialData)))
         )
       )
       implicit val hc: HeaderCarrier         = HeaderCarrier()
       val eclReference                       = EclReference("ECL1234")
-      await(hipConnector.getFinancialDetails(eclReference)).isInstanceOf[FinancialDataHIP] shouldBe true
+      await(hipConnector.getFinancialDetails(eclReference)).isInstanceOf[FinancialData] shouldBe true
     }
 
     "when a 500x error is returned from HIP API" in {
@@ -76,7 +76,6 @@ class HipConnectorSpec extends PlaySpec with MockitoSugar {
       when(mockAppConfig.hipServiceOriginatorIdKeyV1).thenReturn("mock-originator-id-key")
       when(mockAppConfig.hipServiceOriginatorIdV1).thenReturn("mock-originator-id")
       when(mockAppConfig.hipDateFrom).thenReturn(LocalDate.of(2023, 1, 1))
-      val mockFinancialDataHIP               = createMockFinancialDataHIP()
       when(mockHttpClient.post(any())(any())).thenReturn(mockRequestBuilder)
       when(mockRequestBuilder.setHeader(any())).thenReturn(mockRequestBuilder)
       when(mockRequestBuilder.withBody(any())(any(), any(), any())).thenReturn(mockRequestBuilder)
@@ -91,7 +90,7 @@ class HipConnectorSpec extends PlaySpec with MockitoSugar {
       }
     }
   }
-  private def createMockFinancialDataHIP(): FinancialDataHIP = {
+  private def createMockFinancialDataHIP(): FinancialData = {
     val totalisation = Totalisation(
       totalAccountBalance = Some(BigDecimal(1250)),
       totalAccountOverdue = Some(BigDecimal(1000)),
@@ -146,7 +145,7 @@ class HipConnectorSpec extends PlaySpec with MockitoSugar {
       )
     )
 
-    FinancialDataHIP(
+    FinancialData(
       totalisation = Some(totalisation),
       documentDetails = Some(documentDetails)
     )

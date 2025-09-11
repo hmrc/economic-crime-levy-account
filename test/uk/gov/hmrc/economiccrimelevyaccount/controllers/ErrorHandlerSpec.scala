@@ -42,27 +42,6 @@ class ErrorHandlerSpec extends SpecBase with ErrorHandler {
     }
   }
 
-  "integrationFrameworkErrorConverter" should {
-
-    "return ResponseError.badGateway when IntegrationFrameworkError.BadGateway is converted" in forAll {
-      (errorMessage: String) =>
-        val integrationFrameworkError = IntegrationFrameworkError.BadGateway(errorMessage, BAD_GATEWAY)
-
-        val result: ResponseError = integrationFrameworkErrorConverter.convert(integrationFrameworkError)
-
-        result shouldBe ResponseError.badGateway(errorMessage, BAD_GATEWAY)
-    }
-
-    "return ResponseError.internalServiceError when IntegrationFrameworkError.InternalUnexpectedError is converted" in forAll {
-      (errorMessage: String) =>
-        val integrationFrameworkError = IntegrationFrameworkError.InternalUnexpectedError(errorMessage, None)
-
-        val result: ResponseError = integrationFrameworkErrorConverter.convert(integrationFrameworkError)
-
-        result shouldBe ResponseError.internalServiceError(errorMessage, cause = None)
-    }
-  }
-
   "hipFrameworkErrorConverter" should {
 
     "return ResponseError.badGateway when HipFrameworkError.BadGateway is converted" in forAll {

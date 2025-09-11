@@ -66,7 +66,7 @@ class ObligationDataISpec extends ISpecBase {
           1,
           getRequestedFor(urlMatching(getObligationDataRegex))
             .withHeader(HeaderNames.authorisation, equalTo(s"Bearer ${appConfig.desBearerToken}"))
-            .withHeader(CustomHeaderNames.environment, equalTo(appConfig.integrationFrameworkEnvironment))
+            .withHeader(CustomHeaderNames.environment, equalTo(appConfig.desEnvironment))
             .withHeader(CustomHeaderNames.xCorrelationId, matching(uuidRegex))
             .withHeader(CustomHeaderNames.correlationId, matching(uuidRegex))
         )
@@ -91,7 +91,7 @@ class ObligationDataISpec extends ISpecBase {
           1,
           getRequestedFor(urlMatching(getObligationDataRegex))
             .withHeader(HeaderNames.authorisation, equalTo(s"Bearer ${appConfig.desBearerToken}"))
-            .withHeader(CustomHeaderNames.environment, equalTo(appConfig.integrationFrameworkEnvironment))
+            .withHeader(CustomHeaderNames.environment, equalTo(appConfig.desEnvironment))
             .withHeader(CustomHeaderNames.xCorrelationId, matching(uuidRegex))
             .withHeader(CustomHeaderNames.correlationId, matching(uuidRegex))
         )
@@ -125,7 +125,7 @@ class ObligationDataISpec extends ISpecBase {
         verify(
           getRequestedFor(urlMatching(getObligationDataRegex))
             .withHeader(HeaderNames.authorisation, equalTo(s"Bearer ${appConfig.desBearerToken}"))
-            .withHeader(CustomHeaderNames.environment, equalTo(appConfig.integrationFrameworkEnvironment))
+            .withHeader(CustomHeaderNames.environment, equalTo(appConfig.desEnvironment))
             .withHeader(CustomHeaderNames.xCorrelationId, matching(uuidRegex))
             .withHeader(CustomHeaderNames.correlationId, matching(uuidRegex))
         )
@@ -148,7 +148,7 @@ class ObligationDataISpec extends ISpecBase {
         verify(
           getRequestedFor(urlMatching(getObligationDataRegex))
             .withHeader(HeaderNames.authorisation, equalTo(s"Bearer ${appConfig.desBearerToken}"))
-            .withHeader(CustomHeaderNames.environment, equalTo(appConfig.integrationFrameworkEnvironment))
+            .withHeader(CustomHeaderNames.environment, equalTo(appConfig.desEnvironment))
             .withHeader(CustomHeaderNames.xCorrelationId, matching(uuidRegex))
             .withHeader(CustomHeaderNames.correlationId, matching(uuidRegex))
         )
