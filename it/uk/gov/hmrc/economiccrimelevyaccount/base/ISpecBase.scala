@@ -69,7 +69,6 @@ abstract class ISpecBase
     "http-verbs.retries.intervals" -> List("1ms", "1ms", "1ms")
   ) ++ setWireMockPort(
     "auth",
-    "integration-framework",
     "des"
   )
 

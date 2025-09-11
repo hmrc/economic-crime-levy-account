@@ -22,7 +22,7 @@ import play.api.http.Status.NOT_FOUND
 import uk.gov.hmrc.economiccrimelevyaccount.connectors.HipConnector
 import uk.gov.hmrc.economiccrimelevyaccount.models.EclReference
 import uk.gov.hmrc.economiccrimelevyaccount.models.hip.DocumentType.Other
-import uk.gov.hmrc.economiccrimelevyaccount.models.hip.{FinancialDataHIP, HipWrappedError}
+import uk.gov.hmrc.economiccrimelevyaccount.models.hip.{FinancialData, HipWrappedError}
 import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
 
 import javax.inject.Inject
@@ -33,7 +33,7 @@ class HIPService @Inject() (hipConnector: HipConnector)(implicit ec: ExecutionCo
 
   def getFinancialDataHIP(
     eclReference: EclReference
-  )(implicit hc: HeaderCarrier): EitherT[Future, HipWrappedError, Option[FinancialDataHIP]] =
+  )(implicit hc: HeaderCarrier): EitherT[Future, HipWrappedError, Option[FinancialData]] =
     EitherT {
       (for {
         financialDataHIP <- hipConnector.getFinancialDetails(eclReference)
@@ -62,10 +62,10 @@ class HIPService @Inject() (hipConnector: HipConnector)(implicit ec: ExecutionCo
       }
     }
 
-  def filterOutUnknownDocumentTypes(financialDataHIP: FinancialDataHIP): FinancialDataHIP = {
-    val documentsWithKnownTypes = financialDataHIP.documentDetails.map(documentDetailsList =>
+  def filterOutUnknownDocumentTypes(financialData: FinancialData): FinancialData = {
+    val documentsWithKnownTypes = financialData.documentDetails.map(documentDetailsList =>
       documentDetailsList.filterNot(_.documentType.exists(_.isInstanceOf[Other]))
     )
-    FinancialDataHIP(financialDataHIP.totalisation, documentsWithKnownTypes)
+    FinancialData(financialData.totalisation, documentsWithKnownTypes)
   }
 }
