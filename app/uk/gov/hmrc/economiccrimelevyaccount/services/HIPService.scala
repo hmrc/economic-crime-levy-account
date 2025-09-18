@@ -19,12 +19,13 @@ package uk.gov.hmrc.economiccrimelevyaccount.services
 import cats.data.EitherT
 import play.api.Logging
 import play.api.http.Status.NOT_FOUND
+import play.api.http.Status.UNPROCESSABLE_ENTITY
 import uk.gov.hmrc.economiccrimelevyaccount.connectors.HipConnector
 import uk.gov.hmrc.economiccrimelevyaccount.models.EclReference
 import uk.gov.hmrc.economiccrimelevyaccount.models.hip.DocumentType.Other
 import uk.gov.hmrc.economiccrimelevyaccount.models.hip.{FinancialDataHIP, HipWrappedError}
 import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
-
+import play.api.libs.json._
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
@@ -43,8 +44,21 @@ class HIPService @Inject() (hipConnector: HipConnector)(implicit ec: ExecutionCo
             s"Successfully retrieved and filtered financial data for ECL-HIP reference--> ${eclReference.value}"
           )
       } yield Right(Some(filteredResult))).recover {
-        case UpstreamErrorResponse(_, NOT_FOUND, _, _) =>
+        case UpstreamErrorResponse(_, NOT_FOUND, _, _)                  =>
           Right(None)
+        case UpstreamErrorResponse(message, UNPROCESSABLE_ENTITY, _, _) =>
+          val statCode = parseJsonCode(message)
+          if (statCode.contains("018")) {
+            logger.info(
+              s"Received HTTP 422 with code '018' for ECL-HIP reference: ${eclReference.value}. Returning No Data."
+            )
+            Right(None)
+          } else {
+            logger.error(
+              s"Failed to retrieve financial data with http 422 for ECL-HIP reference: ${eclReference.value}. Reason: $message, Code: 422"
+            )
+            Left(HipWrappedError.BadGateway(reason = s"Get Financial Data Failed - $message", code = 422))
+          }
         case error @ UpstreamErrorResponse(message, code, _, _)
             if UpstreamErrorResponse.Upstream5xxResponse
               .unapply(error)
@@ -53,7 +67,7 @@ class HIPService @Inject() (hipConnector: HipConnector)(implicit ec: ExecutionCo
             s"Failed to retrieve financial data for ECL-HIP reference: ${eclReference.value}. Reason: $message, Code: $code"
           )
           Left(HipWrappedError.BadGateway(reason = s"Get Financial Data Failed - $message", code = code))
-        case NonFatal(thr)                             =>
+        case NonFatal(thr)                                              =>
           logger.error(
             s"An unexpected error occurred while retrieving financial data for ECL-HIP reference: ${eclReference.value}",
             thr
@@ -68,4 +82,12 @@ class HIPService @Inject() (hipConnector: HipConnector)(implicit ec: ExecutionCo
     )
     FinancialDataHIP(financialDataHIP.totalisation, documentsWithKnownTypes)
   }
+
+  def parseJsonCode(message: String): Option[String] =
+    try {
+      val json = Json.parse(message)
+      (json \ "errors" \ "code").asOpt[String]
+    } catch {
+      case NonFatal(_) => None
+    }
 }
