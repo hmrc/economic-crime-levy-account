@@ -60,14 +60,16 @@ class HIPService @Inject() (hipConnector: HipConnector, appConfig: AppConfig)(im
                 Right(response)
               }
               .recover {
+                case UpstreamErrorResponse(_, NOT_FOUND, _, _)                  =>
+                  Right(FinancialDataHIP(None, None))
                 case UpstreamErrorResponse(message, UNPROCESSABLE_ENTITY, _, _) =>
                   val statCode = parseJsonCode(message)
                   if (statCode.contains("018")) {
                     logger.info(
                       s"Received HTTP 422 with code '018' for ECL-HIP reference: ${eclReference.value}. Returning No Data."
                     )
-                    //Right(None)
-                    Left(HipWrappedError.BadGateway(reason = s"Get Financial Data Failed - $message", code = 422))
+                    Right(FinancialDataHIP(None, None))
+
                   } else {
                     logger.error(
                       s"Failed to retrieve financial data with http 422 for ECL-HIP reference: ${eclReference.value}. Reason: $message, Code: 422"
