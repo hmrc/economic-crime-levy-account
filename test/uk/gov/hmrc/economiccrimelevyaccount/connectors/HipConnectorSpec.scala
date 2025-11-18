@@ -40,6 +40,8 @@ class HipConnectorSpec extends PlaySpec with MockitoSugar {
       val mockAppConfig                      = mock[AppConfig]
       val mockHttpClient                     = mock[HttpClientV2]
       val mockRequestBuilder: RequestBuilder = mock[RequestBuilder]
+      val dateFrom                           = "2023-06-01"
+      val dateTo                             = "2025-02-01"
       val hipConnector                       = new HipConnector(mockAppConfig, mockHttpClient)
       when(mockAppConfig.hipUrl).thenReturn(
         "http://localhost:9099/etmp/RESTAdapter/cross-regime/taxpayer/financial-data/query"
@@ -59,7 +61,8 @@ class HipConnectorSpec extends PlaySpec with MockitoSugar {
       )
       implicit val hc: HeaderCarrier         = HeaderCarrier()
       val eclReference                       = EclReference("ECL1234")
-      await(hipConnector.getFinancialDetails(eclReference)).isInstanceOf[FinancialDataHIP] shouldBe true
+      await(hipConnector.getFinancialDetails(eclReference, dateFrom, dateTo))
+        .isInstanceOf[FinancialDataHIP] shouldBe true
     }
 
     "when a 500x error is returned from HIP API" in {
@@ -68,6 +71,8 @@ class HipConnectorSpec extends PlaySpec with MockitoSugar {
       val mockRequestBuilder: RequestBuilder = mock[RequestBuilder]
       val errorMessage                       = "internal server error"
       val eclReference                       = EclReference("ECL1234")
+      val dateFrom                           = "2023-06-01"
+      val dateTo                             = "2025-02-01"
       val hipConnector                       = new HipConnector(mockAppConfig, mockHttpClient)
       when(mockAppConfig.hipUrl).thenReturn(
         "http://localhost:9099/etmp/RESTAdapter/cross-regime/taxpayer/financial-data/query"
@@ -83,7 +88,7 @@ class HipConnectorSpec extends PlaySpec with MockitoSugar {
       when(mockRequestBuilder.execute[HttpResponse](any(), any()))
         .thenReturn(Future.successful(HttpResponse.apply(INTERNAL_SERVER_ERROR, errorMessage)))
       implicit val hc: HeaderCarrier         = HeaderCarrier()
-      Try(await(hipConnector.getFinancialDetails(eclReference))) match {
+      Try(await(hipConnector.getFinancialDetails(eclReference, dateFrom, dateTo))) match {
         case Failure(UpstreamErrorResponse(msg, _, _, _)) =>
           msg shouldEqual errorMessage
         case _                                            =>

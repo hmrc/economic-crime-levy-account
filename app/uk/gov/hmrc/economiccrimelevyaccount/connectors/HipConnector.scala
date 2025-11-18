@@ -39,15 +39,15 @@ class HipConnector @Inject() (
     extends BaseConnector
     with Logging {
 
-  def getFinancialDetails(
-    eclReference: EclReference
-  )(implicit hc: HeaderCarrier): Future[FinancialDataHIP] = {
+  def getFinancialDetails(eclReference: EclReference, dateFrom: String, dateTo: String)(implicit
+    hc: HeaderCarrier
+  ): Future[FinancialDataHIP] = {
 
     val correlationId = UUID.randomUUID().toString
     val hipHeaders    = buildHIPHeaders(correlationId)
 
     val url                    = s"${appConfig.hipUrl}/etmp/RESTAdapter/cross-regime/taxpayer/financial-data/query"
-    val hipRequest: HipRequest = hipRequestBody(eclReference)
+    val hipRequest: HipRequest = hipRequestBody(eclReference, dateFrom, dateTo)
     val jsonBody               = Json.toJson(hipRequest)
 
     httpClient
@@ -56,7 +56,9 @@ class HipConnector @Inject() (
       .withBody(jsonBody)
       .executeAndDeserialise[FinancialDataHIP]
       .map { financialDataHIP =>
-        logger.info(s"Successfully retrieved financial data for ECL-HIP reference--> ${eclReference.value}")
+        logger.info(
+          s"Successfully retrieved financial data for ECL-HIP reference--> ${eclReference.value} and $financialDataHIP"
+        )
         financialDataHIP
       }
   }
@@ -72,7 +74,7 @@ class HipConnector @Inject() (
     CustomHeaderNames.xTransmittingSystem -> "HIP"
   )
 
-  private def hipRequestBody(eclReference: EclReference): HipRequest =
+  private def hipRequestBody(eclReference: EclReference, dateFrom: String, dateTo: String): HipRequest =
     HipRequest(
       taxRegime = "ECL",
       taxpayerInformation = TaxpayerInformation(
@@ -84,8 +86,10 @@ class HipConnector @Inject() (
         SelectionCriteria(
           dateRange = DateRange(
             dateType = "POSTING",
-            dateFrom = appConfig.hipDateFrom.format(DateTimeFormatter.ISO_LOCAL_DATE),
-            dateTo = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
+            dateFrom = dateFrom,
+            //dateFrom = appConfig.hipDateFrom.format(DateTimeFormatter.ISO_LOCAL_DATE),
+            dateTo = dateTo
+            //dateTo = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
           ),
           includeClearedItems = true,
           includeStatisticalItems = true,

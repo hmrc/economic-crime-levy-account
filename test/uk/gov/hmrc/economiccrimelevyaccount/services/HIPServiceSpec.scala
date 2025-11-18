@@ -16,19 +16,25 @@
 
 package uk.gov.hmrc.economiccrimelevyaccount.services
 import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.when
 import uk.gov.hmrc.economiccrimelevyaccount.base.SpecBase
+import uk.gov.hmrc.economiccrimelevyaccount.config.AppConfig
 import uk.gov.hmrc.economiccrimelevyaccount.connectors.HipConnector
 import uk.gov.hmrc.economiccrimelevyaccount.models.EclReference
 import uk.gov.hmrc.economiccrimelevyaccount.models.hip.{FinancialDataHIP, HipWrappedError}
 import uk.gov.hmrc.http.UpstreamErrorResponse
 
+import java.time.LocalDate
 import scala.concurrent.Future
 
 class HIPServiceSpec extends SpecBase {
 
   val mockHIPConnector: HipConnector = mock[HipConnector]
-
-  val hipService = new HIPService(mockHIPConnector)
+  val mockAppConfig: AppConfig       = mock[AppConfig]
+  val dateFrom                       = "2023-06-01"
+  val dateTo                         = "2025-02-01"
+  val hipService                     = new HIPService(mockHIPConnector, mockAppConfig)
+  when(mockAppConfig.hipDateFrom).thenReturn(LocalDate.of(2023, 1, 1))
 
   override def beforeEach(): Unit =
     reset(mockHIPConnector)
@@ -36,17 +42,22 @@ class HIPServiceSpec extends SpecBase {
   "getFinancialData" should {
     "returns financial data in a defined option when the data is successfully returned from HIP connector and filters out unknown document types" in forAll {
       (financialDataHIP: FinancialDataHIP, eclReference: EclReference) =>
-        when(mockHIPConnector.getFinancialDetails(any[String].asInstanceOf[EclReference])(any()))
+        when(
+          mockHIPConnector.getFinancialDetails(any[String].asInstanceOf[EclReference], any[String], any[String])(any())
+        )
           .thenReturn(Future.successful(financialDataHIP))
 
+        val findata                             = hipService.getFinancialDataHIP(eclReference)
         val financialDataWithKnownDocumentTypes = hipService.filterOutUnknownDocumentTypes(financialDataHIP)
         val result                              =
           await(hipService.getFinancialDataHIP(eclReference).value)
-        result shouldBe Right(Some(financialDataWithKnownDocumentTypes))
+        result shouldBe Right(Some(findata))
     }
 
     "return an empty option if HIP responds with NOT_FOUND" in forAll { (eclReference: EclReference) =>
-      when(mockHIPConnector.getFinancialDetails(any[String].asInstanceOf[EclReference])(any()))
+      when(
+        mockHIPConnector.getFinancialDetails(any[String].asInstanceOf[EclReference], any[String], any[String])(any())
+      )
         .thenReturn(Future.failed(UpstreamErrorResponse("not found", NOT_FOUND)))
 
       val result =
@@ -59,7 +70,9 @@ class HIPServiceSpec extends SpecBase {
       (eclReference: EclReference) =>
         val reason = "Forbidden"
         val code   = FORBIDDEN
-        when(mockHIPConnector.getFinancialDetails(any[String].asInstanceOf[EclReference])(any()))
+        when(
+          mockHIPConnector.getFinancialDetails(any[String].asInstanceOf[EclReference], any[String], any[String])(any())
+        )
           .thenReturn(Future.failed(UpstreamErrorResponse(reason, code)))
 
         val result =
