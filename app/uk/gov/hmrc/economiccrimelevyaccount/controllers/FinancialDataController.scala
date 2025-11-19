@@ -49,7 +49,6 @@ class FinancialDataController @Inject() (
                               .getFinancialDataHIP(request.eclReference)
                               .asResponseError
       } yield {
-        println(s"financialDataHIP--> $financialDataHIP")
         financialDataHIP
       }).convertToResultWithJsonBody(OK)
     } else {

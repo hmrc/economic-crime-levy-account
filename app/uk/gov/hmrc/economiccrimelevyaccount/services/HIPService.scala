@@ -140,7 +140,7 @@ class HIPService @Inject() (hipConnector: HipConnector, appConfig: AppConfig)(im
     ranges
   }
 
-  private def combineFinancialData(dataList: Seq[FinancialDataHIP]): FinancialDataHIP = {
+  def combineFinancialData(dataList: Seq[FinancialDataHIP]): FinancialDataHIP = {
     val combinedDocumentDetails = dataList.flatMap(_.documentDetails).flatten
     val combineTotalisation     = dataList.lastOption.flatMap(_.totalisation)
     FinancialDataHIP(

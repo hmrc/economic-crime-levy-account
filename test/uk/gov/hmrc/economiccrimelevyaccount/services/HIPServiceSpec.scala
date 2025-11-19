@@ -21,7 +21,8 @@ import uk.gov.hmrc.economiccrimelevyaccount.base.SpecBase
 import uk.gov.hmrc.economiccrimelevyaccount.config.AppConfig
 import uk.gov.hmrc.economiccrimelevyaccount.connectors.HipConnector
 import uk.gov.hmrc.economiccrimelevyaccount.models.EclReference
-import uk.gov.hmrc.economiccrimelevyaccount.models.hip.{FinancialDataHIP, HipWrappedError}
+import uk.gov.hmrc.economiccrimelevyaccount.models.hip.DocumentType.NewCharge
+import uk.gov.hmrc.economiccrimelevyaccount.models.hip.{DocumentDetails, DocumentType, FinancialDataHIP, HipWrappedError, LineItemDetails, Totalisation}
 import uk.gov.hmrc.http.UpstreamErrorResponse
 
 import java.time.LocalDate
@@ -38,22 +39,93 @@ class HIPServiceSpec extends SpecBase {
     reset(mockHIPConnector)
 
   "getFinancialData" should {
-    "returns financial data in a defined option when the data is successfully returned from HIP connector and filters out unknown document types" in forAll {
-      (financialDataHIP: FinancialDataHIP, eclReference: EclReference) =>
-        when(
-          mockHIPConnector.getFinancialDetails(any[String].asInstanceOf[EclReference], any[String], any[String])(any())
+    "returns financial data in a defined option when the data is successfully returned from HIP connector and filters out unknown document types" in {
+
+      val eclRef         = EclReference("ECL1234567890")
+      val financialData1 = mockFinData()
+      val financialData2 = mockFinData()
+      when(
+        mockHIPConnector.getFinancialDetails(any[String].asInstanceOf[EclReference], any[String], any[String])(any())
+      )
+        .thenReturn(Future.successful(financialData1), Future.successful(financialData2))
+
+      val result = hipService.getFinancialDataHIP(eclRef).value.futureValue
+
+      result shouldBe Right(
+        Some(
+          FinancialDataHIP(
+            Some(Totalisation(Some(1250), Some(1000), Some(100), Some(250), Some(100), Some(0), Some(0))),
+            Some(
+              Vector(
+                DocumentDetails(
+                  Some(NewCharge),
+                  Some("XMECL0000000003"),
+                  None,
+                  Some("2024-04-01"),
+                  Some(10000),
+                  Some(0),
+                  Some(10000),
+                  Some(
+                    List(
+                      LineItemDetails(
+                        None,
+                        None,
+                        None,
+                        None,
+                        None,
+                        Some(0),
+                        None,
+                        None,
+                        None,
+                        Some("6220"),
+                        Some("3410")
+                      )
+                    )
+                  ),
+                  Some(13.12),
+                  Some(12.1),
+                  Some("XB001286323438"),
+                  None,
+                  Some("104920928302302"),
+                  Some("ECL")
+                ),
+                DocumentDetails(
+                  Some(NewCharge),
+                  Some("XMECL0000000003"),
+                  None,
+                  Some("2024-04-01"),
+                  Some(10000),
+                  Some(0),
+                  Some(10000),
+                  Some(
+                    List(
+                      LineItemDetails(
+                        None,
+                        None,
+                        None,
+                        None,
+                        None,
+                        Some(0),
+                        None,
+                        None,
+                        None,
+                        Some("6220"),
+                        Some("3410")
+                      )
+                    )
+                  ),
+                  Some(13.12),
+                  Some(12.1),
+                  Some("XB001286323438"),
+                  None,
+                  Some("104920928302302"),
+                  Some("ECL")
+                )
+              )
+            )
+          )
         )
-          .thenReturn(Future.successful(financialDataHIP))
-
-        val findata                             = hipService.getFinancialDataHIP(eclReference)
-        val financialDataWithKnownDocumentTypes = hipService.filterOutUnknownDocumentTypes(financialDataHIP)
-        val result                              =
-          await(hipService.getFinancialDataHIP(eclReference).value)
-
-        println(s"result--> $result")
-        println(s"findata--> $findata")
-        println(s"financialDataWithKnownDocumentTypes--> $financialDataWithKnownDocumentTypes")
-        result shouldBe Right(Some(findata))
+      )
     }
 
     "return an empty option if HIP responds with NOT_FOUND" in forAll { (eclReference: EclReference) =>
@@ -82,4 +154,53 @@ class HIPServiceSpec extends SpecBase {
     }
 
   }
+  def mockFinData(): FinancialDataHIP = FinancialDataHIP(
+    Some(
+      Totalisation(
+        totalAccountBalance = Some(1250),
+        totalAccountOverdue = Some(1000),
+        totalBalance = Some(100),
+        totalCleared = Some(0),
+        totalCredit = Some(0),
+        totalNotYetDue = Some(250),
+        totalOverdue = Some(100)
+      )
+    ),
+    Some(
+      Seq(
+        DocumentDetails(
+          chargeReferenceNumber = Some("XMECL0000000003"),
+          contractObjectNumber = Some("104920928302302"),
+          contractObjectType = Some("ECL"),
+          documentClearedAmount = Some(0),
+          documentOutstandingAmount = Some(10000),
+          documentTotalAmount = Some(10000),
+          documentType = Some(DocumentType.NewCharge),
+          interestAccruingAmount = Some(12.1),
+          interestPostedAmount = Some(13.12),
+          interestPostedChargeRef = Some("XB001286323438"),
+          issueDate = Some("2024-04-01"),
+          lineItemDetails = Some(
+            Seq(
+              LineItemDetails(
+                amount = Some(0),
+                chargeDescription = None,
+                clearingDate = None,
+                clearingDocument = None,
+                clearingReason = None,
+                periodFromDate = None,
+                periodKey = None,
+                periodToDate = None,
+                netDueDate = None,
+                mainTransaction = Some("6220"),
+                subTransaction = Some("3410")
+              )
+            )
+          ),
+          penaltyTotals = None,
+          postingDate = None
+        )
+      )
+    )
+  )
 }
