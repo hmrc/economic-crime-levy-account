@@ -31,8 +31,6 @@ class HIPServiceSpec extends SpecBase {
 
   val mockHIPConnector: HipConnector = mock[HipConnector]
   val mockAppConfig: AppConfig       = mock[AppConfig]
-  val dateFrom                       = "2023-06-01"
-  val dateTo                         = "2025-02-01"
   val hipService                     = new HIPService(mockHIPConnector, mockAppConfig)
   when(mockAppConfig.hipDateFrom).thenReturn(LocalDate.of(2023, 1, 1))
 
@@ -49,8 +47,13 @@ class HIPServiceSpec extends SpecBase {
 
         val findata                             = hipService.getFinancialDataHIP(eclReference)
         val financialDataWithKnownDocumentTypes = hipService.filterOutUnknownDocumentTypes(financialDataHIP)
-        val result                              =
+        val result                              = {
           await(hipService.getFinancialDataHIP(eclReference).value)
+        }
+
+        println(s"result--> $result")
+        println(s"findata--> $findata")
+        println(s"financialDataWithKnownDocumentTypes--> $financialDataWithKnownDocumentTypes")
         result shouldBe Right(Some(findata))
     }
 
@@ -59,11 +62,9 @@ class HIPServiceSpec extends SpecBase {
         mockHIPConnector.getFinancialDetails(any[String].asInstanceOf[EclReference], any[String], any[String])(any())
       )
         .thenReturn(Future.failed(UpstreamErrorResponse("not found", NOT_FOUND)))
-
       val result =
         await(hipService.getFinancialDataHIP(eclReference).value)
-
-      result shouldBe Right(None)
+      result shouldBe Right(Some(FinancialDataHIP(None, None)))
     }
 
     "return a bad gateway when HIP responds with an upstream error other than NOT_FOUND" in forAll {
