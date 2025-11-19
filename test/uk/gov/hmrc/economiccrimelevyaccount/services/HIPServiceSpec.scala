@@ -47,9 +47,8 @@ class HIPServiceSpec extends SpecBase {
 
         val findata                             = hipService.getFinancialDataHIP(eclReference)
         val financialDataWithKnownDocumentTypes = hipService.filterOutUnknownDocumentTypes(financialDataHIP)
-        val result                              = {
+        val result                              =
           await(hipService.getFinancialDataHIP(eclReference).value)
-        }
 
         println(s"result--> $result")
         println(s"findata--> $findata")

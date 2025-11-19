@@ -106,7 +106,7 @@ class HIPService @Inject() (hipConnector: HipConnector, appConfig: AppConfig)(im
           case Right(Some(combinedData)) =>
             val filteredResult = filterOutUnknownDocumentTypes(combinedData)
             Right(Some(filteredResult))
-          case other => other
+          case other                     => other
         }
       processedData
     }
