@@ -43,7 +43,7 @@ class HIPService @Inject() (hipConnector: HipConnector, appConfig: AppConfig)(im
     EitherT {
       val dateFrom: LocalDate = LocalDate.parse(appConfig.hipDateFrom.format(DateTimeFormatter.ISO_LOCAL_DATE))
       val dateTo: LocalDate   = LocalDate.now()
-      val batchSize           = 999
+      val batchSize           = appConfig.batchSize
       val dateRanges          = calculateDateRanges(dateFrom, dateTo, batchSize)
       val results             = Future
         .sequence {

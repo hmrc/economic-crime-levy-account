@@ -16,7 +16,8 @@
 
 package uk.gov.hmrc.economiccrimelevyaccount.services
 import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito.when
+import play.api.http.Status.UNPROCESSABLE_ENTITY
+import play.api.libs.json.Json
 import uk.gov.hmrc.economiccrimelevyaccount.base.SpecBase
 import uk.gov.hmrc.economiccrimelevyaccount.config.AppConfig
 import uk.gov.hmrc.economiccrimelevyaccount.connectors.HipConnector
@@ -34,6 +35,7 @@ class HIPServiceSpec extends SpecBase {
   val mockAppConfig: AppConfig       = mock[AppConfig]
   val hipService                     = new HIPService(mockHIPConnector, mockAppConfig)
   when(mockAppConfig.hipDateFrom).thenReturn(LocalDate.of(2023, 1, 1))
+  when(mockAppConfig.batchSize).thenReturn(999)
 
   override def beforeEach(): Unit =
     reset(mockHIPConnector)
@@ -136,6 +138,33 @@ class HIPServiceSpec extends SpecBase {
       val result =
         await(hipService.getFinancialDataHIP(eclReference).value)
       result shouldBe Right(Some(FinancialDataHIP(None, None)))
+    }
+
+    "return an empty option if HIP responds with 422 status code and 018 code" in forAll {
+      (eclReference: EclReference) =>
+        when(
+          mockHIPConnector.getFinancialDetails(any[String].asInstanceOf[EclReference], any[String], any[String])(any())
+        )
+          .thenReturn(
+            Future.failed(
+              UpstreamErrorResponse(
+                Json
+                  .parse(s"""
+                                                                        {
+                                                                        |  "errors": {
+                                                                        |    "processingDate": "2025-09-17T09:30:47Z",
+                                                                        |    "code": "018",
+                                                                        |    "text": "No Data Identified"
+                                                                        |  }
+                                                                        |}""".stripMargin)
+                  .toString(),
+                UNPROCESSABLE_ENTITY
+              )
+            )
+          )
+        val result =
+          await(hipService.getFinancialDataHIP(eclReference).value)
+        result shouldBe Right(Some(FinancialDataHIP(None, None)))
     }
 
     "return a bad gateway when HIP responds with an upstream error other than NOT_FOUND" in forAll {

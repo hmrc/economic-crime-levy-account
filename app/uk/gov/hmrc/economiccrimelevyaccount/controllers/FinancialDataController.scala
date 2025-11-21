@@ -48,9 +48,7 @@ class FinancialDataController @Inject() (
         financialDataHIP <- hipService
                               .getFinancialDataHIP(request.eclReference)
                               .asResponseError
-      } yield {
-        financialDataHIP
-      }).convertToResultWithJsonBody(OK)
+      } yield financialDataHIP).convertToResultWithJsonBody(OK)
     } else {
       (for {
         financialData <- integrationFrameworkService
