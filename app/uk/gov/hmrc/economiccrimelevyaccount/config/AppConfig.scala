@@ -49,9 +49,6 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
   val hipDateFrom: LocalDate                  =
     config.get[LocalDate]("microservice.services.hip.dateFrom")
 
-  val batchSize: Int =
-    config.get[Int]("microservice.services.hip.batchSize")
-
   val hipUrl: String                      = servicesConfig.baseUrl("hip")
   val clientIdV1: String                  = config.get[String]("microservice.services.hip.client-id")
   val secretV1: String                    = config.get[String]("microservice.services.hip.client-secret")
