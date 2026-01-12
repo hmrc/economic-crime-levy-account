@@ -22,7 +22,7 @@ import org.scalacheck.derive.MkArbitrary
 import uk.gov.hmrc.auth.core.Enrolment
 import uk.gov.hmrc.economiccrimelevyaccount.EclTestData
 import uk.gov.hmrc.economiccrimelevyaccount.models.des.{ObligationData, ObligationDetails, ObligationStatus}
-import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.FinancialData
+import uk.gov.hmrc.economiccrimelevyaccount.models.hip.FinancialData
 
 object CachedArbitraries extends EclTestData with Generators {
 

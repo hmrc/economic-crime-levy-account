@@ -36,26 +36,11 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
 
   val desUrl: String = servicesConfig.baseUrl("des")
 
-  val integrationFrameworkUrl: String = servicesConfig.baseUrl("integration-framework")
-
-  val integrationFrameworkBearerToken: String =
-    config.get[String]("microservice.services.integration-framework.bearerToken")
-
-  val integrationFrameworkEnvironment: String =
-    config.get[String]("microservice.services.integration-framework.environment")
-
-  val integrationFrameworkDateFrom: LocalDate =
-    config.get[LocalDate]("microservice.services.integration-framework.dateFrom")
-  val hipDateFrom: LocalDate                  =
-    config.get[LocalDate]("microservice.services.hip.dateFrom")
-
+  val hipDateFrom: LocalDate              = config.get[LocalDate]("microservice.services.hip.dateFrom")
   val hipUrl: String                      = servicesConfig.baseUrl("hip")
   val clientIdV1: String                  = config.get[String]("microservice.services.hip.client-id")
   val secretV1: String                    = config.get[String]("microservice.services.hip.client-secret")
   val hipToken: String                    = Base64.getEncoder.encodeToString(s"$clientIdV1:$secretV1".getBytes("UTF-8"))
   val hipServiceOriginatorIdKeyV1: String = config.get[String]("microservice.services.hip.originator-id-key")
   val hipServiceOriginatorIdV1: String    = config.get[String]("microservice.services.hip.originator-id-value")
-
-  val enable1811HipCall: Boolean = config.get[Boolean]("feature-switch.enable1811HipCall")
-
 }

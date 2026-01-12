@@ -18,7 +18,7 @@ package uk.gov.hmrc.economiccrimelevyaccount.controllers
 
 import cats.data.EitherT
 import play.api.Logging
-import uk.gov.hmrc.economiccrimelevyaccount.models.errors.{BadGateway, DesError, IntegrationFrameworkError, InternalServiceError, ResponseError}
+import uk.gov.hmrc.economiccrimelevyaccount.models.errors.{BadGateway, DesError, InternalServiceError, ResponseError}
 import uk.gov.hmrc.economiccrimelevyaccount.models.hip.HipWrappedError
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -65,16 +65,6 @@ trait ErrorHandler extends Logging {
         case DesError.BadGateway(message, code)               =>
           ResponseError.badGateway(message = message, code = code)
         case DesError.InternalUnexpectedError(message, cause) =>
-          ResponseError.internalServiceError(message = message, cause = cause)
-      }
-    }
-
-  implicit val integrationFrameworkErrorConverter: Converter[IntegrationFrameworkError] =
-    new Converter[IntegrationFrameworkError] {
-      override def convert(error: IntegrationFrameworkError): ResponseError = error match {
-        case IntegrationFrameworkError.BadGateway(message, code)               =>
-          ResponseError.badGateway(message = message, code = code)
-        case IntegrationFrameworkError.InternalUnexpectedError(message, cause) =>
           ResponseError.internalServiceError(message = message, cause = cause)
       }
     }

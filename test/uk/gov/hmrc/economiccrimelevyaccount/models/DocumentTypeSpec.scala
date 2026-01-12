@@ -18,8 +18,8 @@ package uk.gov.hmrc.economiccrimelevyaccount.models
 
 import play.api.libs.json.{JsError, JsNumber, JsString, Json}
 import uk.gov.hmrc.economiccrimelevyaccount.base.SpecBase
-import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.DocumentType
-import uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework.DocumentType.{AmendedCharge, InterestCharge, NewCharge, Payment}
+import uk.gov.hmrc.economiccrimelevyaccount.models.hip.DocumentType
+import uk.gov.hmrc.economiccrimelevyaccount.models.hip.DocumentType.{AmendedCharge, InterestCharge, NewCharge, Payment}
 
 class DocumentTypeSpec extends SpecBase {
 

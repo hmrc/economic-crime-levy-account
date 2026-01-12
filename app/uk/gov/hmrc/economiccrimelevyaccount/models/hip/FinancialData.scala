@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.economiccrimelevyaccount.models.integrationframework
+package uk.gov.hmrc.economiccrimelevyaccount.models.hip
 
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
@@ -22,12 +22,10 @@ import play.api.libs.json._
 case class FinancialData(totalisation: Option[Totalisation], documentDetails: Option[Seq[DocumentDetails]])
 
 object FinancialData {
-
-  implicit val reads: Reads[FinancialData] = (
-    (JsPath \ "getFinancialData" \ "financialDetails" \ "totalisation").readNullable[Totalisation] and
-      (JsPath \ "getFinancialData" \ "financialDetails" \ "documentDetails").readNullable[Seq[DocumentDetails]]
+  implicit val reads: Reads[FinancialData]    = (
+    (JsPath \ "success" \ "financialData" \ "totalisation").readNullable[Totalisation] and
+      (JsPath \ "success" \ "financialData" \ "documentDetails").readNullable[Seq[DocumentDetails]]
   )(FinancialData.apply _)
-
   implicit val writes: OWrites[FinancialData] = Json.writes[FinancialData]
 }
 
@@ -100,9 +98,9 @@ case class LineItemDetails(
   periodKey: Option[String],
   netDueDate: Option[String],
   amount: Option[BigDecimal],
-  clearingDate: Option[String],
-  clearingReason: Option[String],
-  clearingDocument: Option[String],
+  clearingDate: Option[String] = None,
+  clearingReason: Option[String] = None,
+  clearingDocument: Option[String] = None,
   mainTransaction: Option[String],
   subTransaction: Option[String]
 )

@@ -19,7 +19,7 @@ package uk.gov.hmrc.economiccrimelevyaccount.connectors
 import play.api.Logging
 import play.api.libs.json.Json
 import uk.gov.hmrc.economiccrimelevyaccount.config.AppConfig
-import uk.gov.hmrc.economiccrimelevyaccount.models.hip.{DataEnrichment, DateRange, FinancialDataHIP, HipRequest, SelectionCriteria, TaxpayerInformation}
+import uk.gov.hmrc.economiccrimelevyaccount.models.hip.{DataEnrichment, DateRange, FinancialData, HipRequest, SelectionCriteria, TaxpayerInformation}
 import uk.gov.hmrc.economiccrimelevyaccount.models.{CustomHeaderNames, EclReference}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, StringContextOps}
@@ -41,7 +41,7 @@ class HipConnector @Inject() (
 
   def getFinancialDetails(
     eclReference: EclReference
-  )(implicit hc: HeaderCarrier): Future[FinancialDataHIP] = {
+  )(implicit hc: HeaderCarrier): Future[FinancialData] = {
 
     val correlationId = UUID.randomUUID().toString
     val hipHeaders    = buildHIPHeaders(correlationId)
@@ -54,7 +54,7 @@ class HipConnector @Inject() (
       .post(url"$url")
       .setHeader(hipHeaders: _*)
       .withBody(jsonBody)
-      .executeAndDeserialise[FinancialDataHIP]
+      .executeAndDeserialise[FinancialData]
       .map { financialDataHIP =>
         logger.info(s"Successfully retrieved financial data for ECL-HIP reference--> ${eclReference.value}")
         financialDataHIP
