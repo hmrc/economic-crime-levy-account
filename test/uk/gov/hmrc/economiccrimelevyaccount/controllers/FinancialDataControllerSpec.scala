@@ -38,35 +38,34 @@ class FinancialDataControllerSpec extends SpecBase {
     mockHIPService
   )
 
-  override def beforeEach(): Unit =
-    "getFinancialData" should {
-      "return 201 OK with the JSON payload when FinancialDataResponseHIP is returned from service" in {
-        financialDataResponse: FinancialData =>
-          when(mockHIPService.getFinancialDataHIP(any[String].asInstanceOf[EclReference])(any()))
-            .thenReturn(EitherT.rightT[Future, HipWrappedError](Some(financialDataResponse)))
-
-          val result: Future[Result] =
-            controller.getFinancialData()(fakeRequest)
-
-          val documentsWithKnownTypes = financialDataResponse.documentDetails.map(documentDetailsList =>
-            documentDetailsList.filterNot(_.documentType.exists(_.isInstanceOf[Other]))
-          )
-
-          val expectedResponse = FinancialData(financialDataResponse.totalisation, documentsWithKnownTypes)
-          status(result) shouldBe OK
-
-          contentAsJson(result) shouldBe Json.toJson(expectedResponse)
-      }
-
-      "return 502 BadGateway when an error is returned from HIP API" in {
-        when(mockHIPService.getFinancialDataHIP(any[String].asInstanceOf[EclReference])(any())).thenReturn(
-          EitherT.leftT[Future, Option[FinancialData]](HipWrappedError.BadGateway("response body", NOT_FOUND))
-        )
+  "getFinancialData" should {
+    "return 201 OK with the JSON payload when FinancialDataResponseHIP is returned from service" in {
+      financialDataResponse: FinancialData =>
+        when(mockHIPService.getFinancialDataHIP(any[String].asInstanceOf[EclReference])(any()))
+          .thenReturn(EitherT.rightT[Future, HipWrappedError](Some(financialDataResponse)))
 
         val result: Future[Result] =
-          controller.getFinancialData(fakeRequest)
+          controller.getFinancialData()(fakeRequest)
 
-        status(result) shouldBe BAD_GATEWAY
-      }
+        val documentsWithKnownTypes = financialDataResponse.documentDetails.map(documentDetailsList =>
+          documentDetailsList.filterNot(_.documentType.exists(_.isInstanceOf[Other]))
+        )
+
+        val expectedResponse = FinancialData(financialDataResponse.totalisation, documentsWithKnownTypes)
+        status(result) shouldBe OK
+
+        contentAsJson(result) shouldBe Json.toJson(expectedResponse)
     }
+
+    "return 502 BadGateway when an error is returned from HIP API" in {
+      when(mockHIPService.getFinancialDataHIP(any[String].asInstanceOf[EclReference])(any())).thenReturn(
+        EitherT.leftT[Future, Option[FinancialData]](HipWrappedError.BadGateway("response body", NOT_FOUND))
+      )
+
+      val result: Future[Result] =
+        controller.getFinancialData(fakeRequest)
+
+      status(result) shouldBe BAD_GATEWAY
+    }
+  }
 }
