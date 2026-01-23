@@ -59,7 +59,8 @@ class HipConnector @Inject() (
       .executeAndDeserialise[FinancialData]
       .map { financialData =>
         logger.info(
-          s"Successfully retrieved financial data for ECL-HIP reference--> ${eclReference.value} and $financialData"
+          s"Successfully retrieved financial data for ECL-HIP reference--> ${eclReference.value} and ${Json
+            .toJson(financialData)}. From date-->$dateFrom and To date-->$dateTo"
         )
         financialData
       }
