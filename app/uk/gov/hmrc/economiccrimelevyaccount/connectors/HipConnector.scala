@@ -24,7 +24,7 @@ import uk.gov.hmrc.economiccrimelevyaccount.models.{CustomHeaderNames, EclRefere
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, StringContextOps}
 
-import java.time.{Instant, LocalDate}
+import java.time.Instant
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.UUID
@@ -40,14 +40,16 @@ class HipConnector @Inject() (
     with Logging {
 
   def getFinancialDetails(
-    eclReference: EclReference
+    eclReference: EclReference,
+    dateFrom: String,
+    dateTo: String
   )(implicit hc: HeaderCarrier): Future[FinancialData] = {
 
     val correlationId = UUID.randomUUID().toString
     val hipHeaders    = buildHIPHeaders(correlationId)
 
     val url                    = s"${appConfig.hipUrl}/etmp/RESTAdapter/cross-regime/taxpayer/financial-data/query"
-    val hipRequest: HipRequest = hipRequestBody(eclReference)
+    val hipRequest: HipRequest = hipRequestBody(eclReference, dateFrom, dateTo)
     val jsonBody               = Json.toJson(hipRequest)
 
     httpClient
@@ -55,9 +57,11 @@ class HipConnector @Inject() (
       .setHeader(hipHeaders: _*)
       .withBody(jsonBody)
       .executeAndDeserialise[FinancialData]
-      .map { financialDataHIP =>
-        logger.info(s"Successfully retrieved financial data for ECL-HIP reference--> ${eclReference.value}")
-        financialDataHIP
+      .map { financialData =>
+        logger.info(
+          s"Successfully retrieved financial data for ECL-HIP reference--> ${eclReference.value} and $financialData"
+        )
+        financialData
       }
   }
 
@@ -72,7 +76,7 @@ class HipConnector @Inject() (
     CustomHeaderNames.xTransmittingSystem -> "HIP"
   )
 
-  private def hipRequestBody(eclReference: EclReference): HipRequest =
+  private def hipRequestBody(eclReference: EclReference, dateFrom: String, dateTo: String): HipRequest =
     HipRequest(
       taxRegime = "ECL",
       taxpayerInformation = TaxpayerInformation(
@@ -84,8 +88,8 @@ class HipConnector @Inject() (
         SelectionCriteria(
           dateRange = DateRange(
             dateType = "POSTING",
-            dateFrom = appConfig.hipDateFrom.format(DateTimeFormatter.ISO_LOCAL_DATE),
-            dateTo = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
+            dateFrom = dateFrom,
+            dateTo = dateTo
           ),
           includeClearedItems = true,
           includeStatisticalItems = true,
