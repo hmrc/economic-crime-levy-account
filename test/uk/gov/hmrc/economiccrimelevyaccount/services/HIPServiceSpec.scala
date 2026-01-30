@@ -55,7 +55,7 @@ class HIPServiceSpec extends SpecBase {
       result shouldBe Right(
         Some(
           FinancialData(
-            Some(Totalisation(Some(1250), Some(1000), Some(100), Some(250), Some(100), Some(0), Some(0))),
+            Some(Totalisation(Some(1250), Some(1000), Some(200), Some(500), Some(200), Some(0), Some(0))),
             Some(
               Vector(
                 DocumentDetails(

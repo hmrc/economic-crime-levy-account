@@ -143,10 +143,26 @@ class HIPService @Inject() (hipConnector: HipConnector, appConfig: AppConfig)(im
 
   def combineFinancialData(dataList: Seq[FinancialData]): FinancialData = {
     val combinedDocumentDetails = dataList.flatMap(_.documentDetails).flatten
-    val combineTotalisation     = dataList.lastOption.flatMap(_.totalisation)
+    val combineTotalisation     = dataList
+      .flatMap(_.totalisation)
+      .reduceOption { (a, b) =>
+        a.copy(
+          totalAccountBalance = a.totalAccountBalance,
+          totalAccountOverdue = a.totalAccountOverdue,
+          totalOverdue = sum(a.totalOverdue, b.totalOverdue),
+          totalNotYetDue = sum(a.totalNotYetDue, b.totalNotYetDue),
+          totalBalance = sum(a.totalBalance, b.totalBalance),
+          totalCredit = sum(a.totalCredit, b.totalCredit),
+          totalCleared = sum(a.totalCleared, b.totalCleared)
+        )
+      }
     FinancialData(
       totalisation = combineTotalisation,
       documentDetails = if (combinedDocumentDetails.nonEmpty) Some(combinedDocumentDetails) else None
     )
   }
+
+  private def sum(a: Option[BigDecimal], b: Option[BigDecimal]): Option[BigDecimal] =
+    Some(a.getOrElse(BigDecimal(0)) + b.getOrElse(BigDecimal(0)))
+
 }
