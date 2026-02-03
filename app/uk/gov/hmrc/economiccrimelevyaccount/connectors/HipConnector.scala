@@ -44,7 +44,9 @@ class HipConnector @Inject() (
     dateFrom: String,
     dateTo: String
   )(implicit hc: HeaderCarrier): Future[FinancialData] = {
-
+    logger.info(
+      s"HIP connector called for ECL-HIP reference--> ${eclReference.value}. From date-->$dateFrom and To date-->$dateTo"
+    )
     val correlationId = UUID.randomUUID().toString
     val hipHeaders    = buildHIPHeaders(correlationId)
 
@@ -59,8 +61,7 @@ class HipConnector @Inject() (
       .executeAndDeserialise[FinancialData]
       .map { financialData =>
         logger.info(
-          s"Successfully retrieved financial data for ECL-HIP reference--> ${eclReference.value} and ${Json
-            .toJson(financialData)}. From date-->$dateFrom and To date-->$dateTo"
+          s"Successfully retrieved financial data for ECL-HIP reference--> ${eclReference.value}. From date-->$dateFrom and To date-->$dateTo"
         )
         financialData
       }
