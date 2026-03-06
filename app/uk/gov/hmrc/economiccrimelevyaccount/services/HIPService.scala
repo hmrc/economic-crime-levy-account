@@ -23,7 +23,7 @@ import play.api.http.Status.UNPROCESSABLE_ENTITY
 import uk.gov.hmrc.economiccrimelevyaccount.connectors.HipConnector
 import uk.gov.hmrc.economiccrimelevyaccount.models.EclReference
 import uk.gov.hmrc.economiccrimelevyaccount.models.hip.DocumentType.Other
-import uk.gov.hmrc.economiccrimelevyaccount.models.hip.{FinancialData, HipWrappedError}
+import uk.gov.hmrc.economiccrimelevyaccount.models.hip.{DocumentDetails, FinancialData, HipWrappedError, LineItemDetails}
 import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
 import play.api.libs.json._
 import uk.gov.hmrc.economiccrimelevyaccount.config.AppConfig
@@ -54,6 +54,9 @@ class HIPService @Inject() (hipConnector: HipConnector, appConfig: AppConfig)(im
             hipConnector
               .getFinancialDetails(eclReference, formattedDateFrom, formattedDateTo)
               .map { response =>
+                println(
+                  s"HIP response for : ${eclReference.value} from date $formattedDateFrom to date $formattedDateTo and response $response"
+                )
                 Right(response)
               }
               .recover {
@@ -141,24 +144,63 @@ class HIPService @Inject() (hipConnector: HipConnector, appConfig: AppConfig)(im
     ranges
   }
 
+//  def combineFinancialData(dataList: Seq[FinancialData]): FinancialData = {
+//    val combinedDocumentDetails = dataList.flatMap(_.documentDetails).flatten
+//    val combineTotalisation     = dataList
+//      .flatMap(_.totalisation)
+//      .reduceOption { (a, b) =>
+//        a.copy(
+//          totalAccountBalance = a.totalAccountBalance,
+//          totalAccountOverdue = a.totalAccountOverdue,
+//          totalOverdue = sum(a.totalOverdue, b.totalOverdue),
+//          totalNotYetDue = sum(a.totalNotYetDue, b.totalNotYetDue),
+//          totalBalance = sum(a.totalBalance, b.totalBalance),
+//          totalCredit = sum(a.totalCredit, b.totalCredit),
+//          totalCleared = sum(a.totalCleared, b.totalCleared)
+//        )
+//      }
+//    FinancialData(
+//      totalisation = combineTotalisation,
+//      documentDetails = if (combinedDocumentDetails.nonEmpty) Some(combinedDocumentDetails) else None
+//    )
+//  }
+
+  private def mergeDocumentDetails(a: DocumentDetails, b: DocumentDetails): DocumentDetails =
+    a.copy(
+      lineItemDetails = Some(
+        (a.lineItemDetails.toSeq.flatten ++ b.lineItemDetails.toSeq.flatten).distinct
+      ),
+      postingDate = a.postingDate.orElse(b.postingDate),
+      penaltyTotals = a.penaltyTotals.orElse(b.penaltyTotals)
+    )
+
   def combineFinancialData(dataList: Seq[FinancialData]): FinancialData = {
-    val combinedDocumentDetails = dataList.flatMap(_.documentDetails).flatten
-    val combineTotalisation     = dataList
-      .flatMap(_.totalisation)
-      .reduceOption { (a, b) =>
+    val mergedDocuments: Seq[DocumentDetails] =
+      dataList
+        .flatMap(_.documentDetails.toSeq.flatten)
+        .groupBy(_.chargeReferenceNumber)
+        .values
+        .map { docs =>
+          docs.reduce(mergeDocumentDetails)
+        }
+        .toSeq
+
+    val combineTotalisation =
+      dataList.flatMap(_.totalisation).reduceOption { (a, b) =>
         a.copy(
-          totalAccountBalance = a.totalAccountBalance,
-          totalAccountOverdue = a.totalAccountOverdue,
           totalOverdue = sum(a.totalOverdue, b.totalOverdue),
           totalNotYetDue = sum(a.totalNotYetDue, b.totalNotYetDue),
           totalBalance = sum(a.totalBalance, b.totalBalance),
           totalCredit = sum(a.totalCredit, b.totalCredit),
-          totalCleared = sum(a.totalCleared, b.totalCleared)
+          totalCleared = sum(a.totalCleared, b.totalCleared),
+          totalAccountBalance = a.totalAccountBalance,
+          totalAccountOverdue = a.totalAccountOverdue
         )
       }
+
     FinancialData(
       totalisation = combineTotalisation,
-      documentDetails = if (combinedDocumentDetails.nonEmpty) Some(combinedDocumentDetails) else None
+      documentDetails = if (mergedDocuments.nonEmpty) Some(mergedDocuments) else None
     )
   }
 
