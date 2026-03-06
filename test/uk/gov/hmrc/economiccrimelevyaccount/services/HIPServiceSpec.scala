@@ -57,39 +57,7 @@ class HIPServiceSpec extends SpecBase {
           FinancialData(
             Some(Totalisation(Some(1250), Some(1000), Some(200), Some(500), Some(200), Some(0), Some(0))),
             Some(
-              Vector(
-                DocumentDetails(
-                  Some(NewCharge),
-                  Some("XMECL0000000003"),
-                  None,
-                  Some("2024-04-01"),
-                  Some(10000),
-                  Some(0),
-                  Some(10000),
-                  Some(
-                    List(
-                      LineItemDetails(
-                        None,
-                        None,
-                        None,
-                        None,
-                        None,
-                        Some(0),
-                        None,
-                        None,
-                        None,
-                        Some("6220"),
-                        Some("3410")
-                      )
-                    )
-                  ),
-                  Some(13.12),
-                  Some(12.1),
-                  Some("XB001286323438"),
-                  None,
-                  Some("104920928302302"),
-                  Some("ECL")
-                ),
+              List(
                 DocumentDetails(
                   Some(NewCharge),
                   Some("XMECL0000000003"),
