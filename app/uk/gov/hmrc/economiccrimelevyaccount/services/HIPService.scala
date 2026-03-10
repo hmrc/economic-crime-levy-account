@@ -144,27 +144,6 @@ class HIPService @Inject() (hipConnector: HipConnector, appConfig: AppConfig)(im
     ranges
   }
 
-//  def combineFinancialData(dataList: Seq[FinancialData]): FinancialData = {
-//    val combinedDocumentDetails = dataList.flatMap(_.documentDetails).flatten
-//    val combineTotalisation     = dataList
-//      .flatMap(_.totalisation)
-//      .reduceOption { (a, b) =>
-//        a.copy(
-//          totalAccountBalance = a.totalAccountBalance,
-//          totalAccountOverdue = a.totalAccountOverdue,
-//          totalOverdue = sum(a.totalOverdue, b.totalOverdue),
-//          totalNotYetDue = sum(a.totalNotYetDue, b.totalNotYetDue),
-//          totalBalance = sum(a.totalBalance, b.totalBalance),
-//          totalCredit = sum(a.totalCredit, b.totalCredit),
-//          totalCleared = sum(a.totalCleared, b.totalCleared)
-//        )
-//      }
-//    FinancialData(
-//      totalisation = combineTotalisation,
-//      documentDetails = if (combinedDocumentDetails.nonEmpty) Some(combinedDocumentDetails) else None
-//    )
-//  }
-
   private def mergeDocumentDetails(a: DocumentDetails, b: DocumentDetails): DocumentDetails =
     a.copy(
       lineItemDetails = Some(
