@@ -41,7 +41,7 @@ class ObligationDataControllerSpec extends SpecBase {
 
   "getObligationData" should {
     "return 200 OK with the obligation data JSON when obligation data is returned by the service" in forAll {
-      obligationData: ObligationData =>
+      (obligationData: ObligationData) =>
         when(mockObligationDataService.getObligationData(any[String].asInstanceOf[EclReference])(any()))
           .thenReturn(EitherT.rightT[Future, DesError](Some(obligationData)))
 

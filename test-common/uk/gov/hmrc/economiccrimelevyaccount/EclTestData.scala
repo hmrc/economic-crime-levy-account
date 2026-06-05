@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.economiccrimelevyaccount
 
-import com.danielasfregola.randomdatagenerator.RandomDataGenerator.derivedArbitrary
+//import com.danielasfregola.randomdatagenerator.RandomDataGenerator.derivedArbitrary
 import org.scalacheck.{Arbitrary, Gen}
 import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier, Enrolments}
 import uk.gov.hmrc.economiccrimelevyaccount.models.EclReference
@@ -26,6 +26,35 @@ import uk.gov.hmrc.economiccrimelevyaccount.models.hip.{DocumentDetails, Documen
 trait EclTestData {
 
   val uuidRegex: String = "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+
+  private val genNonEmptyString: Gen[String] =
+    Gen.alphaNumStr.suchThat(_.nonEmpty)
+
+  implicit lazy val arbEnrolmentIdentifier: Arbitrary[EnrolmentIdentifier] =
+    Arbitrary(
+      for {
+        key   <- genNonEmptyString
+        value <- genNonEmptyString
+      } yield EnrolmentIdentifier(
+        key = key,
+        value = value
+      )
+    )
+
+  implicit lazy val arbEnrolment: Arbitrary[Enrolment] =
+    Arbitrary(
+      for {
+        key               <- genNonEmptyString
+        identifiers       <- Gen.listOf(arbEnrolmentIdentifier.arbitrary).map(_.toSeq)
+        state             <- genNonEmptyString
+        delegatedAuthRule <- Gen.option(genNonEmptyString)
+      } yield Enrolment(
+        key = key,
+        identifiers = identifiers,
+        state = state,
+        delegatedAuthRule = delegatedAuthRule
+      )
+    )
 
   def arbEnrolments(withEcl: Boolean): Arbitrary[Enrolments] = Arbitrary {
     for {
@@ -64,7 +93,7 @@ trait EclTestData {
     )
   }
 
-  implicit val arbDocumentTypes: Arbitrary[DocumentType with Serializable] = Arbitrary {
+  implicit val arbDocumentTypes: Arbitrary[DocumentType] = Arbitrary {
     Gen.oneOf(
       Seq(
         DocumentType.InterestCharge,
@@ -84,11 +113,60 @@ trait EclTestData {
       documentTotalAmount       <- Arbitrary.arbitrary[BigDecimal].map(Some(_))
       documentClearedAmount     <- Arbitrary.arbitrary[BigDecimal].map(Some(_))
       documentOutstandingAmount <- Arbitrary.arbitrary[BigDecimal].map(Some(_))
-      lineItemDetails           <- Arbitrary.arbitrary[Seq[LineItemDetails]].map(Some(_))
+      lineItemDetails           <-
+        Gen.option(
+          Gen
+            .listOf(
+              for {
+                chargeDescription <- Gen.option(Gen.alphaNumStr.suchThat(_.nonEmpty))
+                periodFromDate    <- Gen.option(Gen.alphaNumStr)
+                periodToDate      <- Gen.option(Gen.alphaNumStr)
+                periodKey         <- Gen.option(Gen.alphaNumStr.suchThat(_.nonEmpty))
+                netDueDate        <- Gen.option(Gen.alphaNumStr)
+                amount            <- Gen.option(Gen.chooseNum(-1000000L, 1000000L).map(BigDecimal(_)))
+                clearingDate      <- Gen.option(Gen.alphaNumStr)
+                clearingReason    <- Gen.option(Gen.alphaNumStr)
+                clearingDocument  <- Gen.option(Gen.alphaNumStr)
+                mainTransaction   <- Gen.option(Gen.alphaNumStr.suchThat(_.nonEmpty))
+                subTransaction    <- Gen.option(Gen.alphaNumStr.suchThat(_.nonEmpty))
+              } yield LineItemDetails(
+                chargeDescription = chargeDescription,
+                periodFromDate = periodFromDate,
+                periodToDate = periodToDate,
+                periodKey = periodKey,
+                netDueDate = netDueDate,
+                amount = amount,
+                clearingDate = clearingDate,
+                clearingReason = clearingReason,
+                clearingDocument = clearingDocument,
+                mainTransaction = mainTransaction,
+                subTransaction = subTransaction
+              )
+            )
+            .map(_.toSeq)
+        )
       interestPostedAmount      <- Arbitrary.arbitrary[BigDecimal].map(Some(_))
       interestAccruingAmount    <- Arbitrary.arbitrary[BigDecimal].map(Some(_))
       interestPostedChargeRef   <- Arbitrary.arbitrary[String].map(Some(_))
-      penaltyTotals             <- Arbitrary.arbitrary[Seq[PenaltyTotals]].map(Some(_))
+      penaltyTotals             <-
+        Gen.option(
+          Gen
+            .listOf(
+              for {
+                penaltyType           <- Gen.option(Gen.alphaNumStr.suchThat(_.nonEmpty))
+                penaltyStatus         <- Gen.option(Gen.alphaNumStr.suchThat(_.nonEmpty))
+                penaltyAmount         <-
+                  Gen.option(Gen.chooseNum(-1000000L, 1000000L).map(BigDecimal(_)))
+                postedChargeReference <- Gen.option(Gen.alphaNumStr.suchThat(_.nonEmpty))
+              } yield PenaltyTotals(
+                penaltyType = penaltyType,
+                penaltyStatus = penaltyStatus,
+                penaltyAmount = penaltyAmount,
+                postedChargeReference = postedChargeReference
+              )
+            )
+            .map(_.toSeq)
+        )
       contractObjectNumber      <- Arbitrary.arbitrary[String].map(Some(_))
       contractObjectType        <- Arbitrary.arbitrary[String].map(Some(_))
     } yield DocumentDetails(

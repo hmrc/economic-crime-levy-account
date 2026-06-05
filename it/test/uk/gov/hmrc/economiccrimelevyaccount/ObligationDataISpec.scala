@@ -14,108 +14,52 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.economiccrimelevyaccount
+package test.uk.gov.hmrc.economiccrimelevyaccount
 
-import com.danielasfregola.randomdatagenerator.RandomDataGenerator.random
-import com.github.tomakehurst.wiremock.client.WireMock.{equalTo, getRequestedFor, matching, resetAllRequests, urlMatching, verify}
+//import com.danielasfregola.randomdatagenerator.RandomDataGenerator.random
+import com.github.tomakehurst.wiremock.client.WireMock._
 import org.scalatest.concurrent.Eventually.eventually
 import org.scalatest.prop.Tables._
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
-import uk.gov.hmrc.economiccrimelevyaccount.base.ISpecBase
-import uk.gov.hmrc.economiccrimelevyaccount.controllers.routes
+import test.uk.gov.hmrc.economiccrimelevyaccount.base.ISpecBase
 import uk.gov.hmrc.economiccrimelevyaccount.generators.CachedArbitraries._
+import uk.gov.hmrc.economiccrimelevyaccount.controllers._
 import uk.gov.hmrc.economiccrimelevyaccount.models.CustomHeaderNames
-import uk.gov.hmrc.economiccrimelevyaccount.models.bta.{BtaTileData, DueReturn}
-import uk.gov.hmrc.economiccrimelevyaccount.models.des._
+import uk.gov.hmrc.economiccrimelevyaccount.models.des.{Obligation, ObligationData}
 import uk.gov.hmrc.economiccrimelevyaccount.models.errors.ResponseError
 import uk.gov.hmrc.http.HeaderNames
 
 import java.time.LocalDate
 
-class BtaTileDataISpec extends ISpecBase {
+class ObligationDataISpec extends ISpecBase {
 
-  s"GET ${routes.BtaTileDataController.getBtaTileData.url}" should {
-
-    "return 200 OK with a due return when there is an open obligation" in {
+  s"GET ${routes.ObligationDataController.getObligationData.url}" should {
+    "return 200 OK with the obligation data JSON when obligation data is returned" in {
       stubAuthorised()
 
-      val openObligation =
-        random[ObligationDetails].copy(
-          status = Open,
-          inboundCorrespondenceFromDate = LocalDate.parse("2021-04-01"),
-          inboundCorrespondenceToDate = LocalDate.parse("2022-03-31"),
-          inboundCorrespondenceDueDate = LocalDate.parse("2022-09-30")
-        )
+      val obligationDetails = arbObligationDetails.arbitrary.sample.get
 
-      val obligationData =
-        ObligationData(
-          Seq(Obligation(None, Seq(openObligation)))
-        )
-
-      stubGetObligations(obligationData)
-
-      val result = callRoute(
-        FakeRequest(routes.BtaTileDataController.getBtaTileData)
-      )
-
-      val expectedBtaTileData = BtaTileData(
-        eclReference = testEclReference,
-        dueReturn = Some(
-          DueReturn(
-            isOverdue = true,
-            dueDate = openObligation.inboundCorrespondenceDueDate,
-            periodStartDate = openObligation.inboundCorrespondenceFromDate,
-            periodEndDate = openObligation.inboundCorrespondenceToDate,
-            fyStartYear = "2021",
-            fyEndYear = "2022"
+      val obligationData = ObligationData(
+        obligations = Seq(
+          Obligation(
+            identification = None,
+            obligationDetails = Seq(
+              obligationDetails.copy(inboundCorrespondenceDueDate = LocalDate.parse("2022-09-30")),
+              obligationDetails.copy(inboundCorrespondenceDueDate = LocalDate.parse("2023-09-30"))
+            )
           )
         )
       )
 
-      status(result)        shouldBe OK
-      contentAsJson(result) shouldBe Json.toJson(expectedBtaTileData)
-
-      eventually {
-        verify(
-          1,
-          getRequestedFor(urlMatching(getObligationDataRegex))
-            .withHeader(HeaderNames.authorisation, equalTo(s"Bearer ${appConfig.desBearerToken}"))
-            .withHeader(CustomHeaderNames.environment, equalTo(appConfig.desEnvironment))
-            .withHeader(CustomHeaderNames.xCorrelationId, matching(uuidRegex))
-            .withHeader(CustomHeaderNames.correlationId, matching(uuidRegex))
-        )
-        resetAllRequests()
-      }
-    }
-
-    "return 200 OK when there is a fulfilled obligation" in {
-      resetAllRequests()
-      stubAuthorised()
-
-      val openObligation =
-        random[ObligationDetails].copy(
-          status = Fulfilled
-        )
-
-      val obligationData =
-        ObligationData(
-          Seq(Obligation(None, Seq(openObligation)))
-        )
-
       stubGetObligations(obligationData)
 
       val result = callRoute(
-        FakeRequest(routes.BtaTileDataController.getBtaTileData)
-      )
-
-      val expectedBtaTileData = BtaTileData(
-        eclReference = testEclReference,
-        dueReturn = None
+        FakeRequest(routes.ObligationDataController.getObligationData)
       )
 
       status(result)        shouldBe OK
-      contentAsJson(result) shouldBe Json.toJson(expectedBtaTileData)
+      contentAsJson(result) shouldBe Json.toJson(obligationData)
 
       eventually {
         verify(
@@ -130,24 +74,17 @@ class BtaTileDataISpec extends ISpecBase {
       }
     }
 
-    "return 200 OK with BtaTileData containing eclReference and None in dueReturn field " in {
+    "return 200 OK with null in the body when the obligation data is not found" in {
       stubAuthorised()
 
       stubObligationsNotFound()
 
-      val expectedBtaTileData = BtaTileData(
-        eclReference = testEclReference,
-        dueReturn = None
-      )
-
       val result = callRoute(
-        FakeRequest(routes.BtaTileDataController.getBtaTileData)
+        FakeRequest(routes.ObligationDataController.getObligationData)
       )
 
       status(result)        shouldBe OK
-      contentAsJson(result) shouldBe Json.toJson(
-        expectedBtaTileData
-      )
+      contentAsJson(result) shouldBe Json.toJson(None)
 
       eventually {
         verify(
@@ -170,14 +107,13 @@ class BtaTileDataISpec extends ISpecBase {
         SERVICE_UNAVAILABLE
       )
     ) { (statusCode: Int) =>
-      resetAllRequests()
       stubAuthorised()
 
       val errorMessage = "Bad Request"
       stubObligationsUpstreamError(statusCode, errorMessage)
 
       val result = callRoute(
-        FakeRequest(routes.BtaTileDataController.getBtaTileData)
+        FakeRequest(routes.ObligationDataController.getObligationData)
       )
 
       status(result)        shouldBe BAD_GATEWAY
@@ -193,7 +129,32 @@ class BtaTileDataISpec extends ISpecBase {
             .withHeader(CustomHeaderNames.xCorrelationId, matching(uuidRegex))
             .withHeader(CustomHeaderNames.correlationId, matching(uuidRegex))
         )
+        resetAllRequests()
+      }
+    }
+
+    "return 500 INTERNAL_SERVER_ERROR when an unexpected exception is thrown" in {
+      stubAuthorised()
+
+      stubGetObligationsUnexpectedResponse()
+
+      val result = callRoute(
+        FakeRequest(routes.ObligationDataController.getObligationData)
+      )
+
+      status(result) shouldBe INTERNAL_SERVER_ERROR
+
+      eventually {
+        verify(
+          getRequestedFor(urlMatching(getObligationDataRegex))
+            .withHeader(HeaderNames.authorisation, equalTo(s"Bearer ${appConfig.desBearerToken}"))
+            .withHeader(CustomHeaderNames.environment, equalTo(appConfig.desEnvironment))
+            .withHeader(CustomHeaderNames.xCorrelationId, matching(uuidRegex))
+            .withHeader(CustomHeaderNames.correlationId, matching(uuidRegex))
+        )
+        resetAllRequests()
       }
     }
   }
+
 }
