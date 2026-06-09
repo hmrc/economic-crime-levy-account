@@ -24,19 +24,6 @@ import uk.gov.hmrc.economiccrimelevyaccount.models.hip.{DocumentDetails, Documen
 
 import java.time.LocalDate
 
-//object CachedArbitraries extends EclTestData with Generators {
-//
-//  private def mkArb[T](implicit mkArb: MkArbitrary[T]): Arbitrary[T] = MkArbitrary[T].arbitrary
-//
-//  implicit lazy val arbEnrolment: Arbitrary[Enrolment]                      = mkArb
-//  implicit lazy val arbFinancialDataResponse: Arbitrary[FinancialData]      = mkArb
-//  implicit lazy val arbOptObligationData: Arbitrary[Option[ObligationData]] = mkArb
-//  implicit lazy val arbObligationData: Arbitrary[ObligationData]            = mkArb
-//  implicit lazy val arbObligationStatus: Arbitrary[ObligationStatus]        = mkArb
-//  implicit lazy val arbObligationDetails: Arbitrary[ObligationDetails]      = mkArb
-//
-//}
-
 object CachedArbitraries extends EclTestData with Generators {
 
   private val genNonEmptyString: Gen[String] =
