@@ -28,7 +28,7 @@ import uk.gov.hmrc.economiccrimelevyaccount.models.EclReference
 import uk.gov.hmrc.economiccrimelevyaccount.models.eacd.EclEnrolment
 import uk.gov.hmrc.economiccrimelevyaccount.models.requests.AuthorisedRequest
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendHeaderCarrierProvider
-import uk.gov.hmrc.play.bootstrap.backend.http.ErrorResponse
+import uk.gov.hmrc.play.bootstrap.http.ErrorResponse
 
 import scala.concurrent.{ExecutionContext, Future}
 

@@ -23,7 +23,7 @@ import play.api.http.Status.UNPROCESSABLE_ENTITY
 import uk.gov.hmrc.economiccrimelevyaccount.connectors.HipConnector
 import uk.gov.hmrc.economiccrimelevyaccount.models.EclReference
 import uk.gov.hmrc.economiccrimelevyaccount.models.hip.DocumentType.Other
-import uk.gov.hmrc.economiccrimelevyaccount.models.hip.{DocumentDetails, FinancialData, HipWrappedError, LineItemDetails}
+import uk.gov.hmrc.economiccrimelevyaccount.models.hip.{DocumentDetails, FinancialData, HipWrappedError}
 import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
 import play.api.libs.json._
 import uk.gov.hmrc.economiccrimelevyaccount.config.AppConfig

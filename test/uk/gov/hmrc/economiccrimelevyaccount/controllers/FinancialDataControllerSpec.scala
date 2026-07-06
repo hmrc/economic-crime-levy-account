@@ -40,7 +40,7 @@ class FinancialDataControllerSpec extends SpecBase {
 
   "getFinancialData" should {
     "return 201 OK with the JSON payload when FinancialDataResponseHIP is returned from service" in {
-      financialDataResponse: FinancialData =>
+      (financialDataResponse: FinancialData) =>
         when(mockHIPService.getFinancialDataHIP(any[String].asInstanceOf[EclReference])(any()))
           .thenReturn(EitherT.rightT[Future, HipWrappedError](Some(financialDataResponse)))
 

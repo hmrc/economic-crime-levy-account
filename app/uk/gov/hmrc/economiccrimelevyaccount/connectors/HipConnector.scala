@@ -23,6 +23,7 @@ import uk.gov.hmrc.economiccrimelevyaccount.models.hip.{DataEnrichment, DateRang
 import uk.gov.hmrc.economiccrimelevyaccount.models.{CustomHeaderNames, EclReference}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, StringContextOps}
+import play.api.libs.ws.writeableOf_JsValue
 
 import java.time.Instant
 import java.time.format.DateTimeFormatter

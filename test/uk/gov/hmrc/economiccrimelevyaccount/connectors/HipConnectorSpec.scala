@@ -19,7 +19,6 @@ import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.mockito.MockitoSugar
 import org.mockito.Mockito._
 import org.mockito.ArgumentMatchers._
-import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK}
 import play.api.libs.json.Json
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
@@ -29,6 +28,7 @@ import uk.gov.hmrc.economiccrimelevyaccount.models.hip.{DocumentDetails, Documen
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, UpstreamErrorResponse}
 import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
 import scala.util.{Failure, Try}
+import org.scalatest.matchers.should.Matchers._
 
 import java.time.LocalDate
 import scala.concurrent.ExecutionContext.Implicits.global

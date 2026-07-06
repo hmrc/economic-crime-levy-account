@@ -42,7 +42,7 @@ class BtaTileDataControllerSpec extends SpecBase {
   )
 
   "getBtaTileData" should {
-    "return 200 OK with no due return when there is no obligation data" in forAll { obligationData: ObligationData =>
+    "return 200 OK with no due return when there is no obligation data" in forAll { (obligationData: ObligationData) =>
       when(mockDesService.getObligationData(any[String].asInstanceOf[EclReference])(any()))
         .thenReturn(EitherT.rightT[Future, DesError](Some(obligationData)))
 
