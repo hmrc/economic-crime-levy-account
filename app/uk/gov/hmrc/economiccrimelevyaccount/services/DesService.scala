@@ -60,10 +60,6 @@ class DesService @Inject() (
     obligationData => {
       val obligationDetails = obligationData.obligations
         .flatMap(_.obligationDetails)
-        .filter(
-          _.inboundCorrespondenceDueDate
-            .isBefore(oneYearFromNow)
-        )
       val identification    = obligationData.obligations.headOption.flatMap(_.identification)
 
       ObligationData(Seq(Obligation(identification, obligationDetails)))
