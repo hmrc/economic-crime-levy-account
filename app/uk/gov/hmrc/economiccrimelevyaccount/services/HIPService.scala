@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 HM Revenue & Customs
+ * Copyright 2026 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,8 +54,8 @@ class HIPService @Inject() (hipConnector: HipConnector, appConfig: AppConfig)(im
             hipConnector
               .getFinancialDetails(eclReference, formattedDateFrom, formattedDateTo)
               .map { response =>
-                println(
-                  s"HIP response for : ${eclReference.value} from date $formattedDateFrom to date $formattedDateTo and response $response"
+                logger.info(
+                  s"HIP response for : ${eclReference.value} from date $formattedDateFrom to date $formattedDateTo"
                 )
                 Right(response)
               }
@@ -144,46 +144,27 @@ class HIPService @Inject() (hipConnector: HipConnector, appConfig: AppConfig)(im
     ranges
   }
 
-  private def mergeDocumentDetails(a: DocumentDetails, b: DocumentDetails): DocumentDetails =
-    a.copy(
-      lineItemDetails = Some(
-        (a.lineItemDetails.toSeq.flatten ++ b.lineItemDetails.toSeq.flatten).distinct
-      ),
-      postingDate = a.postingDate.orElse(b.postingDate),
-      penaltyTotals = a.penaltyTotals.orElse(b.penaltyTotals)
-    )
-
   def combineFinancialData(dataList: Seq[FinancialData]): FinancialData = {
-    val mergedDocuments: Seq[DocumentDetails] =
-      dataList
-        .flatMap(_.documentDetails.toSeq.flatten)
-        .groupBy(_.chargeReferenceNumber)
-        .values
-        .map { docs =>
-          docs.reduce(mergeDocumentDetails)
-        }
-        .toSeq
-
-    val combineTotalisation =
-      dataList.flatMap(_.totalisation).reduceOption { (a, b) =>
+    val combinedDocumentDetails = dataList.flatMap(_.documentDetails).flatten
+    val combineTotalisation     = dataList
+      .flatMap(_.totalisation)
+      .reduceOption { (a, b) =>
         a.copy(
+          totalAccountBalance = a.totalAccountBalance,
+          totalAccountOverdue = a.totalAccountOverdue,
           totalOverdue = sum(a.totalOverdue, b.totalOverdue),
           totalNotYetDue = sum(a.totalNotYetDue, b.totalNotYetDue),
           totalBalance = sum(a.totalBalance, b.totalBalance),
           totalCredit = sum(a.totalCredit, b.totalCredit),
-          totalCleared = sum(a.totalCleared, b.totalCleared),
-          totalAccountBalance = a.totalAccountBalance,
-          totalAccountOverdue = a.totalAccountOverdue
+          totalCleared = sum(a.totalCleared, b.totalCleared)
         )
       }
-
     FinancialData(
       totalisation = combineTotalisation,
-      documentDetails = if (mergedDocuments.nonEmpty) Some(mergedDocuments) else None
+      documentDetails = if (combinedDocumentDetails.nonEmpty) Some(combinedDocumentDetails) else None
     )
   }
 
   private def sum(a: Option[BigDecimal], b: Option[BigDecimal]): Option[BigDecimal] =
     Some(a.getOrElse(BigDecimal(0)) + b.getOrElse(BigDecimal(0)))
-
 }

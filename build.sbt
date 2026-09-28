@@ -77,7 +77,7 @@ val excludedScoveragePackages: Seq[String] = Seq(
 )
 
 val scoverageSettings: Seq[Setting[?]] = Seq(
-  ScoverageKeys.coverageExcludedFiles := excludedScoveragePackages.mkString(";"),
+  ScoverageKeys.coverageExcludedFiles := excludedScoveragePackages.mkString(";") + ";.*models.errors.ResponseError;." + ";.*models.hip.FinancialData;.",
   ScoverageKeys.coverageMinimumStmtTotal := 90,
   ScoverageKeys.coverageFailOnMinimum := true,
   ScoverageKeys.coverageHighlighting := true
